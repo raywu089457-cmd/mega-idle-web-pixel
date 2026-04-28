@@ -696,6 +696,7 @@ function HeroSystem_processWanderingTick() {
     const hero = wanderingHeroes[i];
     if (Math.random() < 0.90) {
       const res = resolveCombat(hero);
+      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: Math.floor(res.goldReward * 0.2), magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0 });
       if (res.victory) {
         ResourceSystem_add('gold', Math.floor(res.goldReward * 0.2));
         if (res.magicStones > 0) ResourceSystem_add('magicStones', Math.floor(res.magicStones * 0.2));
@@ -743,6 +744,7 @@ function HeroSystem_processExplorationTick(zoneId) {
   for (const hero of explorers) {
     if (Math.random() < 0.90) {
       const res = resolveZoneCombat(hero, zone);
+      addBattleReport(hero.name, zone.name, res.victory ? 'victory' : 'retreat', { gold: res.goldReward, magicStones: res.magicStones });
       if (res.victory) {
         ResourceSystem_add('gold', res.goldReward);
         if (res.magicStones > 0) ResourceSystem_add('magicStones', res.magicStones);
