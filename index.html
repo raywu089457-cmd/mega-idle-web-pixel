@@ -69,7 +69,7 @@ body{
 /* ── MAIN CANVAS ── */
 .main-canvas{position:fixed;top:var(--panel-h);left:0;right:0;max-width:480px;bottom:var(--nav-h);margin:0 auto;z-index:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .castle-scene{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.castle-img{font-size:144px;filter:drop-shadow(0 0 30px rgba(255,215,0,0.3));animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;transition:transform 0.15s;}
+.castle-img{font-size:144px;filter:drop-shadow(0 0 30px rgba(255,215,0,0.3));animation:float 4s ease-in-out infinite;user-select:none;transition:transform 0.15s;}
 @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 .castle-label{font-family:'Cinzel',serif;font-size:19px;color:var(--gold);letter-spacing:2px;}
 .castle-sub{font-size:15px;color:var(--text-faint);}
@@ -1380,15 +1380,7 @@ function closeSettings() { document.getElementById('modal-settings').classList.r
 // ═══════════════════════════════════════════════════════════════════
 // CASTLE CLICK
 // ═══════════════════════════════════════════════════════════════════
-document.getElementById('castle-click').onclick = function() {
-  ResourceSystem_add('gold', 50);
-  ResourceSystem_add('fruitPoor', 5);
-  spawnFloat('🪙+50', true);
-  spawnFloat('🍎+5', false);
-  this.style.transform = 'scale(0.92)';
-  setTimeout(() => this.style.transform = '', 150);
-  updateHUD();
-};
+// Castle click disabled
 
 // ═══════════════════════════════════════════════════════════════════
 // OFFLINE COLLECT
