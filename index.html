@@ -897,6 +897,8 @@ let pendingOfflineSummary = null;
 let dispatchHeroId = null;
 let dispatchZoneId = null;
 let activePanel = null;
+let activeHeroTab = 'hero-territory';
+let activeReportTab = 'wander';
 
 function saveGame() {
   if (!gameState) return;
@@ -1017,7 +1019,7 @@ function switchTab(btn, targetId) {
   panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(targetId)?.classList.add('active');
-  if (targetId === 'hero-territory' || targetId === 'hero-wander') renderHeroesTab(targetId);
+  if (targetId === 'hero-territory' || targetId === 'hero-wander') { activeHeroTab = targetId; renderHeroesTab(targetId); }
   if (targetId === 'hero-reports') renderReportsTab();
 }
 
@@ -1049,7 +1051,14 @@ function renderResourcesPanel() {
 // ═══════════════════════════════════════════════════════════════════
 // RENDER: HEROES
 // ═══════════════════════════════════════════════════════════════════
-function renderHeroesPanel() { renderHeroesTab('hero-territory'); }
+function renderHeroesPanel() {
+  // Check if hero tab has hero-reports active by seeing which tab-btn inside hero panel is active
+  const heroPanel = document.getElementById('panel-hero');
+  const activeTabBtn = heroPanel?.querySelector('.tab-btn.active');
+  const activeTabId = activeTabBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+  if (activeTabId === 'hero-reports') { renderReportsTab(); return; }
+  renderHeroesTab(activeHeroTab);
+}
 function renderHeroesTab(tab) {
   const territoryDiv = document.getElementById('hero-territory');
   const wanderDiv = document.getElementById('hero-wander');
@@ -1118,19 +1127,23 @@ function renderHeroCard(hero, type) {
   </div>`;
 }
 
-function renderReportsTab() {
+function renderReportsTab(activeTab) {
+  const tab = activeTab || activeReportTab;
   const div = document.getElementById('hero-reports');
   div.innerHTML = `<div class="report-sub-tabs">
-      <button class="report-sub-btn active">流浪戰報</button>
-      <button class="report-sub-btn">領地戰報</button>
+      <button class="report-sub-btn ${tab === 'wander' ? 'active' : ''}" onclick="setReportTab('wander')">流浪戰報</button>
+      <button class="report-sub-btn ${tab === 'zone' ? 'active' : ''}" onclick="setReportTab('zone')">領地戰報</button>
     </div>
     <div class="clear-btn-row"><button class="btn btn-red btn-sm" onclick="clearReports()">清除全部</button></div>
     <div id="report-list"></div>`;
   const list = document.getElementById('report-list');
-  if (battleReports.length === 0) {
+  const filtered = tab === 'wander'
+    ? battleReports.filter(r => r.zoneName === 'wander')
+    : battleReports.filter(r => r.zoneName !== 'wander');
+  if (filtered.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:10px;">暫無戰報</div>`;
   } else {
-    list.innerHTML = battleReports.slice(0, 20).map(r => {
+    list.innerHTML = filtered.slice(0, 20).map(r => {
       const timeAgo = getTimeAgo(r.time);
       return `<div class="report-entry">
         <div class="report-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.report-expand').classList.toggle('open')">
@@ -1146,6 +1159,7 @@ function renderReportsTab() {
     }).join('');
   }
 }
+function setReportTab(tab) { activeReportTab = tab; renderReportsTab(tab); }
 
 function getTimeAgo(ts) {
   const diff = Math.floor((Date.now() - ts) / 1000);
