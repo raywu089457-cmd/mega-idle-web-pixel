@@ -1,0 +1,81 @@
+{
+  "systems": {
+    "save-system": {
+      "label": "存檔系統",
+      "description": "IndexedDB 存讀刪，版本遷移，所有系統的基礎",
+      "dependsOn": [],
+      "tier": 0,
+      "taskIds": ["01-save-system-dev"]
+    },
+    "resource-system": {
+      "label": "資源系統",
+      "description": "5 種材料、金幣、魔法石 CRUD，容量檢查",
+      "dependsOn": ["save-system"],
+      "tier": 1,
+      "taskIds": ["02-resource-system-dev"]
+    },
+    "monument-system": {
+      "label": "紀念碑系統",
+      "description": "每秒隨機產生 1-3 個每種材料，升級倍率",
+      "dependsOn": ["save-system", "resource-system"],
+      "tier": 2,
+      "taskIds": ["03-data-architect", "04-balance-designer", "05-monument-system-dev"]
+    },
+    "hero-system": {
+      "label": "英雄系統",
+      "description": "領土英雄、漫遊英雄 AI，戰鬥狀態",
+      "dependsOn": ["save-system", "resource-system"],
+      "tier": 2,
+      "taskIds": ["06-hero-system-dev", "07-combat-resolution-dev"]
+    },
+    "shop-system": {
+      "label": "商店系統",
+      "description": "材料兌換金幣，漫遊英雄自動購買",
+      "dependsOn": ["save-system", "resource-system", "hero-system"],
+      "tier": 3,
+      "taskIds": ["08-shop-system-dev"]
+    },
+    "map-system": {
+      "label": "地圖系統",
+      "description": "區域解鎖，難度遞增，探索進度",
+      "dependsOn": ["save-system", "resource-system", "hero-system"],
+      "tier": 3,
+      "taskIds": ["09-map-system-dev"]
+    },
+    "offline-system": {
+      "label": "離線系統",
+      "description": "8小時上限離線計算，時間回補",
+      "dependsOn": ["save-system", "resource-system", "monument-system", "hero-system"],
+      "tier": 3,
+      "taskIds": ["10-offline-system-dev"]
+    },
+    "tick-system": {
+      "label": "Tick 主迴圈",
+      "description": "遊戲主迴圈，每秒結算所有系統",
+      "dependsOn": ["save-system", "resource-system", "monument-system", "hero-system", "shop-system", "map-system"],
+      "tier": 4,
+      "taskIds": ["11-tick-system-engineer"]
+    },
+    "visual-canvas": {
+      "label": "Canvas 視覺層",
+      "description": "Canvas 渲染，浮動數字動畫，英雄移動",
+      "dependsOn": ["save-system", "resource-system", "monument-system", "hero-system", "tick-system"],
+      "tier": 5,
+      "taskIds": ["12-canvas-renderer", "13-animation-engineer"]
+    },
+    "visual-ui": {
+      "label": "UI 面板層",
+      "description": "DOM panel 切換，底部導航，資源顯示",
+      "dependsOn": ["save-system", "resource-system", "tick-system"],
+      "tier": 5,
+      "taskIds": ["14-ui-layout-designer", "15-css-stylist"]
+    },
+    "pwa": {
+      "label": "PWA 基礎設施",
+      "description": "manifest.json, Service Worker，快取策略",
+      "dependsOn": [],
+      "tier": 0,
+      "taskIds": ["16-pwa-specialist"]
+    }
+  }
+}

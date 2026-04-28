@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Idle Kingdom Builder — 瀏覽器閒置王國建設遊戲">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Idle Kingdom Builder</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- HUD — Top Status Bar                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <header id="hud">
+    <div class="hud-left">
+      <span id="kingdom-name">My Kingdom</span>
+      <div id="resource-gold" class="resource-item" data-resource="gold">
+        <span class="resource-icon">🪙</span>
+        <span class="resource-value" id="gold-value">500</span>
+        <span class="resource-max">/ <span id="gold-max">10,000</span></span>
+      </div>
+      <div id="resource-magicStones" class="resource-item" data-resource="magicStones">
+        <span class="resource-icon">💎</span>
+        <span class="resource-value" id="magicStones-value">0</span>
+      </div>
+    </div>
+
+    <div class="hud-center">
+      <div id="material-icons">
+        <!-- Material icons injected by JS -->
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <button id="btn-settings" class="hud-btn" title="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Main Game Canvas                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <main id="game-canvas-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="floating-numbers"></div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Bottom Navigation                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <nav id="bottom-nav">
+    <button class="nav-btn" data-panel="resources">
+      <span class="nav-icon">📦</span>
+      <span class="nav-label">資源</span>
+    </button>
+    <button class="nav-btn" data-panel="heroes">
+      <span class="nav-icon">⚔️</span>
+      <span class="nav-label">英雄</span>
+    </button>
+    <button class="nav-btn" data-panel="building">
+      <span class="nav-icon">🏰</span>
+      <span class="nav-label">建築</span>
+    </button>
+    <button class="nav-btn" data-panel="map">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-label">地圖</span>
+    </button>
+    <button class="nav-btn" data-panel="shop">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-label">商店</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Panel Container                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="panel-container">
+    <!-- Resource Panel -->
+    <div id="panel-resources" class="panel hidden">
+      <div class="panel-header">
+        <h2>Resources</h2>
+        <button class="btn-close panel-close" data-panel="resources">×</button>
+      </div>
+      <div class="panel-content" id="resources-panel-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- Hero Panel -->
+    <div id="panel-heroes" class="panel hidden">
+      <div class="panel-header">
+        <h2>Heroes</h2>
+        <button class="btn-close panel-close" data-panel="heroes">×</button>
+      </div>
+      <div class="panel-content" id="heroes-panel-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- Building Panel -->
+    <div id="panel-building" class="panel hidden">
+      <div class="panel-header">
+        <h2>Buildings</h2>
+        <button class="btn-close panel-close" data-panel="building">×</button>
+      </div>
+      <div class="panel-content" id="building-panel-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- Map Panel -->
+    <div id="panel-map" class="panel hidden">
+      <div class="panel-header">
+        <h2>Exploration</h2>
+        <button class="btn-close panel-close" data-panel="map">×</button>
+      </div>
+      <div class="panel-content" id="map-panel-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- Shop Panel -->
+    <div id="panel-shop" class="panel hidden">
+      <div class="panel-header">
+        <h2>Shop</h2>
+        <button class="btn-close panel-close" data-panel="shop">×</button>
+      </div>
+      <div class="panel-content" id="shop-panel-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Welcome Back Modal                                                -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="welcome-back-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Welcome Back!</h2>
+      <p>You were away for: <span id="offline-time">0h 0m</span></p>
+      <div id="offline-earnings">
+        <p>While you were gone:</p>
+        <ul id="earnings-list"></ul>
+      </div>
+      <button id="collect-offline" class="btn-primary">Collect</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Settings Modal                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button id="close-settings" class="btn-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-row">
+          <label for="setting-music">Music Volume</label>
+          <input type="range" id="setting-music" min="0" max="100" value="50">
+        </div>
+        <div class="setting-row">
+          <label for="setting-sfx">SFX Volume</label>
+          <input type="range" id="setting-sfx" min="0" max="100" value="70">
+        </div>
+        <div class="setting-row">
+          <label>
+            <input type="checkbox" id="setting-notifications" checked>
+            Enable Notifications
+          </label>
+        </div>
+        <hr>
+        <div class="setting-actions">
+          <button id="btn-save-game" class="btn-secondary">💾 Save Game</button>
+          <button id="btn-new-game" class="btn-danger">🆕 New Game</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Toast Container                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="toast-container"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Scripts (order matters!)                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script src="js/data/gameData.js"></script>
+  <script src="js/data/saveManager.js"></script>
+  <script src="js/systems/resourceSystem.js"></script>
+  <script src="js/systems/buildingSystem.js"></script>
+  <script src="js/systems/heroSystem.js"></script>
+  <script src="js/systems/shopSystem.js"></script>
+  <script src="js/systems/mapSystem.js"></script>
+  <script src="js/systems/offlineSystem.js"></script>
+  <script src="js/ui/canvasRenderer.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- UI Controller                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    /**
+     * UI Controller — handles DOM updates and user interactions
+     * Depends on: Game, ResourceSystem, HeroSystem, GameData
+     */
+    const UIController = (function () {
+      // ─── DOM References ───────────────────────────────────────────────
+      const elements = {
+        goldValue: document.getElementById('gold-value'),
+        goldMax: document.getElementById('gold-max'),
+        magicStonesValue: document.getElementById('magicStones-value'),
+        materialIcons: document.getElementById('material-icons'),
+        toastContainer: document.getElementById('toast-container'),
+        panelContainer: document.getElementById('panel-container'),
+        welcomeBackModal: document.getElementById('welcome-back-modal'),
+        settingsModal: document.getElementById('settings-modal'),
+        floatingNumbers: document.getElementById('floating-numbers'),
+      };
+
+      // ─── Initialization ───────────────────────────────────────────────
+
+      function init() {
+        // Set up material icons
+        createMaterialIcons();
+
+        // Set up nav button listeners
+        setupNavigation();
+
+        // Set up settings modal
+        setupSettings();
+
+        // Set up game event listeners
+        setupGameListeners();
+
+        // Initial UI update
+        updateAllResources();
+      }
+
+      function createMaterialIcons() {
+        const materials = ResourceSystem.getMaterialTypes();
+        elements.materialIcons.innerHTML = materials.map(mat => {
+          const config = ResourceSystem.getConfig(mat);
+          return `
+            <div class="material-icon" data-resource="${mat}" title="${config.name}">
+              <span class="resource-icon">${config.icon}</span>
+              <span class="resource-value" id="${mat}-value">0</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ─── Navigation ───────────────────────────────────────────────────
+
+      let currentPanel = null;
+
+      function setupNavigation() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const panel = btn.dataset.panel;
+            openPanel(panel);
+          });
+        });
+
+        // Panel close buttons
+        document.querySelectorAll('.panel-close').forEach(btn => {
+          btn.addEventListener('click', () => {
+            closePanel();
+          });
+        });
+      }
+
+      function openPanel(panelName) {
+        // Close current panel if open
+        closePanel();
+
+        // Open the requested panel
+        const panel = document.getElementById(`panel-${panelName}`);
+        if (!panel) {
+          console.warn(`[UI] Panel not found: ${panelName}`);
+          return;
+        }
+
+        panel.classList.remove('hidden');
+        elements.panelContainer.classList.add('open');
+        currentPanel = panelName;
+
+        // Render panel content
+        renderPanelContent(panelName);
+      }
+
+      function closePanel() {
+        if (currentPanel) {
+          const panel = document.getElementById(`panel-${currentPanel}`);
+          if (panel) {
+            panel.classList.add('hidden');
+          }
+        }
+        elements.panelContainer.classList.remove('open');
+        currentPanel = null;
+      }
+
+      function renderPanelContent(panelName) {
+        const contentId = `${panelName}-panel-content`;
+        const content = document.getElementById(contentId);
+        if (!content) return;
+
+        switch (panelName) {
+          case 'resources':
+            renderResourcesPanel(content);
+            break;
+          case 'heroes':
+            renderHeroesPanel(content);
+            break;
+          case 'building':
+            renderBuildingPanel(content);
+            break;
+          case 'map':
+            renderMapPanel(content);
+            break;
+          case 'shop':
+            renderShopPanel(content);
+            break;
+        }
+      }
+
+      // ─── Panel Renderers ───────────────────────────────────────────────
+
+      function renderResourcesPanel(content) {
+        const resources = [
+          { id: 'gold', config: ResourceSystem.getConfig('gold') },
+          { id: 'magicStones', config: ResourceSystem.getConfig('magicStones') },
+          ...ResourceSystem.getMaterialTypes().map(id => ({
+            id,
+            config: ResourceSystem.getConfig(id)
+          }))
+        ];
+
+        content.innerHTML = resources.map(r => `
+          <div class="resource-detail" data-resource="${r.id}">
+            <div class="resource-detail-header">
+              <span class="resource-icon">${r.config.icon}</span>
+              <span class="resource-name">${r.config.name}</span>
+            </div>
+            <div class="resource-detail-values">
+              <span class="resource-current">${formatNumber(ResourceSystem.get(r.id))}</span>
+              <span class="resource-separator">/</span>
+              <span class="resource-max">${formatNumber(ResourceSystem.getCapacity(r.id))}</span>
+            </div>
+            <div class="resource-bar">
+              <div class="resource-bar-fill" style="width: ${ResourceSystem.getFillPercent(r.id)}%"></div>
+            </div>
+          </div>
+        `).join('');
+
+        // Add CSS for resource details
+        addResourceDetailStyles();
+      }
+
+      function renderHeroesPanel(content) {
+        content.innerHTML = `
+          <div class="hero-sub-tabs">
+            <button class="hero-sub-tab active" data-tab="heroes">⚔️ Heroes</button>
+            <button class="hero-sub-tab" data-tab="reports">📜 Battle Reports</button>
+          </div>
+          <div id="hero-tab-content">
+            <!-- populated by tab switch -->
+          </div>
+        `;
+
+        const tabContent = content.querySelector('#hero-tab-content');
+
+        function switchHeroTab(tab) {
+          content.querySelectorAll('.hero-sub-tab').forEach(t => t.classList.remove('active'));
+          content.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+          if (tab === 'heroes') renderHeroesTab(tabContent);
+          else renderReportsTab(tabContent);
+        }
+
+        content.querySelectorAll('.hero-sub-tab').forEach(btn => {
+          btn.addEventListener('click', () => switchHeroTab(btn.dataset.tab));
+        });
+
+        // Default to heroes tab
+        switchHeroTab('heroes');
+      }
+
+      function renderHeroesTab(content) {
+        const territory = HeroSystem.getTerritoryHeroes();
+        const wandering = HeroSystem.getWanderingHeroes();
+        const slots = BuildingSystem.getTerritoryHeroSlots();
+        const castleLevel = BuildingSystem.getLevel('castle');
+        const tavernLevel = BuildingSystem.getLevel('tavern');
+        const maxWandering = BuildingSystem.getMaxWanderingHeroes();
+
+        content.innerHTML = `
+          <div class="panel-section">
+            <h3>⚔️ Territory Heroes (${slots.current}/${slots.max})</h3>
+            <div class="tavern-info">🏰 Castle Lv.${castleLevel} — ${slots.max - slots.current} slots free</div>
+            ${territory.length === 0 ? '<p class="empty-state">No heroes yet! Recruit from wandering visitors.</p>' : ''}
+            ${territory.map(hero => `
+              <div class="hero-card territory ${hero.status}">
+                <div class="hero-portrait">${getHeroIcon(hero.class)}</div>
+                <div class="hero-info-block">
+                  <div class="hero-name">${hero.name}</div>
+                  <div class="hero-class">Lv.${hero.level} ${hero.class}</div>
+                  <div class="hero-stats-row">
+                    <span>HP: ${hero.hp}/${hero.maxHp}</span>
+                    <span>ATK: ${hero.atk}</span>
+                    <span>DEF: ${hero.def}</span>
+                  </div>
+                  <div class="hero-status-row">
+                    <span class="hero-status-badge status-${hero.status}">${hero.status === 'resting' ? '💤 resting' : hero.status}</span>
+                    ${hero.status === 'exploring' ? `<span class="explore-zone-label">🔍 Zone ${hero.currentZone || ''}</span>` : ''}
+                    ${hero.status === 'resting' ? `<span class="resting-heal-hint">+${Math.ceil(hero.maxHp * 0.001)} HP/tick</span>` : ''}
+                  </div>
+                </div>
+                <div class="hero-actions">
+                  ${hero.status === 'idle' ? `<button class="btn-small btn-dispatch" data-hero="${hero.id}">Dispatch</button>` : ''}
+                  ${hero.status === 'idle' ? `<button class="btn-small btn-train" data-hero="${hero.id}">Train</button>` : ''}
+                  ${hero.status === 'exploring' ? `<button class="btn-small btn-cancel" data-hero="${hero.id}">Recall</button>` : ''}
+                  ${hero.status === 'resting' ? `<span class="resting-label">💤 Recovering...</span>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="panel-section">
+            <h3>👥 Wandering Heroes (${wandering.length}/${BuildingSystem.getMaxWanderingHeroes()})</h3>
+            ${wandering.length === 0 ? '<p class="empty-state">No visitors right now.</p>' : ''}
+            ${wandering.map(hero => {
+              const cost = HeroSystem.getRecruitCost(hero.id);
+              const canRecruit = ResourceSystem.get('gold') >= cost && slots.current < slots.max;
+              return `
+              <div class="hero-card wandering ${hero.status}">
+                <div class="hero-portrait">${getHeroIcon(hero.class)}</div>
+                <div class="hero-info-block">
+                  <div class="hero-name">${hero.name}</div>
+                  <div class="hero-class">Lv.${hero.level} ${hero.class}</div>
+                  <div class="hero-stats-row">
+                    <span>HP: ${hero.hp}/${hero.maxHp}</span>
+                    <span>ATK: ${hero.atk}</span>
+                    <span>DEF: ${hero.def}</span>
+                  </div>
+                  <div class="hero-status-row">
+                    <span class="hero-status-badge status-${hero.status}">${hero.status}</span>
+                  </div>
+                </div>
+                <div class="hero-actions">
+                  <button class="btn-small btn-recruit ${canRecruit ? '' : 'disabled'}"
+                    data-hero="${hero.id}"
+                    data-cost="${cost}"
+                    ${canRecruit ? '' : 'disabled'}>
+                    🏠 Recruit (${cost}g)
+                  </button>
+                </div>
+              </div>
+            `;}).join('')}
+          </div>
+        `;
+
+        // Dispatch button — open zone selector
+        content.querySelectorAll('.btn-dispatch').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const heroId = btn.dataset.hero;
+            showDispatchModal(heroId);
+          });
+        });
+
+        // Cancel/Recall button
+        content.querySelectorAll('.btn-cancel').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const heroId = btn.dataset.hero;
+            HeroSystem.returnToIdle(heroId);
+            renderHeroesTab(content);
+          });
+        });
+
+        // Wake button (for resting heroes)
+        content.querySelectorAll('.btn-wake').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const heroId = btn.dataset.hero;
+            HeroSystem.wakeFromResting(heroId);
+            renderHeroesTab(content);
+          });
+        });
+
+        // Train button
+        content.querySelectorAll('.btn-train').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const heroId = btn.dataset.hero;
+            const hero = HeroSystem.getTerritoryHero(heroId);
+            if (!hero) return;
+            const cost = hero.level * 150;
+            if (ResourceSystem.spend({ gold: cost })) {
+              HeroSystem.trainHero(heroId, { gold: cost });
+              showToast('Hero trained!');
+              renderHeroesTab(content);
+            } else {
+              showToast('Not enough gold!');
+            }
+          });
+        });
+
+        // Recruit button
+        content.querySelectorAll('.btn-recruit:not(.disabled)').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const heroId = btn.dataset.hero;
+            if (HeroSystem.recruitWanderingHero(heroId)) {
+              showToast('Hero recruited!');
+              renderHeroesTab(content);
+            }
+          });
+        });
+
+        addHeroPanelStyles();
+      }
+
+      function showDispatchModal(heroId) {
+        const hero = HeroSystem.getTerritoryHero(heroId);
+        if (!hero) return;
+        const zones = MapSystem.getZones();
+        const unlocked = MapSystem.getUnlockedZones().map(z => z.id);
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'dispatch-modal';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Dispatch ${hero.name}</h2>
+              <button class="btn-close dispatch-close">×</button>
+            </div>
+            <div class="dispatch-zones">
+              ${zones.map(zone => {
+                const isUnlocked = unlocked.includes(zone.id);
+                const difficulty = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
+                return `
+                <div class="dispatch-zone ${!isUnlocked ? 'locked' : ''}" ${isUnlocked ? `data-zone="${zone.id}" data-hero="${heroId}"` : ''}>
+                  <div class="zone-name">${zone.name}</div>
+                  <div class="zone-difficulty">${difficulty}</div>
+                  <div class="zone-req">Rec. Lv.${zone.recommendedLevel}+</div>
+                  ${!isUnlocked ? '<div class="zone-locked">🔒 Locked</div>' : ''}
+                </div>
+              `;}).join('')}
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('.dispatch-close').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        modal.querySelectorAll('.dispatch-zone:not(.locked)').forEach(z => {
+          z.addEventListener('click', () => {
+            const zoneId = parseInt(z.dataset.zone);
+            const heroId = z.dataset.hero;
+            MapSystem.startExploration(heroId, zoneId);
+            modal.remove();
+            renderHeroesTab(document.querySelector('#hero-tab-content'));
+          });
+        });
+      }
+
+      function renderReportsTab(content) {
+        const wandReports = HeroSystem.getCombatReports('wandering');
+        const terrReports = HeroSystem.getCombatReports('territory');
+
+        content.innerHTML = `
+          <div class="panel-section">
+            <div class="reports-header">
+              <h3>📜 Battle Reports</h3>
+              <button class="btn-small btn-clear-reports">Clear All</button>
+            </div>
+            <div class="report-subtabs">
+              <button class="btn-small report-subtab active" data-type="wandering">👥 Wandering (${wandReports.length})</button>
+              <button class="btn-small report-subtab" data-type="territory">⚔️ Territory (${terrReports.length})</button>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div id="report-list-container"></div>
+          </div>
+        `;
+
+        content.querySelectorAll('.btn-clear-reports').forEach(btn => {
+          btn.addEventListener('click', () => {
+            HeroSystem.clearCombatReports();
+            renderReportsTab(content);
+          });
+        });
+
+        // Sub-tab switching
+        content.querySelectorAll('.report-subtab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            content.querySelectorAll('.report-subtab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderReportList(content, btn.dataset.type);
+          });
+        });
+
+        // Initial render with wandering
+        renderReportList(content, 'wandering');
+
+        function renderReportList(type) {
+          const container = content.querySelector('#report-list-container');
+          const reports = type === 'wandering' ? wandReports : terrReports;
+          if (reports.length === 0) {
+            container.innerHTML = `<p class="empty-state">No ${type} hero battle reports.</p>`;
+            return;
+          }
+          container.innerHTML = `<div class="report-list">${reports.slice().reverse().map(r => buildReportEntry(r, type)).join('')}</div>`;
+          attachReportListeners(container);
+        }
+      }
+
+      function attachReportListeners(container) {
+        container.querySelectorAll('.report-entry').forEach(entry => {
+          entry.addEventListener('click', () => {
+            const wasExpanded = entry.classList.contains('expanded');
+            container.querySelectorAll('.report-entry').forEach(e => e.classList.remove('expanded'));
+            if (!wasExpanded) {
+              entry.classList.add('expanded');
+            }
+          });
+        });
+      }
+
+      function buildReportEntry(report, type) {
+        const icon = report.victory ? '🏆' : '💨';
+        const typeLabel = type === 'wandering' ? 'Wandering' : report.zoneName;
+        const time = new Date(report.timestamp).toLocaleTimeString();
+        const preview = report.combatLog?.find(e => e.type === 'result')?.text || '';
+        return `
+          <div class="report-entry" data-id="${report.id}">
+            <div class="report-summary">
+              <span class="report-icon">${icon}</span>
+              <span class="report-hero">${report.heroName} (Lv.${report.heroLevel})</span>
+              <span class="report-zone">${typeLabel}</span>
+              <span class="report-time">${time}</span>
+            </div>
+            <div class="report-log">
+              ${report.combatLog.map(e => `<div class="combat-entry ${e.type}">${e.text}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderBuildingPanel(content) {
+        const buildings = BuildingSystem.getAll();
+        const tavernSlots = BuildingSystem.getTerritoryHeroSlots();
+        const spawnInterval = BuildingSystem.getWanderingSpawnInterval();
+        const maxWandering = BuildingSystem.getMaxWanderingHeroes();
+
+        content.innerHTML = Object.values(buildings).map(b => {
+          return `
+            <div class="building-card ${b.id === 'tavern' ? 'tavern-card' : ''}">
+              <div class="building-header">
+                <span class="building-name">${b.name}</span>
+                <span class="building-level">Lv.${b.level}</span>
+              </div>
+              <div class="building-desc">${b.description}</div>
+              ${b.id === 'tavern' ? `
+                <div class="tavern-stats">
+                  <div>⚔️ Combat heroes: ${tavernSlots.current}/${tavernSlots.max}</div>
+                  <div>🗡️ Wandering spawn: every ${spawnInterval}s</div>
+                  <div>👥 Wandering cap: ${maxWandering} heroes</div>
+                </div>
+              ` : `<div class="building-effect">${b.effect}</div>`}
+              ${b.canUpgrade ? `
+                <div class="building-cost">
+                  ${Object.entries(b.cost || {}).map(([r, a]) => {
+                    const config = ResourceSystem.getConfig(r);
+                    return `<span>${config.icon} ${a}</span>`;
+                  }).join(' ')}
+                </div>
+                <button class="btn-upgrade ${b.canUpgrade ? '' : 'disabled'}" data-building="${b.id}" ${b.canUpgrade && ResourceSystem.canAfford(b.cost) ? '' : 'disabled'}>
+                  Upgrade
+                </button>
+              ` : '<div class="building-max">MAX LEVEL</div>'}
+            </div>
+          `;
+        }).join('');
+
+        addBuildingPanelStyles();
+
+        // Wire up upgrade buttons
+        content.querySelectorAll('.btn-upgrade:not(.disabled)').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const buildingId = btn.dataset.building;
+            if (BuildingSystem.upgrade(buildingId)) {
+              showToast(`${GameData.BUILDINGS[buildingId].name} upgraded to Lv.${BuildingSystem.getLevel(buildingId)}!`);
+              renderBuildingPanel(content); // Refresh panel
+            }
+          });
+        });
+      }
+
+      function renderMapPanel(content) {
+        const zones = MapSystem.getZones();
+        const unlocked = MapSystem.getUnlockedZones().map(z => z.id);
+        const cleared = MapSystem.getProgress().clearedZones;
+        const activeExplorations = MapSystem.getActiveExplorations();
+
+        content.innerHTML = `
+          <div class="panel-section">
+            <h3>Active Explorations</h3>
+            ${activeExplorations.length === 0 ? '<p class="empty-state">No active explorations.</p>' : ''}
+            ${activeExplorations.map(exp => `
+              <div class="exploration-card">
+                <div class="exp-hero">${exp.zoneName}</div>
+                <div class="exp-progress">
+                  <div class="exp-progress-bar" style="width: ${exp.progress}%"></div>
+                </div>
+                <div class="exp-percent">${Math.floor(exp.progress)}%</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="panel-section">
+            <h3>Zones</h3>
+            ${zones.map(zone => {
+              const isUnlocked = unlocked.includes(zone.id);
+              const isCleared = cleared.includes(zone.id);
+              const difficulty = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
+
+              return `
+                <div class="zone-card ${!isUnlocked ? 'locked' : ''} ${isCleared ? 'cleared' : ''}">
+                  <div class="zone-header">
+                    <span class="zone-name">${zone.name}</span>
+                    ${isCleared ? '<span class="zone-badge cleared">✓ Cleared</span>' : ''}
+                    ${!isUnlocked ? '<span class="zone-badge locked">🔒 Locked</span>' : ''}
+                  </div>
+                  <div class="zone-difficulty">${difficulty}</div>
+                  <div class="zone-info">
+                    <span>Recommended: Lv.${zone.recommendedLevel}+</span>
+                  </div>
+                  ${isUnlocked && !isCleared ? `
+                    <button class="btn-explore-zone" data-zone="${zone.id}">Explore</button>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+        addMapPanelStyles();
+
+        // Wire up explore buttons
+        content.querySelectorAll('.btn-explore-zone').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const zoneId = parseInt(btn.dataset.zone);
+            // For now, find first idle territory hero to dispatch
+            const heroes = HeroSystem.getTerritoryHeroes();
+            const idleHero = heroes.find(h => h.status === 'idle');
+            if (idleHero) {
+              MapSystem.startExploration(idleHero.id, zoneId);
+              showToast(`Dispatched ${idleHero.name} to explore!`);
+              renderMapPanel(content);
+            } else {
+              showToast('No idle heroes available', 'error');
+            }
+          });
+        });
+      }
+
+      function renderShopPanel(content) {
+        const items = ShopSystem.getItems();
+        const inventory = ShopSystem.getInventory();
+
+        content.innerHTML = `
+          <div class="panel-section">
+            <h3>Craft Items</h3>
+            <div class="shop-grid">
+              ${items.map(item => {
+                const qty = inventory[item.id] || 0;
+                const canCraft = ResourceSystem.canAfford(item.cost);
+
+                return `
+                  <div class="shop-item">
+                    <div class="shop-item-header">${item.name}</div>
+                    <div class="shop-item-cost">
+                      ${Object.entries(item.cost).map(([r, a]) => {
+                        const config = ResourceSystem.getConfig(r);
+                        return `<span>${config.icon} ${a}</span>`;
+                      }).join(' ')}
+                    </div>
+                    <div class="shop-item-stock">Stock: ${qty}</div>
+                    <button class="btn-craft ${canCraft ? '' : 'disabled'}" data-item="${item.id}" ${canCraft ? '' : 'disabled'}>
+                      Craft (${item.price}g)
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          <div class="panel-section">
+            <h3>Shop Inventory</h3>
+            <div class="inventory-list">
+              ${Object.keys(inventory).length === 0 ? '<p class="empty-state">No items in stock.</p>' : ''}
+              ${Object.entries(inventory).filter(([, qty]) => qty > 0).map(([itemId, qty]) => {
+                const item = ShopSystem.getItem(itemId);
+                return `<div class="inventory-item"><span>${item.name}</span><span>x${qty}</span></div>`;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        addShopPanelStyles();
+
+        // Wire up craft buttons
+        content.querySelectorAll('.btn-craft:not(.disabled)').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const itemId = btn.dataset.item;
+            if (ShopSystem.craftItem(itemId)) {
+              showToast('Item crafted!');
+              renderShopPanel(content); // Refresh panel
+            } else {
+              showToast('Cannot craft item', 'error');
+            }
+          });
+        });
+      }
+
+      // ─── Helper Functions ───────────────────────────────────────────────
+
+      function getHeroIcon(heroClass) {
+        const icons = { warrior: '⚔️', mage: '🧙', rogue: '🗡️', cleric: '⛪', ranger: '🏹' };
+        return icons[heroClass] || '👤';
+      }
+
+      function formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+      }
+
+      // ─── Dynamic Styles ─────────────────────────────────────────────────
+
+      function addResourceDetailStyles() {
+        if (document.getElementById('dynamic-resource-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'dynamic-resource-styles';
+        style.textContent = `
+          .resource-detail {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+          }
+          .resource-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+          }
+          .resource-detail-header .resource-icon { font-size: 20px; }
+          .resource-detail-header .resource-name { font-weight: bold; color: #F5F5DC; }
+          .resource-detail-values { font-size: 18px; margin-bottom: 4px; }
+          .resource-current { color: #FFD700; }
+          .resource-separator { color: rgba(255,255,255,0.4); }
+          .resource-max { color: rgba(255,255,255,0.6); }
+          .resource-bar {
+            height: 6px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+          }
+          .resource-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27AE60, #2ECC71);
+            transition: width 0.3s;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function addHeroPanelStyles() {
+        if (document.getElementById('dynamic-hero-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'dynamic-hero-styles';
+        style.textContent = `
+          .panel-section { margin-bottom: 16px; flex-shrink: 0; }
+          .panel-section h3 { color: #FFD700; margin-bottom: 8px; font-size: 14px; }
+          .panel-section h4 { color: rgba(255,215,0,0.7); margin-bottom: 6px; font-size: 12px; }
+          .hero-sub-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            padding-bottom: 8px;
+            flex-shrink: 0;
+          }
+          #hero-tab-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+          }
+          .hero-sub-tab {
+            flex: 1;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 6px;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+          }
+          .hero-sub-tab.active {
+            background: rgba(255,215,0,0.15);
+            border-color: #FFD700;
+            color: #FFD700;
+          }
+          .hero-sub-tab:hover:not(.active) {
+            background: rgba(255,215,0,0.05);
+          }
+          .hero-card {
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 2px solid rgba(255,215,0,0.3);
+            overflow: hidden;
+          }
+          .hero-card.territory { border-color: rgba(255,215,0,0.5); }
+          .hero-card.exploring { border-color: rgba(52,152,219,0.5); }
+          .hero-card.resting { border-color: rgba(155,89,182,0.5); }
+          .hero-card.wandering { border-color: rgba(155,89,182,0.3); }
+          .hero-portrait { font-size: 24px; width: 36px; min-width: 36px; text-align: center; flex-shrink: 0; align-self: flex-start; padding-top: 4px; }
+          .hero-info-block { flex: 1; min-width: 0; max-width: calc(100% - 120px); }
+          .hero-name { font-weight: bold; color: #FFD700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+          .hero-class { font-size: 11px; color: rgba(255,255,255,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+          .hero-stats-row { font-size: 10px; margin: 3px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+          .hero-status-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 4px; }
+          .hero-status-badge { font-size: 10px; font-weight: bold; display: block; }
+          .explore-zone-label { font-size: 10px; color: #3498DB; display: block; }
+          .resting-heal-hint { font-size: 9px; color: rgba(155,89,182,0.8); display: block; }
+          .status-idle { color: #27AE60; }
+          .status-exploring { color: #3498DB; }
+          .status-resting { color: #9B59B6; }
+          .status-fighting { color: #E74C3C; }
+          .status-shopping { color: #F39C12; }
+          .btn-wake { background: #9B59B6; }
+          .btn-wake:hover { background: #8E44AD; }
+          .resting-label { font-size: 10px; color: #9B59B6; font-style: italic; padding: 4px 0; }
+          .status-idle { color: #27AE60; }
+          .hero-actions { display: flex; flex-direction: column; gap: 4px; }
+          .btn-small {
+            padding: 4px 8px;
+            font-size: 10px;
+            background: #3498DB;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          }
+          .btn-small:hover { background: #2980B9; }
+          .btn-small:disabled { background: #7F8C8D; cursor: not-allowed; }
+          .btn-recruit { background: #9B59B6; }
+          .btn-recruit:hover:not(:disabled) { background: #8E44AD; }
+          .btn-train { background: #27AE60; }
+          .btn-train:hover:not(:disabled) { background: #219A52; }
+          .btn-dispatch { background: #E67E22; }
+          .btn-dispatch:hover:not(:disabled) { background: #D35400; }
+          .empty-state { color: rgba(255,255,255,0.4); font-size: 12px; font-style: italic; }
+          .tavern-info { font-size: 10px; color: #9B59B6; margin-bottom: 6px; }
+          /* Dispatch modal */
+          .dispatch-zones { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+          .dispatch-zone {
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .dispatch-zone:hover { background: rgba(255,215,0,0.1); border-color: #FFD700; }
+          .dispatch-zone.locked { opacity: 0.4; cursor: not-allowed; }
+          .dispatch-zone .zone-name { font-weight: bold; color: #FFD700; margin-bottom: 4px; }
+          .dispatch-zone .zone-difficulty { font-size: 11px; color: #F39C12; }
+          .dispatch-zone .zone-req { font-size: 10px; color: rgba(255,255,255,0.5); }
+          .dispatch-zone .zone-locked { font-size: 10px; color: #E74C3C; margin-top: 4px; }
+          /* Battle Reports */
+          .reports-header { display: flex; justify-content: space-between; align-items: center; }
+          .reports-header h3 { margin-bottom: 0; }
+          .btn-clear-reports { background: #7F8C8D; font-size: 10px; }
+          .btn-clear-reports:hover { background: #6C7A7D; }
+          .report-section-title { color: rgba(255,215,0,0.6); font-size: 11px; margin-bottom: 6px; }
+          .report-list { display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto; padding-right: 4px; flex-shrink: 0; }
+          .report-entry {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,215,0,0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            position: relative;
+            overflow: visible;
+          }
+          .report-entry:hover { border-color: rgba(255,215,0,0.4); }
+          .report-summary {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            min-height: 36px;
+            box-sizing: border-box;
+          }
+          .report-icon { font-size: 14px; }
+          .report-hero { color: #FFD700; font-weight: bold; }
+          .report-zone { color: rgba(255,255,255,0.6); flex: 1; }
+          .report-time { color: rgba(255,255,255,0.35); font-size: 10px; }
+          .report-log {
+            visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 320px;
+            background: rgba(10,10,20,0.95);
+            border: 1px solid rgba(255,215,0,0.4);
+            border-radius: 6px;
+            padding: 10px 12px;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            transform: translateX(-110%);
+            transition: transform 0.25s ease, visibility 0.25s;
+          }
+          .report-entry.expanded .report-log {
+            visibility: visible;
+            transform: translateX(0);
+          }
+          .report-entry .combat-entry { font-size: 11px; padding: 2px 4px; line-height: 1.4; }
+          .report-entry .combat-entry.narrate { color: #FFD700; font-weight: bold; text-align: center; }
+          .report-entry .combat-entry.round { color: #e0e0e0; }
+          .report-entry .combat-entry.result { color: #90EE90; font-weight: bold; }
+          .report-subtabs { display: flex; gap: 6px; margin-top: 8px; }
+          .report-subtab { background: #2C3E50; color: rgba(255,255,255,0.6); }
+          .report-subtab.active { background: #6366F1; color: #fff; }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function addBuildingPanelStyles() {
+        if (document.getElementById('dynamic-building-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'dynamic-building-styles';
+        style.textContent = `
+          .building-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+          }
+          .building-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+          .building-name { font-weight: bold; color: #FFD700; }
+          .building-level { color: rgba(255,255,255,0.6); font-size: 12px; }
+          .building-desc { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+          .building-effect { font-size: 10px; color: #27AE60; margin-bottom: 8px; }
+          .building-cost { font-size: 11px; margin-bottom: 6px; }
+          .building-cost span { margin-right: 8px; }
+          .btn-upgrade {
+            width: 100%;
+            padding: 8px;
+            background: #3498DB;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+          }
+          .btn-upgrade:hover { background: #2980B9; }
+          .btn-upgrade.disabled { background: #7F8C8D; cursor: not-allowed; }
+          .building-max { text-align: center; color: #FFD700; font-size: 12px; padding: 8px; }
+          .tavern-info { font-size: 11px; color: #9B59B6; margin-bottom: 6px; }
+          .tavern-stats { font-size: 11px; color: rgba(255,255,255,0.8); margin-bottom: 8px; line-height: 1.6; }
+          .tavern-card { border-left: 3px solid #9B59B6; }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function addMapPanelStyles() {
+        if (document.getElementById('dynamic-map-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'dynamic-map-styles';
+        style.textContent = `
+          .zone-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #27AE60;
+          }
+          .zone-card.locked { opacity: 0.5; border-left-color: #7F8C8D; }
+          .zone-card.cleared { border-left-color: #FFD700; }
+          .zone-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+          .zone-name { font-weight: bold; color: #F5F5DC; }
+          .zone-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+          .zone-badge.cleared { background: #27AE60; color: white; }
+          .zone-badge.locked { background: #7F8C8D; color: white; }
+          .zone-difficulty { font-size: 12px; color: #FFD700; margin-bottom: 4px; }
+          .zone-info { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+          .btn-explore-zone {
+            width: 100%;
+            padding: 8px;
+            background: #27AE60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+          }
+          .btn-explore-zone:hover { background: #219653; }
+          .exploration-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+          }
+          .exp-hero { font-weight: bold; margin-bottom: 4px; }
+          .exp-progress {
+            height: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 4px;
+          }
+          .exp-progress-bar { height: 100%; background: #3498DB; }
+          .exp-percent { font-size: 10px; color: rgba(255,255,255,0.6); text-align: right; }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function addShopPanelStyles() {
+        if (document.getElementById('dynamic-shop-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'dynamic-shop-styles';
+        style.textContent = `
+          .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+          .shop-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+          }
+          .shop-item-header { font-weight: bold; color: #FFD700; font-size: 11px; margin-bottom: 4px; }
+          .shop-item-cost { font-size: 10px; margin-bottom: 4px; }
+          .shop-item-stock { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+          .btn-craft {
+            width: 100%;
+            padding: 6px;
+            background: #9B59B6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+          }
+          .btn-craft:hover { background: #8E44AD; }
+          .btn-craft.disabled { background: #7F8C8D; cursor: not-allowed; }
+          .inventory-list { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; }
+          .inventory-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // ─── Settings Modal ───────────────────────────────────────────────
+
+      function setupSettings() {
+        document.getElementById('btn-settings').addEventListener('click', () => {
+          elements.settingsModal.classList.remove('hidden');
+        });
+
+        document.getElementById('close-settings').addEventListener('click', () => {
+          elements.settingsModal.classList.add('hidden');
+        });
+
+        document.getElementById('btn-save-game').addEventListener('click', async () => {
+          await Game.manualSave();
+          showToast('Game saved!', 'success');
+        });
+
+        document.getElementById('btn-new-game').addEventListener('click', async () => {
+          if (confirm('Start a new game? All progress will be lost!')) {
+            await Game.newGame();
+            elements.settingsModal.classList.add('hidden');
+            showToast('New game started!', 'success');
+          }
+        });
+      }
+
+      // ─── Game Event Listeners ─────────────────────────────────────────
+
+      function setupGameListeners() {
+        // Resource changes
+        ResourceSystem.addListener((event, data) => {
+          if (event === 'add' || event === 'subtract') {
+            updateResourceDisplay(data.resourceId);
+            if (event === 'add' && data.amount > 0) {
+              showFloatingNumber(data.resourceId, '+' + data.amount);
+            }
+          }
+        });
+
+        // Game tick — periodic UI refresh
+        document.addEventListener('game_tick', () => {
+          updateAllResources();
+        });
+
+        // Welcome back
+        document.addEventListener('game_welcome_back', (e) => {
+          showWelcomeBack(e.detail);
+        });
+
+        // Game saved notification
+        document.addEventListener('game_saved', (e) => {
+          if (e.detail.manual) return; // Manual save shows toast already
+          // Silent save indicator could go here
+        });
+
+        // Hero combat results — reports are stored in HeroSystem, UI picks them up from tab
+        HeroSystem.addListener((event, data) => {
+          if (event === 'wandering_combat_result' || event === 'exploration_combat_result') {
+            // Reports auto-update in Battle Reports tab when user switches to it
+            // No modal needed — tabbed UI handles it
+          }
+        });
+      }
+
+      // ─── Resource Display ─────────────────────────────────────────────
+
+      function updateAllResources() {
+        updateResourceDisplay('gold');
+        updateResourceDisplay('magicStones');
+        ResourceSystem.getMaterialTypes().forEach(mat => {
+          updateResourceDisplay(mat);
+        });
+      }
+
+      function updateResourceDisplay(resourceId) {
+        const value = ResourceSystem.get(resourceId);
+        const capacity = ResourceSystem.getCapacity(resourceId);
+        const element = document.getElementById(`${resourceId}-value`);
+        const maxElement = document.getElementById(`${resourceId}-max`);
+
+        if (element) {
+          element.textContent = formatNumber(value);
+        }
+        if (maxElement) {
+          maxElement.textContent = formatNumber(capacity);
+        }
+
+        // Capacity warning
+        const fillPercent = ResourceSystem.getFillPercent(resourceId);
+        const container = document.querySelector(`[data-resource="${resourceId}"]`);
+        if (container) {
+          container.classList.remove('warning', 'critical');
+          if (fillPercent >= 90) container.classList.add('critical');
+          else if (fillPercent >= 80) container.classList.add('warning');
+        }
+      }
+
+      // ─── Toasts ───────────────────────────────────────────────────────
+
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        elements.toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add('toast-fade');
+          setTimeout(() => toast.remove(), 300);
+        }, 2000);
+      }
+
+      // ─── Floating Numbers ─────────────────────────────────────────────
+
+      function showFloatingNumber(resourceId, text) {
+        const config = ResourceSystem.getConfig(resourceId);
+        const container = elements.floatingNumbers;
+
+        const floater = document.createElement('div');
+        floater.className = 'floating-number';
+        floater.textContent = `${config.icon} ${text}`;
+        floater.style.left = Math.random() * 200 + 100 + 'px';
+        floater.style.top = Math.random() * 100 + 50 + 'px';
+
+        container.appendChild(floater);
+
+        setTimeout(() => {
+          floater.classList.add('float-up');
+          setTimeout(() => floater.remove(), 1000);
+        }, 50);
+      }
+
+      // ─── Welcome Back Modal ────────────────────────────────────────────
+
+      function showWelcomeBack(data) {
+        const hours = Math.floor(data.cappedSeconds / 3600);
+        const minutes = Math.floor((data.cappedSeconds % 3600) / 60);
+
+        document.getElementById('offline-time').textContent = `${hours}h ${minutes}m`;
+
+        const list = document.getElementById('earnings-list');
+        list.innerHTML = '';
+
+        if (data.goldProduced > 0) {
+          list.innerHTML += `<li>🪙 +${formatNumber(data.goldProduced)} Gold</li>`;
+        }
+
+        for (const [mat, amount] of Object.entries(data.materialsProduced)) {
+          if (amount > 0) {
+            const config = ResourceSystem.getConfig(mat);
+            if (config) {
+              list.innerHTML += `<li>${config.icon} +${formatNumber(amount)} ${config.name}</li>`;
+            }
+          }
+        }
+
+        if (data.magicStonesProduced > 0) {
+          list.innerHTML += `<li>💎 +${formatNumber(data.magicStonesProduced)} Magic Stones</li>`;
+        }
+
+        if (data.isCapped) {
+          list.innerHTML += `<li class="note">⏰ (8h cap applied)</li>`;
+        }
+
+        elements.welcomeBackModal.classList.remove('hidden');
+
+        document.getElementById('collect-offline').onclick = () => {
+          elements.welcomeBackModal.classList.add('hidden');
+          showToast('Resources collected!', 'success');
+        };
+      }
+
+      // ─── Utilities ─────────────────────────────────────────────────────
+
+      function formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+      }
+
+      // ─── Public API ────────────────────────────────────────────────────
+
+      return {
+        init,
+        showToast,
+        updateAllResources,
+      };
+    })();
+
+    // Initialize UI after Game systems are ready
+    function initUI() {
+      console.log('[UI] Initializing UI...');
+      try {
+        UIController.init();
+        console.log('[UI] UIController.init() complete');
+      } catch (err) {
+        console.error('[UI] UIController.init() failed:', err);
+      }
+    }
+
+    // Wait for Game.init() to complete via event, then init UI
+    document.addEventListener('game_ready', () => {
+      console.log('[UI] game_ready event received');
+      initUI();
+    });
+
+    // Fallback: if game_ready doesn't fire within 3 seconds, init anyway
+    setTimeout(() => {
+      console.warn('[UI] game_ready timeout - forcing init');
+      initUI();
+    }, 3000);
+  </script>
+</body>
+</html>

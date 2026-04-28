@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "sessionId": null,
+  "startedAt": null,
+  "rootTask": null,
+  "nextAction": "等待指令：/build <system> 或 /status",
+  "tasks": {}
+}

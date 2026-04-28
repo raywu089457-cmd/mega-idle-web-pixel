@@ -1,0 +1,6 @@
+{
+  "nextTaskId": 5,
+  "pendingTaskIds": [],
+  "completedTaskIds": ["01-save-system-dev", "02-resource-system-dev", "03-shop-system-dev", "04-visual-canvas-dev"],
+  "inProgressTaskIds": []
+}
