@@ -1,0 +1,27 @@
+{
+  "name": "Idle Kingdom Builder",
+  "short_name": "IdleKingdom",
+  "description": "瀏覽器閒置王國建設遊戲 — 免費、離線可玩",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#FFD700",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231a1a2e' width='192' height='192'/><text y='.9em' font-size='140' x='50%' text-anchor='middle'>🏰</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%231a1a2e' width='512' height='512'/><text y='.9em' font-size='360' x='50%' text-anchor='middle'>🏰</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "zh-TW",
+  "dir": "ltr"
+}
