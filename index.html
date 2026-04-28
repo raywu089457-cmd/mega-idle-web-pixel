@@ -1435,6 +1435,12 @@ function gameTick() {
   ShopSystem_processAutoProduction();
   updateHUD();
   updateHUDMats();
+  // Always refresh open panels every tick so data is always live
+  if (activePanel === 'res') renderResourcesPanel();
+  if (activePanel === 'hero') renderHeroesPanel();
+  if (activePanel === 'build') renderBuildingPanel();
+  if (activePanel === 'map') renderMapPanel();
+  if (activePanel === 'shop') renderShopPanel();
   saveGame();
 }
 
