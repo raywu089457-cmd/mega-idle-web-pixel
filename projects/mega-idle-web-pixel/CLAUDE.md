@@ -106,6 +106,20 @@ mega-idle-web-mobile/
 - @MEMORY.md — 記憶索引
 - @memory/mega-idle-web-mobile-implementation.md — 手機版實作記錄
 
+## 部署
+
+| 環境 | URL | 說明 |
+|------|-----|------|
+| **GitHub Pages** | https://raywu089457-cmd.github.io/mega-idle-web-pixel/ | 主要發布地址 |
+| **獨立 Repo** | https://github.com/raywu089457-cmd/mega-idle-web-pixel | 程式碼同步到此 |
+
+**push 設定（已寫入 git config）：**
+```bash
+git config push.default current          # 預設推送行為
+git config remote.web.push +HEAD:refs/heads/main  # web remote 推送 HEAD → main
+```
+日後直接 `git push` 就會推到 `mega-idle-web-pixel` 這個獨立 repo。
+
 ## 修改代碼安全規範
 
 > 降低「修 A 壞 B」出錯率的核心原則。
