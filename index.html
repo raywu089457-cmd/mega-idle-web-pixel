@@ -909,6 +909,7 @@ function saveGame() {
   gameState.mapProgress = mapProgress;
   gameState.shopInventory = shopInventory;
   gameState.nextWanderingSpawnIn = nextWanderingSpawnIn;
+  gameState.battleReports = battleReports;
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(gameState));
 }
 
@@ -1440,6 +1441,7 @@ function gameTick() {
 // ═══════════════════════════════════════════════════════════════════
 function init() {
   const saved = loadGame();
+  if (saved.battleReports) battleReports = saved.battleReports;
   ResourceSystem_init(saved);
   BuildingSystem_init(saved);
   HeroSystem_init(saved);
