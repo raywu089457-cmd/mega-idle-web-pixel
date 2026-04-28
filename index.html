@@ -1,1387 +1,1489 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Idle Kingdom Builder — 瀏覽器閒置王國建設遊戲">
-  <meta name="theme-color" content="#1a1a2e">
-  <title>Idle Kingdom Builder</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="description" content="王國傳說 — Idle Kingdom Builder">
+<meta name="theme-color" content="#0d0d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>王國傳說 — Idle Kingdom Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0d0d1a;
+  --bg-dark: #1a1a2e;
+  --bg-mid: #16213e;
+  --gold: #FFD700;
+  --gold-dim: #b8960c;
+  --gold-glow: rgba(255,215,0,0.15);
+  --purple: #9B59B6;
+  --green: #27AE60;
+  --red: #E74C3C;
+  --blue: #3498DB;
+  --text: #F5F5DC;
+  --text-dim: rgba(245,245,220,0.65);
+  --text-faint: rgba(245,245,220,0.4);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,215,0,0.12);
+  --panel-h: 60px;
+  --nav-h: 56px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Crimson Pro',Georgia,serif;
+  background:var(--bg-dark);
+  color:var(--text);
+  position:relative;overflow:hidden;
+}
+#game-wrap{
+  position:relative;width:100%;max-width:480px;height:100vh;margin:0 auto;
+  overflow:hidden;background:var(--bg-dark);
+}
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
+/* ── BACKGROUND ── */
+.bg-layer{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 20% 30%, rgba(15,52,96,0.6) 0%, transparent 60%),radial-gradient(ellipse 60% 80% at 80% 70%, rgba(26,26,46,0.8) 0%, transparent 60%),linear-gradient(180deg,#0d0d1a 0%,#1a1a2e 40%,#16213e 100%);}
+.bg-stars{position:fixed;inset:0;z-index:0;background-image:radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,215,0,0.5) 0%, transparent 100%),radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.5) 0%, transparent 100%),radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.3) 0%, transparent 100%);pointer-events:none;}
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/style.css">
+/* ── FLOAT CANVAS ── */
+#float-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200;}
+
+/* ── HUD ── */
+.hud{position:fixed;top:0;left:0;right:0;max-width:480px;height:var(--panel-h);margin:0 auto;z-index:100;background:linear-gradient(180deg,rgba(10,10,20,0.98) 0%,rgba(13,13,26,0.95) 100%);border-bottom:1px solid rgba(255,215,0,0.2);display:flex;align-items:center;padding:0 12px;gap:8px;box-shadow:0 2px 20px rgba(0,0,0,0.5);}
+.hud-left{display:flex;flex-direction:column;gap:2px;min-width:100px;}
+.kingdom-name{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;text-shadow:0 0 10px rgba(255,215,0,0.4);}
+.hud-resources{display:flex;gap:8px;}
+.hud-res{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-dim);}
+.hud-res .icon{font-size:11px;}
+.hud-res .val{color:var(--gold);font-weight:600;}
+.hud-center{flex:1;display:flex;justify-content:center;align-items:center;gap:6px;}
+.mat-icon{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;padding:4px 6px;border-radius:4px;transition:background 0.2s;}
+.mat-icon:hover{background:var(--gold-glow);}
+.mat-icon .ico{font-size:16px;}
+.mat-icon .amt{font-size:8px;color:var(--text-faint);}
+.hud-right{display:flex;align-items:center;gap:6px;}
+.btn-icon{width:36px;height:36px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);color:var(--text-dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.btn-icon:hover{background:var(--gold-glow);border-color:var(--gold);color:var(--gold);}
+
+/* ── MAIN CANVAS ── */
+.main-canvas{position:fixed;top:var(--panel-h);left:0;right:0;max-width:480px;bottom:var(--nav-h);margin:0 auto;z-index:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.castle-scene{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.castle-img{font-size:96px;filter:drop-shadow(0 0 30px rgba(255,215,0,0.3));animation:float 4s ease-in-out infinite;cursor:pointer;user-select:none;transition:transform 0.15s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.castle-label{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;}
+.castle-sub{font-size:10px;color:var(--text-faint);}
+.click-hint{font-size:9px;color:rgba(255,215,0,0.4);letter-spacing:1px;margin-top:4px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.4;}50%{opacity:0.9;}}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;height:var(--nav-h);margin:0 auto;z-index:100;background:linear-gradient(0deg,rgba(10,10,20,0.98) 0%,rgba(13,13,26,0.95) 100%);border-top:1px solid rgba(255,215,0,0.2);display:flex;box-shadow:0 -2px 20px rgba(0,0,0,0.5);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--text-faint);font-family:'Crimson Pro',serif;font-size:9px;padding:4px 0;transition:all 0.2s;position:relative;min-height:44px;}
+.nav-btn .nav-ico{font-size:20px;transition:transform 0.2s;}
+.nav-btn:hover,.nav-btn.active{color:var(--gold);}
+.nav-btn:hover .nav-ico,.nav-btn.active .nav-ico{transform:scale(1.15);}
+.nav-btn.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--gold);border-radius:2px 2px 0 0;box-shadow:0 0 8px var(--gold);}
+
+/* ── PANELS ── */
+.panel{position:fixed;left:0;right:0;bottom:var(--nav-h);max-width:480px;margin:0 auto;z-index:50;background:linear-gradient(180deg,rgba(13,13,26,0.98) 0%,rgba(15,20,40,0.99) 100%);border-top:1px solid rgba(255,215,0,0.25);border-radius:16px 16px 0 0;max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);box-shadow:0 -4px 40px rgba(0,0,0,0.7);}
+.panel.open{max-height:calc(100vh - var(--panel-h) - var(--nav-h));}
+.panel-inner{height:calc(100vh - var(--panel-h) - var(--nav-h) - 2px);overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(255,215,0,0.2) transparent;}
+.panel-inner::-webkit-scrollbar{width:3px;}.panel-inner::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.2);border-radius:3px;}
+.panel-header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 0 10px;background:linear-gradient(180deg,rgba(13,13,26,1) 80%,transparent 100%);}
+.panel-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold);letter-spacing:1px;}
+.btn-close{background:none;border:none;font-size:20px;color:var(--text-faint);cursor:pointer;padding:4px 8px;transition:color 0.2s;}
+.btn-close:hover{color:var(--gold);}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid rgba(255,215,0,0.1);padding-bottom:0;}
+.tab-btn{padding:6px 12px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.5px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;transition:all 0.2s;margin-bottom:-1px;}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-btn:hover{color:var(--text);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ── RESOURCE CARDS ── */
+.res-grid{display:flex;flex-direction:column;gap:8px;}
+.res-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+.res-top{display:flex;align-items:center;justify-content:space-between;}
+.res-info{display:flex;align-items:center;gap:8px;}
+.res-ico{font-size:20px;}
+.res-name{font-size:11px;color:var(--text-dim);}
+.res-val{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);}
+.res-max{font-size:10px;color:var(--text-faint);}
+.progress-bar{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));border-radius:2px;transition:width 0.5s;}
+.progress-fill.warn{background:linear-gradient(90deg,#e67e22,#f39c12);}
+.progress-fill.crit{background:linear-gradient(90deg,var(--red),#c0392b);}
+.rate{font-size:9px;color:var(--green);margin-left:auto;}
+
+/* ── HERO CARDS ── */
+.hero-slot-info{font-family:'Cinzel',serif;font-size:10px;color:var(--text-faint);margin-bottom:8px;letter-spacing:0.5px;}
+.hero-cards{display:flex;flex-direction:column;gap:8px;}
+.hero-card{background:var(--card-bg);border-radius:8px;padding:10px;border:1px solid var(--card-border);transition:border-color 0.2s;display:flex;flex-direction:column;gap:8px;}
+.hero-card.idle{border-color:rgba(255,215,0,0.3);}
+.hero-card.exploring{border-color:rgba(52,152,219,0.5);}
+.hero-card.resting{border-color:rgba(155,89,182,0.5);}
+.hero-card.wandering{border-color:rgba(155,89,182,0.35);}
+.hero-top{display:flex;align-items:center;gap:10px;}
+.hero-portrait{width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.hero-info{flex:1;}
+.hero-name{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--gold);}
+.hero-class{font-size:10px;color:var(--text-faint);}
+.hero-stats{display:flex;gap:10px;margin-top:3px;}
+.stat{font-size:10px;color:var(--text-dim);}
+.stat span{color:var(--text);}
+.hero-badge{padding:3px 8px;border-radius:20px;font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.5px;flex-shrink:0;}
+.badge-idle{background:rgba(255,215,0,0.15);color:var(--gold);border:1px solid rgba(255,215,0,0.3);}
+.badge-exploring{background:rgba(52,152,219,0.15);color:var(--blue);border:1px solid rgba(52,152,219,0.3);}
+.badge-resting{background:rgba(155,89,182,0.15);color:var(--purple);border:1px solid rgba(155,89,182,0.3);}
+.badge-wandering{background:rgba(155,89,182,0.1);color:var(--purple);border:1px solid rgba(155,89,182,0.25);}
+.hero-actions{display:flex;gap:6px;}
+
+/* ── BUTTONS ── */
+.btn{padding:7px 14px;border-radius:4px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.5px;cursor:pointer;border:1px solid;transition:all 0.15s;display:inline-flex;align-items:center;gap:4px;}
+.btn-gold{background:linear-gradient(135deg,#b8960c,#d4a900);border-color:#FFD700;color:#0d0d1a;font-weight:700;}
+.btn-gold:hover{background:linear-gradient(135deg,#d4a900,#FFD700);box-shadow:0 0 12px rgba(255,215,0,0.3);}
+.btn-outline{background:transparent;border-color:rgba(255,215,0,0.3);color:var(--text-dim);}
+.btn-outline:hover{background:var(--gold-glow);border-color:var(--gold);color:var(--gold);}
+.btn-blue{background:rgba(52,152,219,0.15);border-color:rgba(52,152,219,0.4);color:var(--blue);}
+.btn-blue:hover{background:rgba(52,152,219,0.25);}
+.btn-purple{background:rgba(155,89,182,0.15);border-color:rgba(155,89,182,0.4);color:var(--purple);}
+.btn-purple:hover{background:rgba(155,89,182,0.25);}
+.btn-red{background:rgba(231,76,60,0.15);border-color:rgba(231,76,60,0.4);color:var(--red);}
+.btn-red:hover{background:rgba(231,76,60,0.25);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-sm{padding:5px 10px;font-size:9px;}
+
+/* ── BUILDINGS ── */
+.building-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.building-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;}
+.building-header{display:flex;align-items:center;justify-content:space-between;}
+.building-name{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);}
+.building-level{font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.2);}
+.building-ico{font-size:28px;text-align:center;margin:2px 0;}
+.building-desc{font-size:9px;color:var(--text-faint);line-height:1.4;}
+.building-effect{font-size:9px;color:var(--green);}
+.building-cost{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+.cost-item{display:flex;align-items:center;gap:2px;font-size:9px;color:var(--text-dim);}
+.max-badge{text-align:center;padding:5px;border-radius:4px;background:rgba(255,215,0,0.06);color:var(--gold-dim);font-size:9px;font-family:'Cinzel',serif;letter-spacing:1px;}
+
+/* ── MAP / ZONES ── */
+.active-explore{margin-bottom:12px;}
+.section-label{font-family:'Cinzel',serif;font-size:10px;color:var(--text-faint);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
+.explore-item{background:var(--card-bg);border:1px solid rgba(52,152,219,0.3);border-radius:8px;padding:8px 10px;margin-bottom:6px;}
+.explore-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.explore-name{font-size:11px;color:var(--blue);}
+.explore-hero{font-size:9px;color:var(--text-faint);}
+.explore-pct{font-size:10px;color:var(--text-dim);}
+.zone-list{display:flex;flex-direction:column;gap:6px;}
+.zone-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:all 0.2s;}
+.zone-card.locked{opacity:0.45;filter:grayscale(0.5);}
+.zone-card.cleared{border-color:rgba(255,215,0,0.4);}
+.zone-card.unlocked{border-color:rgba(39,174,96,0.35);}
+.zone-ico{font-size:24px;flex-shrink:0;}
+.zone-info{flex:1;}
+.zone-name{font-family:'Cinzel',serif;font-size:11px;color:var(--text);}
+.zone-stars{font-size:10px;color:var(--gold);}
+.zone-rec{font-size:9px;color:var(--text-faint);}
+.zone-status{font-size:14px;flex-shrink:0;}
+
+/* ── SHOP ── */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.shop-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+.shop-ico{font-size:32px;}
+.shop-name{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);}
+.shop-stock{font-size:9px;color:var(--text-faint);}
+.inventory{margin-top:4px;}
+.inv-title{font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);margin-bottom:8px;border-bottom:1px solid rgba(255,215,0,0.1);padding-bottom:6px;}
+.inv-list{display:flex;flex-direction:column;gap:4px;}
+.inv-item{display:flex;align-items:center;gap:8px;background:var(--card-bg);border-radius:4px;padding:7px 10px;border:1px solid var(--card-border);}
+.inv-ico{font-size:16px;}
+.inv-name{flex:1;font-size:10px;color:var(--text-dim);}
+.inv-qty{font-size:10px;color:var(--gold);}
+
+/* ── REPORT SUB TABS ── */
+.report-sub-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.report-sub-btn{padding:5px 10px;font-size:9px;font-family:'Cinzel',serif;background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text-faint);cursor:pointer;transition:all 0.2s;}
+.report-sub-btn.active{background:var(--gold-glow);border-color:var(--gold);color:var(--gold);}
+.clear-btn-row{display:flex;justify-content:flex-end;margin-bottom:8px;}
+.report-entry{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;margin-bottom:6px;overflow:hidden;}
+.report-head{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;transition:background 0.2s;}
+.report-head:hover{background:rgba(255,255,255,0.03);}
+.report-result{font-size:16px;}
+.report-info{flex:1;}
+.report-title{font-size:10px;color:var(--text);}
+.report-time{font-size:9px;color:var(--text-faint);}
+.report-expand{font-size:10px;color:var(--text-faint);transition:transform 0.2s;}
+.report-expand.open{transform:rotate(180deg);}
+.report-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;border-top:0px solid rgba(255,215,0,0.1);}
+.report-body.open{max-height:500px;border-top-width:1px;}
+.combat-log{padding:10px;display:flex;flex-direction:column;gap:3px;}
+.log-line{font-size:9px;color:var(--text-dim);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.log-line:last-child{border-bottom:none;}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:linear-gradient(160deg,#1a1a2e 0%,#0f1020 100%);border:1px solid rgba(255,215,0,0.25);border-radius:12px;padding:20px;max-width:320px;width:90%;box-shadow:0 8px 60px rgba(0,0,0,0.8);transform:translateY(20px);transition:transform 0.25s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);margin-bottom:14px;text-align:center;}
+.modal-body{display:flex;flex-direction:column;gap:10px;}
+.offline-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.offline-label{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
+.offline-val{font-size:10px;color:var(--gold);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+.setting-label{font-size:11px;color:var(--text-dim);}
+.slider{-webkit-appearance:none;width:100px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);cursor:pointer;}
+.toggle{width:36px;height:18px;background:rgba(255,255,255,0.1);border-radius:9px;position:relative;cursor:pointer;transition:background 0.2s;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(18px);}
+
+/* ── DISPATCH MODAL ── */
+.dispatch-zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.dispatch-zone{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:8px;cursor:pointer;transition:all 0.2s;}
+.dispatch-zone.locked{opacity:0.4;cursor:not-allowed;}
+.dispatch-zone.selected{border-color:var(--gold);background:var(--gold-glow);}
+.dispatch-zone:not(.locked):hover{border-color:rgba(255,215,0,0.4);}
+.dz-name{font-family:'Cinzel',serif;font-size:9px;color:var(--text);}
+.dz-stars{font-size:9px;color:var(--gold);}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;top:70px;right:12px;max-width:480px;z-index:400;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.toast{padding:8px 14px;border-radius:8px;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:toastIn 0.3s ease forwards;opacity:0;}
+.toast.show{opacity:1;}
+.toast-success{background:rgba(39,174,96,0.9);color:#fff;border:1px solid rgba(39,174,96,0.5);}
+.toast-error{background:rgba(231,76,60,0.9);color:#fff;border:1px solid rgba(231,76,60,0.5);}
+.toast-info{background:rgba(52,152,219,0.9);color:#fff;border:1px solid rgba(52,152,219,0.5);}
+@keyframes toastIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(20px);}}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:rgba(255,215,0,0.08);margin:8px 0;}
+
+@media(max-width:400px){
+  .building-grid{grid-template-columns:1fr;}
+  .shop-grid{grid-template-columns:1fr;}
+}
+</style>
 </head>
 <body>
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- HUD — Top Status Bar                                              -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <header id="hud">
-    <div class="hud-left">
-      <span id="kingdom-name">My Kingdom</span>
-      <div id="resource-gold" class="resource-item" data-resource="gold">
-        <span class="resource-icon">🪙</span>
-        <span class="resource-value" id="gold-value">500</span>
-        <span class="resource-max">/ <span id="gold-max">10,000</span></span>
-      </div>
-      <div id="resource-magicStones" class="resource-item" data-resource="magicStones">
-        <span class="resource-icon">💎</span>
-        <span class="resource-value" id="magicStones-value">0</span>
-      </div>
-    </div>
+<div class="bg-layer"></div>
+<div class="bg-stars"></div>
+<canvas id="float-canvas"></canvas>
+<div id="game-wrap">
 
-    <div class="hud-center">
-      <div id="material-icons">
-        <!-- Material icons injected by JS -->
-      </div>
-    </div>
-
-    <div class="hud-right">
-      <button id="btn-settings" class="hud-btn" title="Settings">⚙️</button>
-    </div>
-  </header>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Main Game Canvas                                                  -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <main id="game-canvas-container">
-    <canvas id="game-canvas"></canvas>
-    <div id="floating-numbers"></div>
-  </main>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Bottom Navigation                                                  -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <nav id="bottom-nav">
-    <button class="nav-btn" data-panel="resources">
-      <span class="nav-icon">📦</span>
-      <span class="nav-label">資源</span>
-    </button>
-    <button class="nav-btn" data-panel="heroes">
-      <span class="nav-icon">⚔️</span>
-      <span class="nav-label">英雄</span>
-    </button>
-    <button class="nav-btn" data-panel="building">
-      <span class="nav-icon">🏰</span>
-      <span class="nav-label">建築</span>
-    </button>
-    <button class="nav-btn" data-panel="map">
-      <span class="nav-icon">🗺️</span>
-      <span class="nav-label">地圖</span>
-    </button>
-    <button class="nav-btn" data-panel="shop">
-      <span class="nav-icon">🛒</span>
-      <span class="nav-label">商店</span>
-    </button>
-  </nav>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Panel Container                                                    -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <div id="panel-container">
-    <!-- Resource Panel -->
-    <div id="panel-resources" class="panel hidden">
-      <div class="panel-header">
-        <h2>Resources</h2>
-        <button class="btn-close panel-close" data-panel="resources">×</button>
-      </div>
-      <div class="panel-content" id="resources-panel-content">
-        <!-- Injected by JS -->
-      </div>
-    </div>
-
-    <!-- Hero Panel -->
-    <div id="panel-heroes" class="panel hidden">
-      <div class="panel-header">
-        <h2>Heroes</h2>
-        <button class="btn-close panel-close" data-panel="heroes">×</button>
-      </div>
-      <div class="panel-content" id="heroes-panel-content">
-        <!-- Injected by JS -->
-      </div>
-    </div>
-
-    <!-- Building Panel -->
-    <div id="panel-building" class="panel hidden">
-      <div class="panel-header">
-        <h2>Buildings</h2>
-        <button class="btn-close panel-close" data-panel="building">×</button>
-      </div>
-      <div class="panel-content" id="building-panel-content">
-        <!-- Injected by JS -->
-      </div>
-    </div>
-
-    <!-- Map Panel -->
-    <div id="panel-map" class="panel hidden">
-      <div class="panel-header">
-        <h2>Exploration</h2>
-        <button class="btn-close panel-close" data-panel="map">×</button>
-      </div>
-      <div class="panel-content" id="map-panel-content">
-        <!-- Injected by JS -->
-      </div>
-    </div>
-
-    <!-- Shop Panel -->
-    <div id="panel-shop" class="panel hidden">
-      <div class="panel-header">
-        <h2>Shop</h2>
-        <button class="btn-close panel-close" data-panel="shop">×</button>
-      </div>
-      <div class="panel-content" id="shop-panel-content">
-        <!-- Injected by JS -->
-      </div>
+<!-- ── HUD ── -->
+<header class="hud" id="hud">
+  <div class="hud-left">
+    <div class="kingdom-name" id="hud-kingdom-name">⚔ 星辰王國</div>
+    <div class="hud-resources">
+      <div class="hud-res"><span class="icon">🪙</span><span class="val" id="hud-gold">500</span></div>
+      <div class="hud-res"><span class="icon">💎</span><span class="val" id="hud-magic">0</span></div>
     </div>
   </div>
+  <div class="hud-center" id="hud-mats">
+    <div class="mat-icon" title="劣等水果"><div class="ico">🍎</div><div class="amt" id="hc-fruit">0</div></div>
+    <div class="mat-icon" title="髒水"><div class="ico">💧</div><div class="amt" id="hc-water">0</div></div>
+    <div class="mat-icon" title="腐朽木頭"><div class="ico">🪵</div><div class="amt" id="hc-wood">0</div></div>
+    <div class="mat-icon" title="鏽跡斑斑的鐵"><div class="ico">⚙</div><div class="amt" id="hc-iron">0</div></div>
+    <div class="mat-icon" title="低等藥材"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
+  </div>
+  <div class="hud-right">
+    <button class="btn-icon" id="btn-settings" title="設定">⚙️</button>
+  </div>
+</header>
 
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Welcome Back Modal                                                -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <div id="welcome-back-modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Welcome Back!</h2>
-      <p>You were away for: <span id="offline-time">0h 0m</span></p>
-      <div id="offline-earnings">
-        <p>While you were gone:</p>
-        <ul id="earnings-list"></ul>
-      </div>
-      <button id="collect-offline" class="btn-primary">Collect</button>
+<!-- ── MAIN CANVAS ── -->
+<main class="main-canvas">
+  <div class="castle-scene">
+    <div class="castle-img" id="castle-click">🏰</div>
+    <div class="castle-label">星辰王國</div>
+    <div class="castle-sub" id="castle-level">卡斯特城堡 Lv.1</div>
+    <div class="click-hint">▾ TAP TO COLLECT ▾</div>
+  </div>
+</main>
+
+<!-- ── PANELS ── -->
+
+<!-- 資源面板 -->
+<div class="panel" id="panel-res">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">📦 資源</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="res-grid" id="res-grid"></div>
+  </div>
+</div>
+
+<!-- 英雄面板 -->
+<div class="panel" id="panel-hero">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">⚔ 英雄</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'hero-territory')">領地英雄</button>
+      <button class="tab-btn" onclick="switchTab(this,'hero-wander')">流浪英雄</button>
+      <button class="tab-btn" onclick="switchTab(this,'hero-reports')">戰報</button>
+    </div>
+    <div class="tab-content active" id="hero-territory"></div>
+    <div class="tab-content" id="hero-wander"></div>
+    <div class="tab-content" id="hero-reports"></div>
+  </div>
+</div>
+
+<!-- 建築面板 -->
+<div class="panel" id="panel-build">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">🏗 建築</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="building-grid" id="building-grid"></div>
+  </div>
+</div>
+
+<!-- 地圖面板 -->
+<div class="panel" id="panel-map">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">🗺 地圖探索</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="active-explore" id="active-explore"></div>
+    <div class="section-label">探索地圖</div>
+    <div class="zone-list" id="zone-list"></div>
+  </div>
+</div>
+
+<!-- 商店面板 -->
+<div class="panel" id="panel-shop">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">🛒 工坊商店</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="shop-grid" id="shop-grid"></div>
+    <div class="inventory">
+      <div class="inv-title">📦 我的物品</div>
+      <div class="inv-list" id="inv-list"></div>
     </div>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Settings Modal                                                    -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <div id="settings-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Settings</h2>
-        <button id="close-settings" class="btn-close">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="setting-row">
-          <label for="setting-music">Music Volume</label>
-          <input type="range" id="setting-music" min="0" max="100" value="50">
-        </div>
-        <div class="setting-row">
-          <label for="setting-sfx">SFX Volume</label>
-          <input type="range" id="setting-sfx" min="0" max="100" value="70">
-        </div>
-        <div class="setting-row">
-          <label>
-            <input type="checkbox" id="setting-notifications" checked>
-            Enable Notifications
-          </label>
-        </div>
-        <hr>
-        <div class="setting-actions">
-          <button id="btn-save-game" class="btn-secondary">💾 Save Game</button>
-          <button id="btn-new-game" class="btn-danger">🆕 New Game</button>
-        </div>
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-btn" id="nav-res" onclick="openPanel('res')"><div class="nav-ico">📦</div>資源</button>
+  <button class="nav-btn" id="nav-hero" onclick="openPanel('hero')"><div class="nav-ico">⚔️</div>英雄</button>
+  <button class="nav-btn" id="nav-build" onclick="openPanel('build')"><div class="nav-ico">🏗️</div>建築</button>
+  <button class="nav-btn" id="nav-map" onclick="openPanel('map')"><div class="nav-ico">🗺️</div>地圖</button>
+  <button class="nav-btn" id="nav-shop" onclick="openPanel('shop')"><div class="nav-ico">🛒</div>商店</button>
+</nav>
+
+<!-- ── TOAST ── -->
+<div id="toast-container"></div>
+
+<!-- ── WELCOME BACK MODAL ── -->
+<div class="modal-overlay" id="modal-welcome">
+  <div class="modal">
+    <div class="modal-title">🌙 歡迎回來！</div>
+    <div class="modal-body" id="modal-welcome-body"></div>
+    <div class="modal-actions"><button class="btn btn-gold" onclick="collectOffline()">✦ 全部收取</button></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-title">⚙️ 遊戲設定</div>
+    <div class="modal-body">
+      <div class="setting-row"><div class="setting-label">🎵 音樂音量</div><input type="range" class="slider" min="0" max="100" value="60"></div>
+      <div class="setting-row"><div class="setting-label">🔊 音效音量</div><input type="range" class="slider" min="0" max="100" value="80"></div>
+      <div class="setting-row"><div class="setting-label">🔔 推播通知</div><div class="toggle on" id="toggle-notif" onclick="this.classList.toggle('on')"></div></div>
+      <div class="divider"></div>
+      <div class="setting-row">
+        <button class="btn btn-gold btn-sm" onclick="saveGame();showToast('遊戲已儲存！','success')">💾 儲存遊戲</button>
+        <button class="btn btn-red btn-sm" onclick="if(confirm('確定要重新開始嗎？')){localStorage.clear();location.reload();}">🗑 重新開始</button>
       </div>
     </div>
+    <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeSettings()">關閉</button></div>
   </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Toast Container                                                   -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <div id="toast-container"></div>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- Scripts (order matters!)                                         -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <script src="js/data/gameData.js"></script>
-  <script src="js/data/saveManager.js"></script>
-  <script src="js/systems/resourceSystem.js"></script>
-  <script src="js/systems/buildingSystem.js"></script>
-  <script src="js/systems/heroSystem.js"></script>
-  <script src="js/systems/shopSystem.js"></script>
-  <script src="js/systems/mapSystem.js"></script>
-  <script src="js/systems/offlineSystem.js"></script>
-  <script src="js/ui/canvasRenderer.js"></script>
-  <script src="js/main.js"></script>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- UI Controller                                                     -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <script>
-    /**
-     * UI Controller — handles DOM updates and user interactions
-     * Depends on: Game, ResourceSystem, HeroSystem, GameData
-     */
-    const UIController = (function () {
-      // ─── DOM References ───────────────────────────────────────────────
-      const elements = {
-        goldValue: document.getElementById('gold-value'),
-        goldMax: document.getElementById('gold-max'),
-        magicStonesValue: document.getElementById('magicStones-value'),
-        materialIcons: document.getElementById('material-icons'),
-        toastContainer: document.getElementById('toast-container'),
-        panelContainer: document.getElementById('panel-container'),
-        welcomeBackModal: document.getElementById('welcome-back-modal'),
-        settingsModal: document.getElementById('settings-modal'),
-        floatingNumbers: document.getElementById('floating-numbers'),
-      };
-
-      // ─── Initialization ───────────────────────────────────────────────
-
-      function init() {
-        // Set up material icons
-        createMaterialIcons();
-
-        // Set up nav button listeners
-        setupNavigation();
-
-        // Set up settings modal
-        setupSettings();
-
-        // Set up game event listeners
-        setupGameListeners();
-
-        // Initial UI update
-        updateAllResources();
-      }
-
-      function createMaterialIcons() {
-        const materials = ResourceSystem.getMaterialTypes();
-        elements.materialIcons.innerHTML = materials.map(mat => {
-          const config = ResourceSystem.getConfig(mat);
-          return `
-            <div class="material-icon" data-resource="${mat}" title="${config.name}">
-              <span class="resource-icon">${config.icon}</span>
-              <span class="resource-value" id="${mat}-value">0</span>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // ─── Navigation ───────────────────────────────────────────────────
-
-      let currentPanel = null;
-
-      function setupNavigation() {
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const panel = btn.dataset.panel;
-            openPanel(panel);
-          });
-        });
-
-        // Panel close buttons
-        document.querySelectorAll('.panel-close').forEach(btn => {
-          btn.addEventListener('click', () => {
-            closePanel();
-          });
-        });
-      }
-
-      function openPanel(panelName) {
-        // Close current panel if open
-        closePanel();
-
-        // Open the requested panel
-        const panel = document.getElementById(`panel-${panelName}`);
-        if (!panel) {
-          console.warn(`[UI] Panel not found: ${panelName}`);
-          return;
-        }
-
-        panel.classList.remove('hidden');
-        elements.panelContainer.classList.add('open');
-        currentPanel = panelName;
-
-        // Render panel content
-        renderPanelContent(panelName);
-      }
-
-      function closePanel() {
-        if (currentPanel) {
-          const panel = document.getElementById(`panel-${currentPanel}`);
-          if (panel) {
-            panel.classList.add('hidden');
-          }
-        }
-        elements.panelContainer.classList.remove('open');
-        currentPanel = null;
-      }
-
-      function renderPanelContent(panelName) {
-        const contentId = `${panelName}-panel-content`;
-        const content = document.getElementById(contentId);
-        if (!content) return;
-
-        switch (panelName) {
-          case 'resources':
-            renderResourcesPanel(content);
-            break;
-          case 'heroes':
-            renderHeroesPanel(content);
-            break;
-          case 'building':
-            renderBuildingPanel(content);
-            break;
-          case 'map':
-            renderMapPanel(content);
-            break;
-          case 'shop':
-            renderShopPanel(content);
-            break;
-        }
-      }
-
-      // ─── Panel Renderers ───────────────────────────────────────────────
-
-      function renderResourcesPanel(content) {
-        const resources = [
-          { id: 'gold', config: ResourceSystem.getConfig('gold') },
-          { id: 'magicStones', config: ResourceSystem.getConfig('magicStones') },
-          ...ResourceSystem.getMaterialTypes().map(id => ({
-            id,
-            config: ResourceSystem.getConfig(id)
-          }))
-        ];
-
-        content.innerHTML = resources.map(r => `
-          <div class="resource-detail" data-resource="${r.id}">
-            <div class="resource-detail-header">
-              <span class="resource-icon">${r.config.icon}</span>
-              <span class="resource-name">${r.config.name}</span>
-            </div>
-            <div class="resource-detail-values">
-              <span class="resource-current">${formatNumber(ResourceSystem.get(r.id))}</span>
-              <span class="resource-separator">/</span>
-              <span class="resource-max">${formatNumber(ResourceSystem.getCapacity(r.id))}</span>
-            </div>
-            <div class="resource-bar">
-              <div class="resource-bar-fill" style="width: ${ResourceSystem.getFillPercent(r.id)}%"></div>
-            </div>
-          </div>
-        `).join('');
-
-        // Add CSS for resource details
-        addResourceDetailStyles();
-      }
-
-      function renderHeroesPanel(content) {
-        content.innerHTML = `
-          <div class="hero-sub-tabs">
-            <button class="hero-sub-tab active" data-tab="heroes">⚔️ Heroes</button>
-            <button class="hero-sub-tab" data-tab="reports">📜 Battle Reports</button>
-          </div>
-          <div id="hero-tab-content">
-            <!-- populated by tab switch -->
-          </div>
-        `;
-
-        const tabContent = content.querySelector('#hero-tab-content');
-
-        function switchHeroTab(tab) {
-          content.querySelectorAll('.hero-sub-tab').forEach(t => t.classList.remove('active'));
-          content.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-          if (tab === 'heroes') renderHeroesTab(tabContent);
-          else renderReportsTab(tabContent);
-        }
-
-        content.querySelectorAll('.hero-sub-tab').forEach(btn => {
-          btn.addEventListener('click', () => switchHeroTab(btn.dataset.tab));
-        });
-
-        // Default to heroes tab
-        switchHeroTab('heroes');
-      }
-
-      function renderHeroesTab(content) {
-        const territory = HeroSystem.getTerritoryHeroes();
-        const wandering = HeroSystem.getWanderingHeroes();
-        const slots = BuildingSystem.getTerritoryHeroSlots();
-        const castleLevel = BuildingSystem.getLevel('castle');
-        const tavernLevel = BuildingSystem.getLevel('tavern');
-        const maxWandering = BuildingSystem.getMaxWanderingHeroes();
-
-        content.innerHTML = `
-          <div class="panel-section">
-            <h3>⚔️ Territory Heroes (${slots.current}/${slots.max})</h3>
-            <div class="tavern-info">🏰 Castle Lv.${castleLevel} — ${slots.max - slots.current} slots free</div>
-            ${territory.length === 0 ? '<p class="empty-state">No heroes yet! Recruit from wandering visitors.</p>' : ''}
-            ${territory.map(hero => `
-              <div class="hero-card territory ${hero.status}">
-                <div class="hero-portrait">${getHeroIcon(hero.class)}</div>
-                <div class="hero-info-block">
-                  <div class="hero-name">${hero.name}</div>
-                  <div class="hero-class">Lv.${hero.level} ${hero.class}</div>
-                  <div class="hero-stats-row">
-                    <span>HP: ${hero.hp}/${hero.maxHp}</span>
-                    <span>ATK: ${hero.atk}</span>
-                    <span>DEF: ${hero.def}</span>
-                  </div>
-                  <div class="hero-status-row">
-                    <span class="hero-status-badge status-${hero.status}">${hero.status === 'resting' ? '💤 resting' : hero.status}</span>
-                    ${hero.status === 'exploring' ? `<span class="explore-zone-label">🔍 Zone ${hero.currentZone || ''}</span>` : ''}
-                    ${hero.status === 'resting' ? `<span class="resting-heal-hint">+${Math.ceil(hero.maxHp * 0.001)} HP/tick</span>` : ''}
-                  </div>
-                </div>
-                <div class="hero-actions">
-                  ${hero.status === 'idle' ? `<button class="btn-small btn-dispatch" data-hero="${hero.id}">Dispatch</button>` : ''}
-                  ${hero.status === 'idle' ? `<button class="btn-small btn-train" data-hero="${hero.id}">Train</button>` : ''}
-                  ${hero.status === 'exploring' ? `<button class="btn-small btn-cancel" data-hero="${hero.id}">Recall</button>` : ''}
-                  ${hero.status === 'resting' ? `<span class="resting-label">💤 Recovering...</span>` : ''}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="panel-section">
-            <h3>👥 Wandering Heroes (${wandering.length}/${BuildingSystem.getMaxWanderingHeroes()})</h3>
-            ${wandering.length === 0 ? '<p class="empty-state">No visitors right now.</p>' : ''}
-            ${wandering.map(hero => {
-              const cost = HeroSystem.getRecruitCost(hero.id);
-              const canRecruit = ResourceSystem.get('gold') >= cost && slots.current < slots.max;
-              return `
-              <div class="hero-card wandering ${hero.status}">
-                <div class="hero-portrait">${getHeroIcon(hero.class)}</div>
-                <div class="hero-info-block">
-                  <div class="hero-name">${hero.name}</div>
-                  <div class="hero-class">Lv.${hero.level} ${hero.class}</div>
-                  <div class="hero-stats-row">
-                    <span>HP: ${hero.hp}/${hero.maxHp}</span>
-                    <span>ATK: ${hero.atk}</span>
-                    <span>DEF: ${hero.def}</span>
-                  </div>
-                  <div class="hero-status-row">
-                    <span class="hero-status-badge status-${hero.status}">${hero.status}</span>
-                  </div>
-                </div>
-                <div class="hero-actions">
-                  <button class="btn-small btn-recruit ${canRecruit ? '' : 'disabled'}"
-                    data-hero="${hero.id}"
-                    data-cost="${cost}"
-                    ${canRecruit ? '' : 'disabled'}>
-                    🏠 Recruit (${cost}g)
-                  </button>
-                </div>
-              </div>
-            `;}).join('')}
-          </div>
-        `;
-
-        // Dispatch button — open zone selector
-        content.querySelectorAll('.btn-dispatch').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const heroId = btn.dataset.hero;
-            showDispatchModal(heroId);
-          });
-        });
-
-        // Cancel/Recall button
-        content.querySelectorAll('.btn-cancel').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const heroId = btn.dataset.hero;
-            HeroSystem.returnToIdle(heroId);
-            renderHeroesTab(content);
-          });
-        });
-
-        // Wake button (for resting heroes)
-        content.querySelectorAll('.btn-wake').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const heroId = btn.dataset.hero;
-            HeroSystem.wakeFromResting(heroId);
-            renderHeroesTab(content);
-          });
-        });
-
-        // Train button
-        content.querySelectorAll('.btn-train').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const heroId = btn.dataset.hero;
-            const hero = HeroSystem.getTerritoryHero(heroId);
-            if (!hero) return;
-            const cost = hero.level * 150;
-            if (ResourceSystem.spend({ gold: cost })) {
-              HeroSystem.trainHero(heroId, { gold: cost });
-              showToast('Hero trained!');
-              renderHeroesTab(content);
-            } else {
-              showToast('Not enough gold!');
-            }
-          });
-        });
-
-        // Recruit button
-        content.querySelectorAll('.btn-recruit:not(.disabled)').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const heroId = btn.dataset.hero;
-            if (HeroSystem.recruitWanderingHero(heroId)) {
-              showToast('Hero recruited!');
-              renderHeroesTab(content);
-            }
-          });
-        });
-
-        addHeroPanelStyles();
-      }
-
-      function showDispatchModal(heroId) {
-        const hero = HeroSystem.getTerritoryHero(heroId);
-        if (!hero) return;
-        const zones = MapSystem.getZones();
-        const unlocked = MapSystem.getUnlockedZones().map(z => z.id);
-
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'dispatch-modal';
-        modal.innerHTML = `
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2>Dispatch ${hero.name}</h2>
-              <button class="btn-close dispatch-close">×</button>
-            </div>
-            <div class="dispatch-zones">
-              ${zones.map(zone => {
-                const isUnlocked = unlocked.includes(zone.id);
-                const difficulty = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
-                return `
-                <div class="dispatch-zone ${!isUnlocked ? 'locked' : ''}" ${isUnlocked ? `data-zone="${zone.id}" data-hero="${heroId}"` : ''}>
-                  <div class="zone-name">${zone.name}</div>
-                  <div class="zone-difficulty">${difficulty}</div>
-                  <div class="zone-req">Rec. Lv.${zone.recommendedLevel}+</div>
-                  ${!isUnlocked ? '<div class="zone-locked">🔒 Locked</div>' : ''}
-                </div>
-              `;}).join('')}
-            </div>
-          </div>
-        `;
-        document.body.appendChild(modal);
-
-        modal.querySelector('.dispatch-close').addEventListener('click', () => modal.remove());
-        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-
-        modal.querySelectorAll('.dispatch-zone:not(.locked)').forEach(z => {
-          z.addEventListener('click', () => {
-            const zoneId = parseInt(z.dataset.zone);
-            const heroId = z.dataset.hero;
-            MapSystem.startExploration(heroId, zoneId);
-            modal.remove();
-            renderHeroesTab(document.querySelector('#hero-tab-content'));
-          });
-        });
-      }
-
-      function renderReportsTab(content) {
-        const wandReports = HeroSystem.getCombatReports('wandering');
-        const terrReports = HeroSystem.getCombatReports('territory');
-
-        content.innerHTML = `
-          <div class="panel-section">
-            <div class="reports-header">
-              <h3>📜 Battle Reports</h3>
-              <button class="btn-small btn-clear-reports">Clear All</button>
-            </div>
-            <div class="report-subtabs">
-              <button class="btn-small report-subtab active" data-type="wandering">👥 Wandering (${wandReports.length})</button>
-              <button class="btn-small report-subtab" data-type="territory">⚔️ Territory (${terrReports.length})</button>
-            </div>
-          </div>
-          <div class="panel-section">
-            <div id="report-list-container"></div>
-          </div>
-        `;
-
-        content.querySelectorAll('.btn-clear-reports').forEach(btn => {
-          btn.addEventListener('click', () => {
-            HeroSystem.clearCombatReports();
-            renderReportsTab(content);
-          });
-        });
-
-        // Sub-tab switching
-        content.querySelectorAll('.report-subtab').forEach(btn => {
-          btn.addEventListener('click', () => {
-            content.querySelectorAll('.report-subtab').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderReportList(content, btn.dataset.type);
-          });
-        });
-
-        // Initial render with wandering
-        renderReportList(content, 'wandering');
-
-        function renderReportList(type) {
-          const container = content.querySelector('#report-list-container');
-          const reports = type === 'wandering' ? wandReports : terrReports;
-          if (reports.length === 0) {
-            container.innerHTML = `<p class="empty-state">No ${type} hero battle reports.</p>`;
-            return;
-          }
-          container.innerHTML = `<div class="report-list">${reports.slice().reverse().map(r => buildReportEntry(r, type)).join('')}</div>`;
-          attachReportListeners(container);
-        }
-      }
-
-      function attachReportListeners(container) {
-        container.querySelectorAll('.report-entry').forEach(entry => {
-          entry.addEventListener('click', () => {
-            const wasExpanded = entry.classList.contains('expanded');
-            container.querySelectorAll('.report-entry').forEach(e => e.classList.remove('expanded'));
-            if (!wasExpanded) {
-              entry.classList.add('expanded');
-            }
-          });
-        });
-      }
-
-      function buildReportEntry(report, type) {
-        const icon = report.victory ? '🏆' : '💨';
-        const typeLabel = type === 'wandering' ? 'Wandering' : report.zoneName;
-        const time = new Date(report.timestamp).toLocaleTimeString();
-        const preview = report.combatLog?.find(e => e.type === 'result')?.text || '';
-        return `
-          <div class="report-entry" data-id="${report.id}">
-            <div class="report-summary">
-              <span class="report-icon">${icon}</span>
-              <span class="report-hero">${report.heroName} (Lv.${report.heroLevel})</span>
-              <span class="report-zone">${typeLabel}</span>
-              <span class="report-time">${time}</span>
-            </div>
-            <div class="report-log">
-              ${report.combatLog.map(e => `<div class="combat-entry ${e.type}">${e.text}</div>`).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      function renderBuildingPanel(content) {
-        const buildings = BuildingSystem.getAll();
-        const tavernSlots = BuildingSystem.getTerritoryHeroSlots();
-        const spawnInterval = BuildingSystem.getWanderingSpawnInterval();
-        const maxWandering = BuildingSystem.getMaxWanderingHeroes();
-
-        content.innerHTML = Object.values(buildings).map(b => {
-          return `
-            <div class="building-card ${b.id === 'tavern' ? 'tavern-card' : ''}">
-              <div class="building-header">
-                <span class="building-name">${b.name}</span>
-                <span class="building-level">Lv.${b.level}</span>
-              </div>
-              <div class="building-desc">${b.description}</div>
-              ${b.id === 'tavern' ? `
-                <div class="tavern-stats">
-                  <div>⚔️ Combat heroes: ${tavernSlots.current}/${tavernSlots.max}</div>
-                  <div>🗡️ Wandering spawn: every ${spawnInterval}s</div>
-                  <div>👥 Wandering cap: ${maxWandering} heroes</div>
-                </div>
-              ` : `<div class="building-effect">${b.effect}</div>`}
-              ${b.canUpgrade ? `
-                <div class="building-cost">
-                  ${Object.entries(b.cost || {}).map(([r, a]) => {
-                    const config = ResourceSystem.getConfig(r);
-                    return `<span>${config.icon} ${a}</span>`;
-                  }).join(' ')}
-                </div>
-                <button class="btn-upgrade ${b.canUpgrade ? '' : 'disabled'}" data-building="${b.id}" ${b.canUpgrade && ResourceSystem.canAfford(b.cost) ? '' : 'disabled'}>
-                  Upgrade
-                </button>
-              ` : '<div class="building-max">MAX LEVEL</div>'}
-            </div>
-          `;
-        }).join('');
-
-        addBuildingPanelStyles();
-
-        // Wire up upgrade buttons
-        content.querySelectorAll('.btn-upgrade:not(.disabled)').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const buildingId = btn.dataset.building;
-            if (BuildingSystem.upgrade(buildingId)) {
-              showToast(`${GameData.BUILDINGS[buildingId].name} upgraded to Lv.${BuildingSystem.getLevel(buildingId)}!`);
-              renderBuildingPanel(content); // Refresh panel
-            }
-          });
-        });
-      }
-
-      function renderMapPanel(content) {
-        const zones = MapSystem.getZones();
-        const unlocked = MapSystem.getUnlockedZones().map(z => z.id);
-        const cleared = MapSystem.getProgress().clearedZones;
-        const activeExplorations = MapSystem.getActiveExplorations();
-
-        content.innerHTML = `
-          <div class="panel-section">
-            <h3>Active Explorations</h3>
-            ${activeExplorations.length === 0 ? '<p class="empty-state">No active explorations.</p>' : ''}
-            ${activeExplorations.map(exp => `
-              <div class="exploration-card">
-                <div class="exp-hero">${exp.zoneName}</div>
-                <div class="exp-progress">
-                  <div class="exp-progress-bar" style="width: ${exp.progress}%"></div>
-                </div>
-                <div class="exp-percent">${Math.floor(exp.progress)}%</div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="panel-section">
-            <h3>Zones</h3>
-            ${zones.map(zone => {
-              const isUnlocked = unlocked.includes(zone.id);
-              const isCleared = cleared.includes(zone.id);
-              const difficulty = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
-
-              return `
-                <div class="zone-card ${!isUnlocked ? 'locked' : ''} ${isCleared ? 'cleared' : ''}">
-                  <div class="zone-header">
-                    <span class="zone-name">${zone.name}</span>
-                    ${isCleared ? '<span class="zone-badge cleared">✓ Cleared</span>' : ''}
-                    ${!isUnlocked ? '<span class="zone-badge locked">🔒 Locked</span>' : ''}
-                  </div>
-                  <div class="zone-difficulty">${difficulty}</div>
-                  <div class="zone-info">
-                    <span>Recommended: Lv.${zone.recommendedLevel}+</span>
-                  </div>
-                  ${isUnlocked && !isCleared ? `
-                    <button class="btn-explore-zone" data-zone="${zone.id}">Explore</button>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-
-        addMapPanelStyles();
-
-        // Wire up explore buttons
-        content.querySelectorAll('.btn-explore-zone').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const zoneId = parseInt(btn.dataset.zone);
-            // For now, find first idle territory hero to dispatch
-            const heroes = HeroSystem.getTerritoryHeroes();
-            const idleHero = heroes.find(h => h.status === 'idle');
-            if (idleHero) {
-              MapSystem.startExploration(idleHero.id, zoneId);
-              showToast(`Dispatched ${idleHero.name} to explore!`);
-              renderMapPanel(content);
-            } else {
-              showToast('No idle heroes available', 'error');
-            }
-          });
-        });
-      }
-
-      function renderShopPanel(content) {
-        const items = ShopSystem.getItems();
-        const inventory = ShopSystem.getInventory();
-
-        content.innerHTML = `
-          <div class="panel-section">
-            <h3>Craft Items</h3>
-            <div class="shop-grid">
-              ${items.map(item => {
-                const qty = inventory[item.id] || 0;
-                const canCraft = ResourceSystem.canAfford(item.cost);
-
-                return `
-                  <div class="shop-item">
-                    <div class="shop-item-header">${item.name}</div>
-                    <div class="shop-item-cost">
-                      ${Object.entries(item.cost).map(([r, a]) => {
-                        const config = ResourceSystem.getConfig(r);
-                        return `<span>${config.icon} ${a}</span>`;
-                      }).join(' ')}
-                    </div>
-                    <div class="shop-item-stock">Stock: ${qty}</div>
-                    <button class="btn-craft ${canCraft ? '' : 'disabled'}" data-item="${item.id}" ${canCraft ? '' : 'disabled'}>
-                      Craft (${item.price}g)
-                    </button>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-          <div class="panel-section">
-            <h3>Shop Inventory</h3>
-            <div class="inventory-list">
-              ${Object.keys(inventory).length === 0 ? '<p class="empty-state">No items in stock.</p>' : ''}
-              ${Object.entries(inventory).filter(([, qty]) => qty > 0).map(([itemId, qty]) => {
-                const item = ShopSystem.getItem(itemId);
-                return `<div class="inventory-item"><span>${item.name}</span><span>x${qty}</span></div>`;
-              }).join('')}
-            </div>
-          </div>
-        `;
-
-        addShopPanelStyles();
-
-        // Wire up craft buttons
-        content.querySelectorAll('.btn-craft:not(.disabled)').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const itemId = btn.dataset.item;
-            if (ShopSystem.craftItem(itemId)) {
-              showToast('Item crafted!');
-              renderShopPanel(content); // Refresh panel
-            } else {
-              showToast('Cannot craft item', 'error');
-            }
-          });
-        });
-      }
-
-      // ─── Helper Functions ───────────────────────────────────────────────
-
-      function getHeroIcon(heroClass) {
-        const icons = { warrior: '⚔️', mage: '🧙', rogue: '🗡️', cleric: '⛪', ranger: '🏹' };
-        return icons[heroClass] || '👤';
-      }
-
-      function formatNumber(num) {
-        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-        return num.toString();
-      }
-
-      // ─── Dynamic Styles ─────────────────────────────────────────────────
-
-      function addResourceDetailStyles() {
-        if (document.getElementById('dynamic-resource-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'dynamic-resource-styles';
-        style.textContent = `
-          .resource-detail {
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-          }
-          .resource-detail-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-          }
-          .resource-detail-header .resource-icon { font-size: 20px; }
-          .resource-detail-header .resource-name { font-weight: bold; color: #F5F5DC; }
-          .resource-detail-values { font-size: 18px; margin-bottom: 4px; }
-          .resource-current { color: #FFD700; }
-          .resource-separator { color: rgba(255,255,255,0.4); }
-          .resource-max { color: rgba(255,255,255,0.6); }
-          .resource-bar {
-            height: 6px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 3px;
-            overflow: hidden;
-          }
-          .resource-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #27AE60, #2ECC71);
-            transition: width 0.3s;
-          }
-        `;
-        document.head.appendChild(style);
-      }
-
-      function addHeroPanelStyles() {
-        if (document.getElementById('dynamic-hero-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'dynamic-hero-styles';
-        style.textContent = `
-          .panel-section { margin-bottom: 16px; flex-shrink: 0; }
-          .panel-section h3 { color: #FFD700; margin-bottom: 8px; font-size: 14px; }
-          .panel-section h4 { color: rgba(255,215,0,0.7); margin-bottom: 6px; font-size: 12px; }
-          .hero-sub-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid rgba(255,215,0,0.2);
-            padding-bottom: 8px;
-            flex-shrink: 0;
-          }
-          #hero-tab-content {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-          }
-          .hero-sub-tab {
-            flex: 1;
-            padding: 8px;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,215,0,0.2);
-            border-radius: 6px;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-          }
-          .hero-sub-tab.active {
-            background: rgba(255,215,0,0.15);
-            border-color: #FFD700;
-            color: #FFD700;
-          }
-          .hero-sub-tab:hover:not(.active) {
-            background: rgba(255,215,0,0.05);
-          }
-          .hero-card {
-            display: flex;
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border: 2px solid rgba(255,215,0,0.3);
-            overflow: hidden;
-          }
-          .hero-card.territory { border-color: rgba(255,215,0,0.5); }
-          .hero-card.exploring { border-color: rgba(52,152,219,0.5); }
-          .hero-card.resting { border-color: rgba(155,89,182,0.5); }
-          .hero-card.wandering { border-color: rgba(155,89,182,0.3); }
-          .hero-portrait { font-size: 24px; width: 36px; min-width: 36px; text-align: center; flex-shrink: 0; align-self: flex-start; padding-top: 4px; }
-          .hero-info-block { flex: 1; min-width: 0; max-width: calc(100% - 120px); }
-          .hero-name { font-weight: bold; color: #FFD700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-          .hero-class { font-size: 11px; color: rgba(255,255,255,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-          .hero-stats-row { font-size: 10px; margin: 3px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-          .hero-status-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 4px; }
-          .hero-status-badge { font-size: 10px; font-weight: bold; display: block; }
-          .explore-zone-label { font-size: 10px; color: #3498DB; display: block; }
-          .resting-heal-hint { font-size: 9px; color: rgba(155,89,182,0.8); display: block; }
-          .status-idle { color: #27AE60; }
-          .status-exploring { color: #3498DB; }
-          .status-resting { color: #9B59B6; }
-          .status-fighting { color: #E74C3C; }
-          .status-shopping { color: #F39C12; }
-          .btn-wake { background: #9B59B6; }
-          .btn-wake:hover { background: #8E44AD; }
-          .resting-label { font-size: 10px; color: #9B59B6; font-style: italic; padding: 4px 0; }
-          .status-idle { color: #27AE60; }
-          .hero-actions { display: flex; flex-direction: column; gap: 4px; }
-          .btn-small {
-            padding: 4px 8px;
-            font-size: 10px;
-            background: #3498DB;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-          }
-          .btn-small:hover { background: #2980B9; }
-          .btn-small:disabled { background: #7F8C8D; cursor: not-allowed; }
-          .btn-recruit { background: #9B59B6; }
-          .btn-recruit:hover:not(:disabled) { background: #8E44AD; }
-          .btn-train { background: #27AE60; }
-          .btn-train:hover:not(:disabled) { background: #219A52; }
-          .btn-dispatch { background: #E67E22; }
-          .btn-dispatch:hover:not(:disabled) { background: #D35400; }
-          .empty-state { color: rgba(255,255,255,0.4); font-size: 12px; font-style: italic; }
-          .tavern-info { font-size: 10px; color: #9B59B6; margin-bottom: 6px; }
-          /* Dispatch modal */
-          .dispatch-zones { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
-          .dispatch-zone {
-            padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,215,0,0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-          }
-          .dispatch-zone:hover { background: rgba(255,215,0,0.1); border-color: #FFD700; }
-          .dispatch-zone.locked { opacity: 0.4; cursor: not-allowed; }
-          .dispatch-zone .zone-name { font-weight: bold; color: #FFD700; margin-bottom: 4px; }
-          .dispatch-zone .zone-difficulty { font-size: 11px; color: #F39C12; }
-          .dispatch-zone .zone-req { font-size: 10px; color: rgba(255,255,255,0.5); }
-          .dispatch-zone .zone-locked { font-size: 10px; color: #E74C3C; margin-top: 4px; }
-          /* Battle Reports */
-          .reports-header { display: flex; justify-content: space-between; align-items: center; }
-          .reports-header h3 { margin-bottom: 0; }
-          .btn-clear-reports { background: #7F8C8D; font-size: 10px; }
-          .btn-clear-reports:hover { background: #6C7A7D; }
-          .report-section-title { color: rgba(255,215,0,0.6); font-size: 11px; margin-bottom: 6px; }
-          .report-list { display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto; padding-right: 4px; flex-shrink: 0; }
-          .report-entry {
-            background: rgba(0,0,0,0.25);
-            border: 1px solid rgba(255,215,0,0.15);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            position: relative;
-            overflow: visible;
-          }
-          .report-entry:hover { border-color: rgba(255,215,0,0.4); }
-          .report-summary {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 10px;
-            font-size: 11px;
-            min-height: 36px;
-            box-sizing: border-box;
-          }
-          .report-icon { font-size: 14px; }
-          .report-hero { color: #FFD700; font-weight: bold; }
-          .report-zone { color: rgba(255,255,255,0.6); flex: 1; }
-          .report-time { color: rgba(255,255,255,0.35); font-size: 10px; }
-          .report-log {
-            visibility: hidden;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 320px;
-            background: rgba(10,10,20,0.95);
-            border: 1px solid rgba(255,215,0,0.4);
-            border-radius: 6px;
-            padding: 10px 12px;
-            z-index: 50;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            transform: translateX(-110%);
-            transition: transform 0.25s ease, visibility 0.25s;
-          }
-          .report-entry.expanded .report-log {
-            visibility: visible;
-            transform: translateX(0);
-          }
-          .report-entry .combat-entry { font-size: 11px; padding: 2px 4px; line-height: 1.4; }
-          .report-entry .combat-entry.narrate { color: #FFD700; font-weight: bold; text-align: center; }
-          .report-entry .combat-entry.round { color: #e0e0e0; }
-          .report-entry .combat-entry.result { color: #90EE90; font-weight: bold; }
-          .report-subtabs { display: flex; gap: 6px; margin-top: 8px; }
-          .report-subtab { background: #2C3E50; color: rgba(255,255,255,0.6); }
-          .report-subtab.active { background: #6366F1; color: #fff; }
-        `;
-        document.head.appendChild(style);
-      }
-
-      function addBuildingPanelStyles() {
-        if (document.getElementById('dynamic-building-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'dynamic-building-styles';
-        style.textContent = `
-          .building-card {
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-          }
-          .building-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
-          .building-name { font-weight: bold; color: #FFD700; }
-          .building-level { color: rgba(255,255,255,0.6); font-size: 12px; }
-          .building-desc { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
-          .building-effect { font-size: 10px; color: #27AE60; margin-bottom: 8px; }
-          .building-cost { font-size: 11px; margin-bottom: 6px; }
-          .building-cost span { margin-right: 8px; }
-          .btn-upgrade {
-            width: 100%;
-            padding: 8px;
-            background: #3498DB;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-          }
-          .btn-upgrade:hover { background: #2980B9; }
-          .btn-upgrade.disabled { background: #7F8C8D; cursor: not-allowed; }
-          .building-max { text-align: center; color: #FFD700; font-size: 12px; padding: 8px; }
-          .tavern-info { font-size: 11px; color: #9B59B6; margin-bottom: 6px; }
-          .tavern-stats { font-size: 11px; color: rgba(255,255,255,0.8); margin-bottom: 8px; line-height: 1.6; }
-          .tavern-card { border-left: 3px solid #9B59B6; }
-        `;
-        document.head.appendChild(style);
-      }
-
-      function addMapPanelStyles() {
-        if (document.getElementById('dynamic-map-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'dynamic-map-styles';
-        style.textContent = `
-          .zone-card {
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-left: 3px solid #27AE60;
-          }
-          .zone-card.locked { opacity: 0.5; border-left-color: #7F8C8D; }
-          .zone-card.cleared { border-left-color: #FFD700; }
-          .zone-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
-          .zone-name { font-weight: bold; color: #F5F5DC; }
-          .zone-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-          .zone-badge.cleared { background: #27AE60; color: white; }
-          .zone-badge.locked { background: #7F8C8D; color: white; }
-          .zone-difficulty { font-size: 12px; color: #FFD700; margin-bottom: 4px; }
-          .zone-info { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
-          .btn-explore-zone {
-            width: 100%;
-            padding: 8px;
-            background: #27AE60;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-          }
-          .btn-explore-zone:hover { background: #219653; }
-          .exploration-card {
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 8px;
-          }
-          .exp-hero { font-weight: bold; margin-bottom: 4px; }
-          .exp-progress {
-            height: 8px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 4px;
-          }
-          .exp-progress-bar { height: 100%; background: #3498DB; }
-          .exp-percent { font-size: 10px; color: rgba(255,255,255,0.6); text-align: right; }
-        `;
-        document.head.appendChild(style);
-      }
-
-      function addShopPanelStyles() {
-        if (document.getElementById('dynamic-shop-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'dynamic-shop-styles';
-        style.textContent = `
-          .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-          .shop-item {
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-          }
-          .shop-item-header { font-weight: bold; color: #FFD700; font-size: 11px; margin-bottom: 4px; }
-          .shop-item-cost { font-size: 10px; margin-bottom: 4px; }
-          .shop-item-stock { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
-          .btn-craft {
-            width: 100%;
-            padding: 6px;
-            background: #9B59B6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 10px;
-          }
-          .btn-craft:hover { background: #8E44AD; }
-          .btn-craft.disabled { background: #7F8C8D; cursor: not-allowed; }
-          .inventory-list { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; }
-          .inventory-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
-        `;
-        document.head.appendChild(style);
-      }
-
-      // ─── Settings Modal ───────────────────────────────────────────────
-
-      function setupSettings() {
-        document.getElementById('btn-settings').addEventListener('click', () => {
-          elements.settingsModal.classList.remove('hidden');
-        });
-
-        document.getElementById('close-settings').addEventListener('click', () => {
-          elements.settingsModal.classList.add('hidden');
-        });
-
-        document.getElementById('btn-save-game').addEventListener('click', async () => {
-          await Game.manualSave();
-          showToast('Game saved!', 'success');
-        });
-
-        document.getElementById('btn-new-game').addEventListener('click', async () => {
-          if (confirm('Start a new game? All progress will be lost!')) {
-            await Game.newGame();
-            elements.settingsModal.classList.add('hidden');
-            showToast('New game started!', 'success');
-          }
-        });
-      }
-
-      // ─── Game Event Listeners ─────────────────────────────────────────
-
-      function setupGameListeners() {
-        // Resource changes
-        ResourceSystem.addListener((event, data) => {
-          if (event === 'add' || event === 'subtract') {
-            updateResourceDisplay(data.resourceId);
-            if (event === 'add' && data.amount > 0) {
-              showFloatingNumber(data.resourceId, '+' + data.amount);
-            }
-          }
-        });
-
-        // Game tick — periodic UI refresh
-        document.addEventListener('game_tick', () => {
-          updateAllResources();
-        });
-
-        // Welcome back
-        document.addEventListener('game_welcome_back', (e) => {
-          showWelcomeBack(e.detail);
-        });
-
-        // Game saved notification
-        document.addEventListener('game_saved', (e) => {
-          if (e.detail.manual) return; // Manual save shows toast already
-          // Silent save indicator could go here
-        });
-
-        // Hero combat results — reports are stored in HeroSystem, UI picks them up from tab
-        HeroSystem.addListener((event, data) => {
-          if (event === 'wandering_combat_result' || event === 'exploration_combat_result') {
-            // Reports auto-update in Battle Reports tab when user switches to it
-            // No modal needed — tabbed UI handles it
-          }
-        });
-      }
-
-      // ─── Resource Display ─────────────────────────────────────────────
-
-      function updateAllResources() {
-        updateResourceDisplay('gold');
-        updateResourceDisplay('magicStones');
-        ResourceSystem.getMaterialTypes().forEach(mat => {
-          updateResourceDisplay(mat);
-        });
-      }
-
-      function updateResourceDisplay(resourceId) {
-        const value = ResourceSystem.get(resourceId);
-        const capacity = ResourceSystem.getCapacity(resourceId);
-        const element = document.getElementById(`${resourceId}-value`);
-        const maxElement = document.getElementById(`${resourceId}-max`);
-
-        if (element) {
-          element.textContent = formatNumber(value);
-        }
-        if (maxElement) {
-          maxElement.textContent = formatNumber(capacity);
-        }
-
-        // Capacity warning
-        const fillPercent = ResourceSystem.getFillPercent(resourceId);
-        const container = document.querySelector(`[data-resource="${resourceId}"]`);
-        if (container) {
-          container.classList.remove('warning', 'critical');
-          if (fillPercent >= 90) container.classList.add('critical');
-          else if (fillPercent >= 80) container.classList.add('warning');
-        }
-      }
-
-      // ─── Toasts ───────────────────────────────────────────────────────
-
-      function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        elements.toastContainer.appendChild(toast);
-
-        setTimeout(() => {
-          toast.classList.add('toast-fade');
-          setTimeout(() => toast.remove(), 300);
-        }, 2000);
-      }
-
-      // ─── Floating Numbers ─────────────────────────────────────────────
-
-      function showFloatingNumber(resourceId, text) {
-        const config = ResourceSystem.getConfig(resourceId);
-        const container = elements.floatingNumbers;
-
-        const floater = document.createElement('div');
-        floater.className = 'floating-number';
-        floater.textContent = `${config.icon} ${text}`;
-        floater.style.left = Math.random() * 200 + 100 + 'px';
-        floater.style.top = Math.random() * 100 + 50 + 'px';
-
-        container.appendChild(floater);
-
-        setTimeout(() => {
-          floater.classList.add('float-up');
-          setTimeout(() => floater.remove(), 1000);
-        }, 50);
-      }
-
-      // ─── Welcome Back Modal ────────────────────────────────────────────
-
-      function showWelcomeBack(data) {
-        const hours = Math.floor(data.cappedSeconds / 3600);
-        const minutes = Math.floor((data.cappedSeconds % 3600) / 60);
-
-        document.getElementById('offline-time').textContent = `${hours}h ${minutes}m`;
-
-        const list = document.getElementById('earnings-list');
-        list.innerHTML = '';
-
-        if (data.goldProduced > 0) {
-          list.innerHTML += `<li>🪙 +${formatNumber(data.goldProduced)} Gold</li>`;
-        }
-
-        for (const [mat, amount] of Object.entries(data.materialsProduced)) {
-          if (amount > 0) {
-            const config = ResourceSystem.getConfig(mat);
-            if (config) {
-              list.innerHTML += `<li>${config.icon} +${formatNumber(amount)} ${config.name}</li>`;
-            }
-          }
-        }
-
-        if (data.magicStonesProduced > 0) {
-          list.innerHTML += `<li>💎 +${formatNumber(data.magicStonesProduced)} Magic Stones</li>`;
-        }
-
-        if (data.isCapped) {
-          list.innerHTML += `<li class="note">⏰ (8h cap applied)</li>`;
-        }
-
-        elements.welcomeBackModal.classList.remove('hidden');
-
-        document.getElementById('collect-offline').onclick = () => {
-          elements.welcomeBackModal.classList.add('hidden');
-          showToast('Resources collected!', 'success');
-        };
-      }
-
-      // ─── Utilities ─────────────────────────────────────────────────────
-
-      function formatNumber(num) {
-        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-        return num.toString();
-      }
-
-      // ─── Public API ────────────────────────────────────────────────────
-
-      return {
-        init,
-        showToast,
-        updateAllResources,
-      };
-    })();
-
-    // Initialize UI after Game systems are ready
-    function initUI() {
-      console.log('[UI] Initializing UI...');
-      try {
-        UIController.init();
-        console.log('[UI] UIController.init() complete');
-      } catch (err) {
-        console.error('[UI] UIController.init() failed:', err);
+</div>
+
+<!-- ── DISPATCH MODAL ── -->
+<div class="modal-overlay" id="modal-dispatch">
+  <div class="modal">
+    <div class="modal-title">⚔ 出征派遣</div>
+    <div id="dispatch-hero-name" style="text-align:center;font-size:10px;color:var(--text-faint);margin-bottom:10px;"></div>
+    <div class="dispatch-zone-grid" id="dispatch-zone-grid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeDispatch()">取消</button>
+      <button class="btn btn-gold btn-sm" onclick="doDispatch()">確認出征</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// GAME DATA — All game data definitions (保留原有系統合併)
+// ═══════════════════════════════════════════════════════════════════
+const RESOURCES = {
+  gold: { name: 'Gold', icon: '🪙', initial: 500, capacity: 10000 },
+  magicStones: { name: 'Ancient Magic Stones', icon: '💎', initial: 0, capacity: 999 },
+  fruitPoor: { name: '劣等水果', icon: '🍎', initial: 0, capacity: 500 },
+  waterDirty: { name: '髒水', icon: '💧', initial: 0, capacity: 500 },
+  woodRotten: { name: '腐朽木頭', icon: '🪵', initial: 0, capacity: 500 },
+  ironRusty: { name: '鏽跡斑斑的鐵', icon: '⚙️', initial: 0, capacity: 500 },
+  herbLow: { name: '低等藥材', icon: '🌿', initial: 0, capacity: 500 },
+};
+const MATERIAL_TYPES = ['fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
+const BUILDINGS = {
+  monument: { id: 'monument', name: '古老石碑', nameAlt: 'Ancient Monument', description: '古老的石碑，散發著神秘的能量，自動生產各種基礎材料。', level: 1, maxLevel: 10, baseCost: { gold: 500, woodRotten: 50, ironRusty: 20 }, costMultiplier: 2.0, icon: '🗿', effectText: '⚡ +2🍎 +1💧 +3🪵/s' },
+  tavern: { id: 'tavern', name: '酒館', nameAlt: 'Tavern', description: '熱鬧的酒館吸引流浪英雄，增加招募機會。', level: 1, maxLevel: 5, baseCost: { gold: 300, woodRotten: 80 }, costMultiplier: 1.5, icon: '🍺', effectText: '🎲 每日訪客 +2' },
+  weaponShop: { id: 'weaponShop', name: '武器鋪', nameAlt: 'Weapon Shop', description: '鑄造各種武器，提升英雄攻擊力。', level: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️', effectText: '🗡 可製作初級武器' },
+  potionShop: { id: 'potionShop', name: '藥水鋪', nameAlt: 'Potion Shop', description: '調配各種藥水，補充英雄體力。', level: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️', effectText: '💊 可製作初級藥水' },
+  armorShop: { id: 'armorShop', name: '鎧甲鋪', nameAlt: 'Armor Shop', description: '打造堅固鎧甲，增強英雄防禦力。', level: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️', effectText: '🛡 最高級防具可製作' },
+};
+const HERO_CLASSES = {
+  warrior: { name: '戰士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
+  mage: { name: '法師', baseHp: 70, baseAtk: 25, baseDef: 5, icon: '🧙' },
+  rogue: { name: '盜賊', baseHp: 85, baseAtk: 18, baseDef: 8, icon: '🗡️' },
+  cleric: { name: '牧師', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '⛪' },
+  ranger: { name: '弓手', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
+};
+const WANDERING_HERO_TYPES = [
+  { typeId: 'wandering_warrior_1', class: 'warrior', name: '僱傭士兵', level: 1, dropGold: 20, dropMagicStoneChance: 0.1 },
+  { typeId: 'wandering_warrior_2', class: 'warrior', name: '資深僱傭兵', level: 5, dropGold: 50, dropMagicStoneChance: 0.15 },
+  { typeId: 'wandering_mage_1', class: 'mage', name: '流浪法師', level: 2, dropGold: 25, dropMagicStoneChance: 0.12 },
+  { typeId: 'wandering_mage_2', class: 'mage', name: '雲游術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
+  { typeId: 'wandering_rogue_1', class: 'rogue', name: '街頭頑童', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
+  { typeId: 'wandering_rogue_2', class: 'rogue', name: '盜賊大師', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+];
+const ZONES = [
+  { id: 1, name: '平靜郊野', nameAlt: 'Countryside', difficulty: 1, recommendedLevel: 1, rewards: { gold: { min: 50, max: 100 }, materials: ['fruitPoor', 'waterDirty'] }, magicStoneChance: 0.1, icon: '🌾' },
+  { id: 2, name: '黑暗森林', nameAlt: 'Dark Forest', difficulty: 2, recommendedLevel: 3, rewards: { gold: { min: 100, max: 200 }, materials: ['woodRotten', 'herbLow'] }, magicStoneChance: 0.15, icon: '🌲' },
+  { id: 3, name: '廢棄礦坑', nameAlt: 'Abandoned Mine', difficulty: 3, recommendedLevel: 5, rewards: { gold: { min: 150, max: 300 }, materials: ['ironRusty', 'woodRotten'] }, magicStoneChance: 0.2, icon: '⛏' },
+  { id: 4, name: '沼澤深淵', nameAlt: 'Swamp Depths', difficulty: 4, recommendedLevel: 7, rewards: { gold: { min: 200, max: 400 }, materials: ['herbLow', 'waterDirty'] }, magicStoneChance: 0.25, icon: '🏚' },
+  { id: 5, name: '龍族廢墟', nameAlt: 'Dragon Ruins', difficulty: 5, recommendedLevel: 10, rewards: { gold: { min: 300, max: 600 }, materials: ['ironRusty', 'magicStones'] }, magicStoneChance: 0.3, icon: '🐉' },
+];
+const ITEMS = {
+  woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️' },
+  ironDagger: { id: 'ironDagger', name: '鐵匕首', type: 'weapon', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪' },
+  healthPotion: { id: 'healthPotion', name: '生命藥水', type: 'potion', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪' },
+  ironArmor: { id: 'ironArmor', name: '鐵甲', type: 'armor', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️' },
+  mysticStaff: { id: 'mysticStaff', name: '神秘法杖', type: 'weapon', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮' },
+};
+
+function createTerritoryHero(classType, name, level = 1) {
+  const classDef = HERO_CLASSES[classType];
+  if (!classDef) return null;
+  return {
+    id: 'territory_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    isTerritory: true, class: classType,
+    name: name || (classDef.name + ' #' + Math.floor(Math.random() * 1000)),
+    level,
+    hp: classDef.baseHp + (level - 1) * 10,
+    maxHp: classDef.baseHp + (level - 1) * 10,
+    atk: classDef.baseAtk + (level - 1) * 3,
+    def: classDef.baseDef + (level - 1) * 2,
+    status: 'idle', currentZone: null, explorationProgress: 0,
+  };
+}
+
+function createWanderingHero(typeDef) {
+  const classDef = HERO_CLASSES[typeDef.class];
+  return {
+    id: 'wandering_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    isTerritory: false, typeId: typeDef.typeId, class: typeDef.class,
+    name: typeDef.name, level: typeDef.level,
+    hp: classDef.baseHp + (typeDef.level - 1) * 10,
+    maxHp: classDef.baseHp + (typeDef.level - 1) * 10,
+    atk: classDef.baseAtk + (typeDef.level - 1) * 3,
+    def: classDef.baseDef + (typeDef.level - 1) * 2,
+    status: 'wandering', dropGold: typeDef.dropGold,
+    dropMagicStoneChance: typeDef.dropMagicStoneChance,
+    ticksUntilStateChange: Math.floor(Math.random() * 120) + 60,
+  };
+}
+
+function getBuildingCost(buildingId, targetLevel) {
+  const building = BUILDINGS[buildingId];
+  if (!building) return null;
+  const multiplier = Math.pow(building.costMultiplier, targetLevel - 1);
+  const cost = {};
+  for (const [resourceId, baseAmount] of Object.entries(building.baseCost)) {
+    cost[resourceId] = Math.floor(baseAmount * multiplier);
+  }
+  return cost;
+}
+
+function getDefaultGameState() {
+  return {
+    version: 1, lastOnline: Date.now(),
+    resources: { gold: 500, magicStones: 0, fruitPoor: 0, waterDirty: 0, woodRotten: 0, ironRusty: 0, herbLow: 0 },
+    heroes: [], wanderingHeroes: [],
+    buildings: { monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } },
+    mapProgress: { currentZone: 1, unlockedZones: [1], clearedZones: [] },
+    shopInventory: {}, tickCount: 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RESOURCE SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let resources = {};
+let resourceListeners = [];
+function ResourceSystem_init(savedState) {
+  if (savedState && savedState.resources) {
+    resources = {};
+    for (const [key, config] of Object.entries(RESOURCES)) {
+      resources[key] = { value: savedState.resources[key] ?? config.initial, capacity: config.capacity };
+    }
+  } else {
+    resources = {};
+    for (const [key, config] of Object.entries(RESOURCES)) {
+      resources[key] = { value: config.initial, capacity: config.capacity };
+    }
+  }
+}
+function ResourceSystem_add(resourceId, amount) {
+  if (!resources[resourceId]) return 0;
+  const prev = resources[resourceId].value;
+  const newValue = Math.min(prev + amount, RESOURCES[resourceId].capacity);
+  const actualAdded = newValue - prev;
+  resources[resourceId].value = newValue;
+  resourceListeners.forEach(l => { try { l('add', { resourceId, amount: actualAdded, total: newValue }); } catch(e) {} });
+  return actualAdded;
+}
+function ResourceSystem_subtract(resourceId, amount) {
+  if (!resources[resourceId]) return false;
+  const prev = resources[resourceId].value;
+  if (prev < amount) return false;
+  resources[resourceId].value = prev - amount;
+  resourceListeners.forEach(l => { try { l('subtract', { resourceId, amount, total: resources[resourceId].value }); } catch(e) {} });
+  return true;
+}
+function ResourceSystem_get(resourceId) { return resources[resourceId]?.value ?? 0; }
+function ResourceSystem_getAll() { const r = {}; for (const [k, v] of Object.entries(resources)) r[k] = v.value; return r; }
+function ResourceSystem_canAfford(cost) { for (const [id, amt] of Object.entries(cost)) if (ResourceSystem_get(id) < amt) return false; return true; }
+function ResourceSystem_spend(cost) { if (!ResourceSystem_canAfford(cost)) return false; for (const [id, amt] of Object.entries(cost)) ResourceSystem_subtract(id, amt); return true; }
+function ResourceSystem_getCapacity(resourceId) { return resources[resourceId]?.capacity ?? 0; }
+function ResourceSystem_getFillPercent(resourceId) { const s = resources[resourceId]; if (!s || s.capacity === 0) return 0; return (s.value / s.capacity) * 100; }
+function ResourceSystem_produceMaterials(monumentLevel = 1) {
+  const results = {};
+  for (const mat of MATERIAL_TYPES) results[mat] = ResourceSystem_add(mat, (Math.floor(Math.random() * 3) + 1) * monumentLevel);
+  return results;
+}
+function ResourceSystem_addListener(cb) { resourceListeners.push(cb); }
+function ResourceSystem_getConfig(rid) { return RESOURCES[rid] ?? null; }
+
+// ═══════════════════════════════════════════════════════════════════
+// BUILDING SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let buildingStates = {};
+function BuildingSystem_init(savedState) {
+  const saved = savedState?.buildings || {};
+  for (const [id, def] of Object.entries({ monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } })) {
+    buildingStates[id] = { level: saved[id]?.level ?? def.level };
+  }
+}
+function BuildingSystem_getLevel(id) { return buildingStates[id]?.level ?? 1; }
+function BuildingSystem_getAll() {
+  const r = {};
+  for (const [id, state] of Object.entries(buildingStates)) {
+    const def = BUILDINGS[id];
+    if (!def) continue;
+    r[id] = { id, name: def.name, description: def.description, effect: def.effect, level: state.level, maxLevel: def.maxLevel, cost: getBuildingCost(id, state.level + 1), canUpgrade: state.level < def.maxLevel, icon: def.icon, effectText: def.effectText };
+  }
+  return r;
+}
+function BuildingSystem_upgrade(id) {
+  const def = BUILDINGS[id]; if (!def) return false;
+  const cur = BuildingSystem_getLevel(id); if (cur >= def.maxLevel) return false;
+  const cost = getBuildingCost(id, cur + 1); if (!ResourceSystem_spend(cost)) return false;
+  buildingStates[id].level += 1; return true;
+}
+function BuildingSystem_getWanderingSpawnInterval() { return Math.max(2, 12 - (BuildingSystem_getLevel('tavern') * 2)); }
+function BuildingSystem_getMaxWanderingHeroes() { return Math.min(5, 2 + BuildingSystem_getLevel('tavern')); }
+function BuildingSystem_getTerritoryHeroSlots(currentCount = 0) { const t = BuildingSystem_getLevel('tavern'); return { current: currentCount, max: 3 + (t - 1) * 2 }; }
+
+// ═══════════════════════════════════════════════════════════════════
+// HERO SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let territoryHeroes = [];
+let wanderingHeroes = [];
+let nextWanderingSpawnIn = 0;
+let heroListeners = [];
+const BW = { fighting: 0.60, shopping: 0.30, leaving: 0.10 };
+
+function HeroSystem_init(savedState) {
+  territoryHeroes = savedState?.heroes || [];
+  wanderingHeroes = savedState?.wanderingHeroes || [];
+  nextWanderingSpawnIn = savedState?.nextWanderingSpawnIn || getRandomSpawnTime();
+}
+function HeroSystem_addTerritoryHero(hero) {
+  const slots = BuildingSystem_getTerritoryHeroSlots(territoryHeroes.length);
+  if (territoryHeroes.length >= slots.max) return false;
+  territoryHeroes.push(hero); return true;
+}
+function HeroSystem_getTerritoryHeroes() { return [...territoryHeroes]; }
+function HeroSystem_getTerritoryHero(id) { return territoryHeroes.find(h => h.id === id) || null; }
+function HeroSystem_sendToExplore(id, zoneId) {
+  const h = HeroSystem_getTerritoryHero(id); if (!h || h.status !== 'idle') return false;
+  h.status = 'exploring'; h.currentZone = zoneId; h.explorationProgress = 0; return true;
+}
+function HeroSystem_returnToIdle(id) {
+  const h = HeroSystem_getTerritoryHero(id); if (!h) return;
+  h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0;
+}
+function HeroSystem_trainHero(id, cost) {
+  const h = HeroSystem_getTerritoryHero(id); if (!h || !ResourceSystem_spend(cost)) return false;
+  h.level += 1; h.maxHp += 10; h.hp = h.maxHp; h.atk += 3; h.def += 2; return true;
+}
+function HeroSystem_getWanderingHeroes() { return [...wanderingHeroes]; }
+function HeroSystem_recruitWanderingHero(id) {
+  const idx = wanderingHeroes.findIndex(h => h.id === id); if (idx === -1) return false;
+  const slots = BuildingSystem_getTerritoryHeroSlots(territoryHeroes.length);
+  if (territoryHeroes.length >= slots.max) return false;
+  const w = wanderingHeroes[idx]; const rc = w.level * 100;
+  if (!ResourceSystem_spend({ gold: rc })) return false;
+  const t = createTerritoryHero(w.class, w.name, w.level);
+  t.dropMagicStoneChance = w.dropMagicStoneChance;
+  wanderingHeroes.splice(idx, 1); territoryHeroes.push(t); return true;
+}
+function HeroSystem_getRecruitCost(id) { const h = wanderingHeroes.find(x => x.id === id); return h ? h.level * 100 : 0; }
+function getRandomSpawnTime() { const i = BuildingSystem_getWanderingSpawnInterval(); return Math.floor(Math.random() * i) + i; }
+function spawnWanderingHero() {
+  const typeDef = WANDERING_HERO_TYPES[Math.floor(Math.random() * WANDERING_HERO_TYPES.length)];
+  wanderingHeroes.push(createWanderingHero(typeDef));
+  nextWanderingSpawnIn = getRandomSpawnTime();
+}
+function genEnemyName(level) {
+  const t = [{ min: 1, n: ['Goblin Scout', 'Wild Wolf', 'Forest Bandit'] }, { min: 3, n: ['Orc Warrior', 'Cave Troll', 'Dark Mage'] }, { min: 5, n: ['Shadow Knight', 'Dire Beast', 'Cursed Knight'] }, { min: 8, n: ['Ancient Dragon', 'Demon Lord', 'Void Walker'] }].filter(e => level >= e.min).pop();
+  return t.n[Math.floor(Math.random() * t.n.length)];
+}
+function resolveCombat(hero) {
+  const eHp = 50 + hero.level * 20, eAtk = 5 + hero.level * 3, eDef = 3 + hero.level * 2;
+  const eName = genEnemyName(hero.level);
+  const hMaxHp = hero.hp || hero.maxHp;
+  const log = [];
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' encounters ' + eName + '!' });
+  let hHp = hMaxHp, eHp2 = eHp;
+  for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
+    const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
+    eHp2 -= hDmg; hHp -= eDmg;
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' attacks ' + eName + ' for ' + hDmg + ' dmg, enemy strikes back for ' + eDmg + ' dmg' });
+  }
+  const vic = eHp2 <= 0;
+  const goldR = vic ? 20 + hero.level * 10 : 0;
+  const mStones = vic && Math.random() < hero.dropMagicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+  if (vic) { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '🏆 Victory! ' + hero.name + ' earned ' + goldR + ' gold' + (mStones > 0 ? ' and ' + mStones + ' magic stones' : '') + '!' }); }
+  else { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '💨 Retreat! ' + hero.name + ' fled from ' + eName }); }
+  return { victory: vic, goldReward: goldR, magicStones: mStones, combatLog: log };
+}
+function HeroSystem_processWanderingTick() {
+  nextWanderingSpawnIn -= 1;
+  const maxW = BuildingSystem_getMaxWanderingHeroes();
+  if (nextWanderingSpawnIn <= 0 && wanderingHeroes.length < maxW) spawnWanderingHero();
+  for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
+    const hero = wanderingHeroes[i];
+    if (Math.random() < 0.90) {
+      const res = resolveCombat(hero);
+      if (res.victory) {
+        ResourceSystem_add('gold', Math.floor(res.goldReward * 0.2));
+        if (res.magicStones > 0) ResourceSystem_add('magicStones', Math.floor(res.magicStones * 0.2));
       }
     }
+    hero.ticksUntilStateChange -= 1;
+    if (hero.ticksUntilStateChange <= 0) {
+      if (Math.random() < BW.leaving) { wanderingHeroes.splice(i, 1); continue; }
+      hero.ticksUntilStateChange = Math.floor(Math.random() * 60) + 30;
+    }
+  }
+}
+function genZoneEnemyName(zone) {
+  const n = { 1: ['Goblin Scout', 'Wild Wolf', 'Forest Rat'], 2: ['Forest Orc', 'Cave Spider', 'Dark Druid'], 3: ['Mine Golem', 'Skeletal Warrior', 'Swamp Witch'], 4: ['Swamp Beast', 'Poison Serpent', 'Dark Cultist'], 5: ['Ancient Dragon', 'Demon Knight', 'Void Titan'] };
+  const p = n[zone.id] || n[1]; return p[Math.floor(Math.random() * p.length)];
+}
+function resolveZoneCombat(hero, zone) {
+  const eHp = 30 + zone.difficulty * 25 + hero.level * 5;
+  const eAtk = 3 + zone.difficulty * 4 + hero.level * 2;
+  const eDef = 2 + zone.difficulty * 3 + hero.level * 2;
+  const eName = genZoneEnemyName(zone);
+  const hMaxHp = hero.hp || hero.maxHp;
+  const log = [];
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' explores ' + zone.name + ' and encounters ' + eName + '!' });
+  let hHp = hMaxHp, eHp2 = eHp;
+  for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
+    const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
+    eHp2 -= hDmg; hHp -= eDmg;
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' deals ' + hDmg + ' dmg, ' + eName + ' deals ' + eDmg + ' dmg' });
+  }
+  const vic = eHp2 <= 0;
+  const goldR = vic ? zone.difficulty * 15 + hero.level * 5 : 0;
+  const mS = vic && Math.random() < zone.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+  if (vic) log.push({ type: 'result', text: '🏆 Victory! ' + hero.name + ' earned ' + goldR + ' gold!' });
+  else log.push({ type: 'result', text: '💨 Narrow escape! ' + hero.name + ' barely escaped' });
+  return { victory: vic, goldReward: goldR, magicStones: mS, combatLog: log, heroRemainingHp: hHp };
+}
+function HeroSystem_processExplorationTick(zoneId) {
+  const zone = ZONES.find(z => z.id === zoneId); if (!zone) return null;
+  const explorers = territoryHeroes.filter(h => h.status === 'exploring' && h.currentZone === zoneId);
+  if (explorers.length === 0) return null;
+  let expData = explorers[0].explorationProgress || 0;
+  expData += 0.5 + (explorers.reduce((s, h) => s + (h.atk + h.def) / 2, 0) / 100);
+  for (const hero of explorers) {
+    if (Math.random() < 0.90) {
+      const res = resolveZoneCombat(hero, zone);
+      if (res.victory) {
+        ResourceSystem_add('gold', res.goldReward);
+        if (res.magicStones > 0) ResourceSystem_add('magicStones', res.magicStones);
+        hero.hp = Math.max(1, res.heroRemainingHp);
+      } else {
+        hero.hp = Math.max(1, res.heroRemainingHp);
+        if (hero.hp <= 1) { hero.status = 'resting'; hero.currentZone = null; hero.explorationProgress = 0; }
+      }
+    }
+  }
+  if (expData >= 100) {
+    explorers.forEach(h => { h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0; });
+    const gR = zone.rewards.gold.min + Math.floor(Math.random() * (zone.rewards.gold.max - zone.rewards.gold.min));
+    ResourceSystem_add('gold', gR);
+    const matD = {};
+    for (const mat of zone.rewards.materials) { const a = Math.floor(Math.random() * 5) + 1; ResourceSystem_add(mat, a); matD[mat] = a; }
+    let mSD = 0;
+    if (Math.random() < zone.magicStoneChance) { mSD = zone.magicStoneChance + Math.floor(Math.random() * (zone.magicStoneChance + 5)); ResourceSystem_add('magicStones', mSD); }
+    return { zoneId, goldReward: gR, materials: matD, magicStones: mSD };
+  }
+  explorers.forEach(h => { h.explorationProgress = expData; });
+  return null;
+}
+function HeroSystem_processRestingTick() {
+  for (const h of territoryHeroes.filter(x => x.status === 'resting')) {
+    h.hp = Math.min(h.maxHp, h.hp + Math.ceil(h.maxHp * 0.001));
+    if (h.hp >= h.maxHp * 0.8) { h.status = 'idle'; }
+  }
+}
+function HeroSystem_addListener(cb) { heroListeners.push(cb); }
 
-    // Wait for Game.init() to complete via event, then init UI
-    document.addEventListener('game_ready', () => {
-      console.log('[UI] game_ready event received');
-      initUI();
-    });
+// ═══════════════════════════════════════════════════════════════════
+// SHOP SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let shopInventory = {};
+let shopLevel = 1;
+let shopListeners = [];
+const MAX_INV = 100;
+function ShopSystem_init(savedState) { shopInventory = savedState?.shopInventory || {}; shopLevel = savedState?.shopLevel || 1; }
+function ShopSystem_getItems() { return Object.values(ITEMS); }
+function ShopSystem_getItem(id) { return ITEMS[id] || null; }
+function ShopSystem_craftItem(id) {
+  const item = ShopSystem_getItem(id); if (!item) return false;
+  if (!ResourceSystem_canAfford(item.cost)) return false;
+  if ((shopInventory[id] || 0) >= MAX_INV) return false;
+  if (!ResourceSystem_spend(item.cost)) return false;
+  shopInventory[id] = (shopInventory[id] || 0) + 1; return true;
+}
+function ShopSystem_getInventory() { return { ...shopInventory }; }
+function ShopSystem_processAutoProduction() {
+  if (Math.random() > 0.1 * shopLevel) return null;
+  const recipes = ShopSystem_getItems().filter(item => ResourceSystem_canAfford(item.cost));
+  if (recipes.length === 0) return null;
+  const it = recipes[Math.floor(Math.random() * recipes.length)];
+  if (!ResourceSystem_spend(it.cost)) return null;
+  shopInventory[it.id] = (shopInventory[it.id] || 0) + 1; return { item: it };
+}
+function ShopSystem_addListener(cb) { shopListeners.push(cb); }
+function ShopSystem_getShopLevel() { return shopLevel; }
 
-    // Fallback: if game_ready doesn't fire within 3 seconds, init anyway
-    setTimeout(() => {
-      console.warn('[UI] game_ready timeout - forcing init');
-      initUI();
-    }, 3000);
-  </script>
+// ═══════════════════════════════════════════════════════════════════
+// MAP SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let mapProgress = { currentZone: 1, unlockedZones: [1], clearedZones: [] };
+let activeExplorations = [];
+let mapListeners = [];
+function MapSystem_init(savedState) { mapProgress = savedState?.mapProgress || { currentZone: 1, unlockedZones: [1], clearedZones: [] }; activeExplorations = []; }
+function MapSystem_getZones() { return [...ZONES]; }
+function MapSystem_getProgress() { return { currentZone: mapProgress.currentZone, unlockedZones: [...mapProgress.unlockedZones], clearedZones: [...mapProgress.clearedZones] }; }
+function MapSystem_getUnlockedZones() { return mapProgress.unlockedZones.map(id => ZONES.find(z => z.id === id)).filter(Boolean); }
+function MapSystem_isZoneUnlocked(id) { return mapProgress.unlockedZones.includes(id); }
+function MapSystem_isZoneCleared(id) { return mapProgress.clearedZones.includes(id); }
+function MapSystem_startExploration(heroId, zoneId) {
+  const hero = HeroSystem_getTerritoryHero(heroId); if (!hero) return false;
+  if (!MapSystem_isZoneUnlocked(zoneId)) return false;
+  if (hero.status !== 'idle') return false;
+  const zone = ZONES.find(z => z.id === zoneId); if (!zone) return false;
+  hero.status = 'exploring'; hero.currentZone = zoneId;
+  activeExplorations.push({ heroId, zoneId, progress: 0, startTime: Date.now(), zoneName: zone.name });
+  return true;
+}
+function MapSystem_processExplorations() {
+  const completed = [];
+  for (let i = activeExplorations.length - 1; i >= 0; i--) {
+    const exp = activeExplorations[i];
+    const hero = HeroSystem_getTerritoryHero(exp.heroId);
+    if (!hero || hero.status !== 'exploring') { activeExplorations.splice(i, 1); continue; }
+    const zone = ZONES.find(z => z.id === exp.zoneId);
+    if (!zone) { activeExplorations.splice(i, 1); continue; }
+    const res = HeroSystem_processExplorationTick(zone.id);
+    if (res) {
+      activeExplorations.splice(i, 1);
+      if (!MapSystem_isZoneCleared(zone.id)) mapProgress.clearedZones.push(zone.id);
+      const nextZ = ZONES.find(z => z.id === zone.id + 1);
+      if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) { mapProgress.unlockedZones.push(nextZ.id); mapProgress.currentZone = nextZ.id; }
+      completed.push({ heroId: exp.heroId, zoneId: zone.id, zoneName: zone.name, rewards: res });
+    } else {
+      exp.progress = hero.explorationProgress || 0;
+    }
+  }
+  return completed;
+}
+function MapSystem_addListener(cb) { mapListeners.push(cb); }
+
+// ═══════════════════════════════════════════════════════════════════
+// OFFLINE SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let lastOnlineTimestamp = null;
+let isOffline = false;
+const MAX_OFFLINE = 8 * 3600;
+const OFFLINE_EFF = 0.5;
+function OfflineSystem_init(savedState) { lastOnlineTimestamp = savedState?.lastOnline || Date.now(); }
+function OfflineSystem_markOffline() { lastOnlineTimestamp = Date.now(); isOffline = true; }
+function OfflineSystem_markOnline() {
+  if (!isOffline) return null;
+  const away = Math.floor((Date.now() - lastOnlineTimestamp) / 1000);
+  if (away < 60) { isOffline = false; return null; }
+  const summary = OfflineSystem_calculateOfflineProgress(lastOnlineTimestamp, Date.now());
+  isOffline = false; return summary;
+}
+function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
+  const total = Math.floor((returnTime - lastOnline) / 1000);
+  const capped = Math.min(total, MAX_OFFLINE);
+  const matP = {};
+  for (const mat of MATERIAL_TYPES) { const v = 0.8 + Math.random() * 0.4; const p = Math.floor(2 * capped * v * OFFLINE_EFF); matP[mat] = p; ResourceSystem_add(mat, p); }
+  const gP = Math.floor(50 * (capped / 60) * OFFLINE_EFF); ResourceSystem_add('gold', gP);
+  const mS = Math.floor(Math.random() * 3); if (mS > 0) ResourceSystem_add('magicStones', mS);
+  return { totalSeconds: total, cappedSeconds: capped, isCapped: total > MAX_OFFLINE, materialsProduced: matP, goldProduced: gP, magicStonesProduced: mS };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// BATTLE REPORTS (UI STATE)
+// ═══════════════════════════════════════════════════════════════════
+let battleReports = [];
+function addBattleReport(heroName, zoneName, result, rewards) {
+  battleReports.unshift({
+    heroName, zoneName, result,
+    rewards: rewards || {},
+    time: Date.now(),
+    combatLog: []
+  });
+  if (battleReports.length > 50) battleReports.pop();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GAME STATE & SAVE
+// ═══════════════════════════════════════════════════════════════════
+let gameState = null;
+let pendingOfflineSummary = null;
+let dispatchHeroId = null;
+let dispatchZoneId = null;
+let activePanel = null;
+
+function saveGame() {
+  if (!gameState) return;
+  gameState.lastOnline = Date.now();
+  gameState.resources = ResourceSystem_getAll();
+  gameState.heroes = territoryHeroes;
+  gameState.wanderingHeroes = wanderingHeroes;
+  gameState.buildings = {};
+  for (const [id, state] of Object.entries(buildingStates)) gameState.buildings[id] = { level: state.level };
+  gameState.mapProgress = mapProgress;
+  gameState.shopInventory = shopInventory;
+  gameState.nextWanderingSpawnIn = nextWanderingSpawnIn;
+  localStorage.setItem('kingdomBuilderSave', JSON.stringify(gameState));
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('kingdomBuilderSave');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      gameState = parsed;
+      return parsed;
+    } catch(e) {
+      return getDefaultGameState();
+    }
+  }
+  return getDefaultGameState();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FLOATING NUMBERS (Canvas)
+// ═══════════════════════════════════════════════════════════════════
+const floatCanvas = document.getElementById('float-canvas');
+const floatCtx = floatCanvas.getContext('2d');
+let floats = [];
+function resizeFloatCanvas() { floatCanvas.width = window.innerWidth; floatCanvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeFloatCanvas); resizeFloatCanvas();
+function spawnFloat(text, fromCenter) {
+  const wrap = document.getElementById('game-wrap');
+  const rect = wrap.getBoundingClientRect();
+  const x = fromCenter
+    ? rect.left + rect.width / 2 + (Math.random() - 0.5) * 60
+    : rect.left + 40 + Math.random() * (rect.width - 80);
+  const y = floatCanvas.height - 120;
+  floats.push({ x, y, text, alpha: 1, vy: -1.2 - Math.random() * 0.8, size: fromCenter ? 14 : 12 });
+}
+function rafLoop() {
+  const wrap = document.getElementById('game-wrap');
+  const rect = wrap.getBoundingClientRect();
+  floatCtx.clearRect(0, 0, floatCanvas.width, floatCanvas.height);
+  floatCtx.save();
+  floatCtx.translate(rect.left, 0);
+  floats = floats.filter(f => f.alpha > 0);
+  for (const f of floats) {
+    f.y += f.vy; f.alpha -= 0.016;
+    floatCtx.globalAlpha = Math.max(0, f.alpha);
+    floatCtx.font = `bold ${f.size}px 'Crimson Pro', serif`;
+    floatCtx.fillStyle = '#FFD700';
+    floatCtx.textAlign = 'center';
+    floatCtx.shadowColor = 'rgba(255,215,0,0.5)';
+    floatCtx.shadowBlur = 6;
+    floatCtx.fillText(f.text, f.x - rect.left, f.y);
+  }
+  floatCtx.globalAlpha = 1; floatCtx.shadowBlur = 0;
+  floatCtx.restore();
+  requestAnimationFrame(rafLoop);
+}
+rafLoop();
+
+// ═══════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : Math.floor(n); }
+function fmtFull(n) { return Math.floor(n).toLocaleString(); }
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type} show`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => t.remove(), 300);
+  }, 2000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PANEL SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+function openPanel(id) {
+  if (activePanel === id) { closePanel(); return; }
+  if (activePanel) {
+    document.getElementById('panel-' + activePanel)?.classList.remove('open');
+    document.getElementById('nav-' + activePanel)?.classList.remove('active');
+  }
+  activePanel = id;
+  document.getElementById('panel-' + id)?.classList.add('open');
+  document.getElementById('nav-' + id)?.classList.add('active');
+  if (id === 'res') renderResourcesPanel();
+  if (id === 'hero') renderHeroesPanel();
+  if (id === 'build') renderBuildingPanel();
+  if (id === 'map') renderMapPanel();
+  if (id === 'shop') renderShopPanel();
+}
+function closePanel() {
+  if (!activePanel) return;
+  document.getElementById('panel-' + activePanel)?.classList.remove('open');
+  document.getElementById('nav-' + activePanel)?.classList.remove('active');
+  activePanel = null;
+}
+function switchTab(btn, targetId) {
+  const panel = btn.closest('.panel-inner');
+  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(targetId)?.classList.add('active');
+  if (targetId === 'hero-territory' || targetId === 'hero-wander') renderHeroesTab(targetId);
+  if (targetId === 'hero-reports') renderReportsTab();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: RESOURCES
+// ═══════════════════════════════════════════════════════════════════
+function renderResourcesPanel() {
+  const grid = document.getElementById('res-grid');
+  const RES_ORDER = ['gold', 'magicStones', 'fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
+  const prod = BuildingSystem_getLevel('monument');
+  const prodRates = { gold: 12, magicStones: 0, fruitPoor: prod, waterDirty: prod, woodRotten: prod, ironRusty: prod, herbLow: prod };
+  grid.innerHTML = RES_ORDER.map(rid => {
+    const cfg = RESOURCES[rid];
+    const val = ResourceSystem_get(rid);
+    const cap = ResourceSystem_getCapacity(rid);
+    const fill = ResourceSystem_getFillPercent(rid);
+    const barClass = fill >= 90 ? 'crit' : fill >= 80 ? 'warn' : '';
+    const rate = prodRates[rid] || 0;
+    return `<div class="res-card">
+      <div class="res-top">
+        <div class="res-info"><span class="res-ico">${cfg.icon}</span><div><div class="res-name">${cfg.name}</div><div class="res-val"><span id="r-${rid}">${fmtFull(val)}</span> / <span class="res-max">${fmtFull(cap)}</span></div></div></div>
+        <div class="rate" id="rate-${rid}">+${rate}/s</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${barClass}" id="pb-${rid}" style="width:${Math.min(100,fill)}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: HEROES
+// ═══════════════════════════════════════════════════════════════════
+function renderHeroesPanel() { renderHeroesTab('hero-territory'); }
+function renderHeroesTab(tab) {
+  const territoryDiv = document.getElementById('hero-territory');
+  const wanderDiv = document.getElementById('hero-wander');
+  const territory = HeroSystem_getTerritoryHeroes();
+  const wandering = HeroSystem_getWanderingHeroes();
+  const slots = BuildingSystem_getTerritoryHeroSlots(territory.length);
+
+  territoryDiv.innerHTML = `<div class="hero-slot-info">🏰 卡斯特城堡 Lv.${BuildingSystem_getLevel('tavern')} — 英雄空位: ${territory.length}/${slots.max}</div>
+    <div class="hero-cards" id="territory-cards"></div>`;
+  wanderDiv.innerHTML = `<div class="hero-slot-info">🌟 今日訪客 — ${wandering.length} 位英雄路過</div>
+    <div class="hero-cards" id="wander-cards"></div>`;
+
+  const tcards = document.getElementById('territory-cards');
+  if (territory.length === 0) {
+    tcards.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:10px;font-style:italic;">尚無領土英雄，訓練流浪英雄來招募！</div>`;
+  } else {
+    tcards.innerHTML = territory.map(h => renderHeroCard(h, 'territory')).join('');
+  }
+
+  const wcards = document.getElementById('wander-cards');
+  if (wandering.length === 0) {
+    wcards.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:10px;font-style:italic;">目前沒有流浪英雄拜訪。</div>`;
+  } else {
+    wcards.innerHTML = wandering.map(h => renderHeroCard(h, 'wandering')).join('');
+  }
+}
+
+function renderHeroCard(hero, type) {
+  const cls = HERO_CLASSES[hero.class] || HERO_CLASSES.warrior;
+  const statusMap = { idle: 'badge-idle', exploring: 'badge-exploring', resting: 'badge-resting', wandering: 'badge-wandering' };
+  const statusText = { idle: '待機', exploring: '探索中', resting: '休息中', wandering: '流浪中' };
+  const sc = statusMap[hero.status] || 'badge-idle';
+  const st = statusText[hero.status] || hero.status;
+
+  let actions = '';
+  if (type === 'territory') {
+    const trainCost = hero.level * 150;
+    const canTrain = ResourceSystem_get('gold') >= trainCost;
+    actions = `<div class="hero-actions">
+      <button class="btn btn-gold btn-sm" onclick="openDispatchModal('${hero.id}')">出征</button>
+      <button class="btn btn-outline btn-sm" ${canTrain ? '' : 'disabled'} onclick="trainHero('${hero.id}')">訓練 ${fmt(trainCost)}g</button>
+    </div>`;
+  } else {
+    const recCost = HeroSystem_getRecruitCost(hero.id);
+    const canRec = ResourceSystem_get('gold') >= recCost;
+    actions = `<div class="hero-actions">
+      <button class="btn btn-gold btn-sm" ${canRec ? '' : 'disabled'} onclick="recruitHero('${hero.id}')">招募 🪙 ${fmtFull(recCost)}</button>
+    </div>`;
+  }
+
+  return `<div class="hero-card ${hero.status}">
+    <div class="hero-top">
+      <div class="hero-portrait">${cls.icon}</div>
+      <div class="hero-info">
+        <div class="hero-name">${hero.name}</div>
+        <div class="hero-class">Lv.${hero.level} ${cls.name}</div>
+        <div class="hero-stats">
+          <div class="stat">HP <span>${fmtFull(hero.hp)}</span></div>
+          <div class="stat">ATK <span>${hero.atk}</span></div>
+          <div class="stat">DEF <span>${hero.def}</span></div>
+        </div>
+      </div>
+      <div class="hero-badge ${sc}">${st}</div>
+    </div>
+    ${actions}
+  </div>`;
+}
+
+function renderReportsTab() {
+  const div = document.getElementById('hero-reports');
+  div.innerHTML = `<div class="report-sub-tabs">
+      <button class="report-sub-btn active">流浪戰報</button>
+      <button class="report-sub-btn">領地戰報</button>
+    </div>
+    <div class="clear-btn-row"><button class="btn btn-red btn-sm" onclick="clearReports()">清除全部</button></div>
+    <div id="report-list"></div>`;
+  const list = document.getElementById('report-list');
+  if (battleReports.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:10px;">暫無戰報</div>`;
+  } else {
+    list.innerHTML = battleReports.slice(0, 20).map(r => {
+      const timeAgo = getTimeAgo(r.time);
+      return `<div class="report-entry">
+        <div class="report-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.report-expand').classList.toggle('open')">
+          <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
+          <div class="report-info">
+            <div class="report-title">${r.heroName} × ${r.zoneName} — ${r.result === 'victory' ? '勝利' : '撤退'}</div>
+            <div class="report-time">${timeAgo}</div>
+          </div>
+          <div class="report-expand">▾</div>
+        </div>
+        <div class="report-body"></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function getTimeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return diff + ' 秒前';
+  if (diff < 3600) return Math.floor(diff / 60) + ' 分前';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' 小時前';
+  return Math.floor(diff / 86400) + ' 天前';
+}
+function clearReports() { battleReports = []; renderReportsTab(); showToast('戰報已清除', 'info'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: BUILDINGS
+// ═══════════════════════════════════════════════════════════════════
+function renderBuildingPanel() {
+  const grid = document.getElementById('building-grid');
+  const bldgs = BuildingSystem_getAll();
+  grid.innerHTML = Object.values(bldgs).map(b => {
+    const costHtml = b.cost ? Object.entries(b.cost).map(([rid, amt]) => `<div class="cost-item">${RESOURCES[rid]?.icon || '🪙'} ${fmtFull(amt)}</div>`).join('') : '';
+    const canAfford = b.cost ? ResourceSystem_canAfford(b.cost) : false;
+    if (b.canUpgrade) {
+      return `<div class="building-card">
+        <div class="building-header">
+          <div class="building-name">${b.name}</div>
+          <div class="building-level">Lv.${b.level}</div>
+        </div>
+        <div class="building-ico">${b.icon}</div>
+        <div class="building-desc">${b.description}</div>
+        <div class="building-effect">${b.effectText}</div>
+        <div class="divider"></div>
+        <div class="building-cost">${costHtml}</div>
+        <button class="btn btn-gold btn-sm" ${canAfford ? '' : 'disabled'} onclick="upgradeBuilding('${b.id}')">升級 Lv.${b.level + 1}</button>
+      </div>`;
+    } else {
+      return `<div class="building-card">
+        <div class="building-header">
+          <div class="building-name">${b.name}</div>
+          <div class="building-level">MAX</div>
+        </div>
+        <div class="building-ico">${b.icon}</div>
+        <div class="building-desc">${b.description}</div>
+        <div class="building-effect">${b.effectText}</div>
+        <div class="max-badge">✦ MAX LEVEL ✦</div>
+      </div>`;
+    }
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: MAP
+// ═══════════════════════════════════════════════════════════════════
+function renderMapPanel() {
+  const activeDiv = document.getElementById('active-explore');
+  const zoneList = document.getElementById('zone-list');
+  const prog = MapSystem_getProgress();
+  const zones = MapSystem_getZones();
+
+  // Active explorations
+  const explorers = territoryHeroes.filter(h => h.status === 'exploring');
+  if (explorers.length > 0) {
+    activeDiv.innerHTML = `<div class="section-label">進行中的探索</div>` + explorers.map(h => {
+      const zone = zones.find(z => z.id === h.currentZone);
+      const pct = Math.min(100, Math.floor((h.explorationProgress || 0)));
+      return `<div class="explore-item">
+        <div class="explore-top">
+          <div class="explore-name">${zone?.icon || '📍'} ${zone?.name || '未知區域'}</div>
+          <div class="explore-hero">英雄：${h.name}</div>
+          <div class="explore-pct">${pct}%</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,#1a5276,var(--blue))"></div></div>
+      </div>`;
+    }).join('');
+  } else {
+    activeDiv.innerHTML = '';
+  }
+
+  // Zone list
+  zoneList.innerHTML = zones.map(zone => {
+    const unlocked = prog.unlockedZones.includes(zone.id);
+    const cleared = prog.clearedZones.includes(zone.id);
+    const stars = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
+    let cls = 'zone-card';
+    if (!unlocked) cls += ' locked';
+    else if (cleared) cls += ' cleared';
+    else cls += ' unlocked';
+
+    let btn = '';
+    if (!unlocked) {
+      btn = `<button class="btn btn-outline btn-sm" disabled>🔒 鎖定</button>`;
+    } else if (cleared) {
+      btn = `<button class="btn btn-outline btn-sm" disabled>✓ 已通關</button>`;
+    } else {
+      btn = `<button class="btn btn-gold btn-sm" onclick="showToast('從英雄面板派遣英雄探索！','info')">探索</button>`;
+    }
+
+    return `<div class="${cls}">
+      <div class="zone-ico">${zone.icon}</div>
+      <div class="zone-info">
+        <div class="zone-name">${zone.name}</div>
+        <div class="zone-stars">${stars}</div>
+        <div class="zone-rec">推薦等級 Lv.${zone.recommendedLevel}+</div>
+      </div>
+      ${btn}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: SHOP
+// ═══════════════════════════════════════════════════════════════════
+function renderShopPanel() {
+  const grid = document.getElementById('shop-grid');
+  const invList = document.getElementById('inv-list');
+  const items = ShopSystem_getItems();
+  const inv = ShopSystem_getInventory();
+
+  grid.innerHTML = items.map(item => {
+    const costHtml = Object.entries(item.cost).map(([rid, amt]) => `<div class="cost-item">${RESOURCES[rid]?.icon || ''} ${fmtFull(amt)}</div>`).join('');
+    const canCraft = ResourceSystem_canAfford(item.cost);
+    return `<div class="shop-card">
+      <div class="shop-ico">${item.icon}</div>
+      <div class="shop-name">${item.name}</div>
+      <div class="shop-stock">庫存: ${inv[item.id] || 0}</div>
+      <div class="building-cost" style="justify-content:center">${costHtml}</div>
+      <button class="btn btn-gold btn-sm" ${canCraft ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作 ${item.price}g</button>
+    </div>`;
+  }).join('');
+
+  const invItems = Object.entries(inv).filter(([, q]) => q > 0);
+  if (invItems.length === 0) {
+    invList.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text-faint);font-size:10px;font-style:italic;">暫無物品</div>`;
+  } else {
+    invList.innerHTML = invItems.map(([iid, qty]) => {
+      const it = ITEMS[iid];
+      return `<div class="inv-item"><div class="inv-ico">${it?.icon || '📦'}</div><div class="inv-name">${it?.name || iid}</div><div class="inv-qty">×${qty}</div></div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DISPATCH MODAL
+// ═══════════════════════════════════════════════════════════════════
+function openDispatchModal(heroId) {
+  dispatchHeroId = heroId;
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  document.getElementById('dispatch-hero-name').textContent = '英雄：' + hero.name;
+  const prog = MapSystem_getProgress();
+  const zones = MapSystem_getZones();
+  document.getElementById('dispatch-zone-grid').innerHTML = zones.map(z => {
+    const unlocked = prog.unlockedZones.includes(z.id);
+    const stars = '★'.repeat(z.difficulty) + '☆'.repeat(5 - z.difficulty);
+    return `<div class="dispatch-zone ${unlocked ? '' : 'locked'}" data-zone="${z.id}" onclick="selectDispatchZone(${z.id},${unlocked})">
+      <div class="dz-name">${z.icon} ${z.name}</div>
+      <div class="dz-stars">${stars}${unlocked ? '' : ' 🔒'}</div>
+    </div>`;
+  }).join('');
+  dispatchZoneId = null;
+  document.getElementById('modal-dispatch').classList.add('open');
+}
+function selectDispatchZone(zoneId, unlocked) {
+  if (!unlocked) return;
+  dispatchZoneId = zoneId;
+  document.querySelectorAll('.dispatch-zone').forEach(z => z.classList.remove('selected'));
+  document.querySelector(`.dispatch-zone[data-zone="${zoneId}"]`)?.classList.add('selected');
+}
+function closeDispatch() { document.getElementById('modal-dispatch').classList.remove('open'); dispatchHeroId = null; dispatchZoneId = null; }
+function doDispatch() {
+  if (!dispatchHeroId || !dispatchZoneId) { showToast('請選擇探索地點', 'error'); return; }
+  const zone = ZONES.find(z => z.id === dispatchZoneId);
+  if (!zone) return;
+  const ok = MapSystem_startExploration(dispatchHeroId, dispatchZoneId);
+  if (ok) {
+    showToast(`${territoryHeroes.find(h=>h.id===dispatchHeroId)?.name || '英雄'} 出征！前往 ${zone.name}`, 'success');
+    closeDispatch();
+    renderMapPanel();
+    if (activePanel === 'hero') renderHeroesTab('hero-territory');
+  } else {
+    showToast('無法派遣，請確認英雄狀態', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════
+function trainHero(heroId) {
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  const cost = hero.level * 150;
+  if (!ResourceSystem_spend({ gold: cost })) { showToast('金幣不足！', 'error'); return; }
+  HeroSystem_trainHero(heroId, { gold: cost });
+  showToast(`${hero.name} 訓練成功！🎉`, 'success');
+  renderHeroesTab('hero-territory');
+}
+function recruitHero(heroId) {
+  const hero = wanderingHeroes.find(h => h.id === heroId);
+  if (!hero) return;
+  const cost = HeroSystem_getRecruitCost(heroId);
+  if (!ResourceSystem_spend({ gold: cost })) { showToast('金幣不足！', 'error'); return; }
+  if (!HeroSystem_recruitWanderingHero(heroId)) { showToast('無法招募！', 'error'); return; }
+  showToast(`${hero.name} 加入了您的王國！🎉`, 'success');
+  renderHeroesTab('hero-wander');
+  renderHeroesTab('hero-territory');
+}
+function upgradeBuilding(id) {
+  const ok = BuildingSystem_upgrade(id);
+  if (!ok) { showToast('升級失敗！', 'error'); return; }
+  const b = BUILDINGS[id];
+  showToast(`${b?.name || '建築'} 升級成功！`, 'success');
+  renderBuildingPanel();
+}
+function craftItem(id) {
+  const ok = ShopSystem_craftItem(id);
+  if (!ok) { showToast('材料不足！', 'error'); return; }
+  const it = ITEMS[id];
+  showToast(`${it?.name || '物品'} 製作成功！`, 'success');
+  renderShopPanel();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════════════
+document.getElementById('btn-settings').onclick = () => document.getElementById('modal-settings').classList.add('open');
+function closeSettings() { document.getElementById('modal-settings').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// CASTLE CLICK
+// ═══════════════════════════════════════════════════════════════════
+document.getElementById('castle-click').onclick = function() {
+  ResourceSystem_add('gold', 50);
+  ResourceSystem_add('fruitPoor', 5);
+  spawnFloat('🪙+50', true);
+  spawnFloat('🍎+5', false);
+  this.style.transform = 'scale(0.92)';
+  setTimeout(() => this.style.transform = '', 150);
+  updateHUD();
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// OFFLINE COLLECT
+// ═══════════════════════════════════════════════════════════════════
+function collectOffline() {
+  if (!pendingOfflineSummary) return;
+  const s = pendingOfflineSummary;
+  ResourceSystem_add('gold', s.goldProduced);
+  for (const [mat, amt] of Object.entries(s.materialsProduced)) ResourceSystem_add(mat, amt);
+  if (s.magicStonesProduced > 0) ResourceSystem_add('magicStones', s.magicStonesProduced);
+  for (let i = 0; i < 5; i++) {
+    const entries = Object.entries(s.materialsProduced);
+    if (entries[i]) spawnFloat(RESOURCES[entries[i][0]]?.icon + '+' + entries[i][1], true);
+  }
+  pendingOfflineSummary = null;
+  document.getElementById('modal-welcome').classList.remove('open');
+  showToast('離線收益已收取！', 'success');
+  updateHUD();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HUD UPDATE
+// ═══════════════════════════════════════════════════════════════════
+function updateHUD() {
+  const g = ResourceSystem_get('gold');
+  const m = ResourceSystem_get('magicStones');
+  document.getElementById('hud-gold').textContent = fmtFull(g);
+  document.getElementById('hud-magic').textContent = fmtFull(m);
+  for (const mat of MATERIAL_TYPES) {
+    const el = document.getElementById('hc-' + mat.replace('Poor','').replace('Dirty','').replace('Rotten','').replace('Rusty','').replace('Low',''));
+    if (el) el.textContent = fmt(ResourceSystem_get(mat));
+  }
+}
+function updateHUDMats() {
+  const matIds = ['fruit', 'water', 'wood', 'iron', 'herb'];
+  matIds.forEach((m, i) => {
+    const el = document.getElementById('hc-' + m);
+    if (el) el.textContent = fmt(ResourceSystem_get(MATERIAL_TYPES[i]));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN TICK LOOP
+// ═══════════════════════════════════════════════════════════════════
+function gameTick() {
+  const mLv = BuildingSystem_getLevel('monument');
+  ResourceSystem_produceMaterials(mLv);
+  HeroSystem_processWanderingTick();
+  MapSystem_processExplorations();
+  HeroSystem_processRestingTick();
+  ShopSystem_processAutoProduction();
+  updateHUD();
+  updateHUDMats();
+  saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+function init() {
+  const saved = loadGame();
+  ResourceSystem_init(saved);
+  BuildingSystem_init(saved);
+  HeroSystem_init(saved);
+  ShopSystem_init(saved);
+  MapSystem_init(saved);
+  OfflineSystem_init(saved);
+
+  if (saved.heroes.length === 0) {
+    const starter = createTerritoryHero('warrior', 'Sir Aldric', 1);
+    HeroSystem_addTerritoryHero(starter);
+  }
+
+  updateHUD();
+
+  // Check offline
+  const offline = OfflineSystem_markOnline();
+  if (offline && offline.cappedSeconds > 60) {
+    pendingOfflineSummary = offline;
+    const body = document.getElementById('modal-welcome-body');
+    const hours = Math.floor(offline.cappedSeconds / 3600);
+    const mins = Math.floor((offline.cappedSeconds % 3600) / 60);
+    body.innerHTML = `
+      <div style="text-align:center;font-size:10px;color:var(--text-faint);margin-bottom:4px;">您離開了 <span style="color:var(--gold)">${hours} 小時 ${mins} 分</span></div>
+      <div class="offline-item"><div class="offline-label">🪙 金幣</div><div class="offline-val">+${fmtFull(offline.goldProduced)}</div></div>
+      ${Object.entries(offline.materialsProduced).map(([mat, amt]) => `<div class="offline-item"><div class="offline-label">${RESOURCES[mat]?.icon || ''} ${RESOURCES[mat]?.name || mat}</div><div class="offline-val">+${fmtFull(amt)}</div></div>`).join('')}
+      ${offline.magicStonesProduced > 0 ? `<div class="offline-item"><div class="offline-label">💎 魔法石</div><div class="offline-val">+${offline.magicStonesProduced}</div></div>` : ''}
+    `;
+    document.getElementById('modal-welcome').classList.add('open');
+  }
+
+  setInterval(gameTick, 1000);
+
+  // Auto-save every 30s
+  setInterval(saveGame, 30000);
+
+  // Visibility handling
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      OfflineSystem_markOffline();
+      saveGame();
+    }
+  });
+}
+
+init();
+</script>
+</div>
 </body>
 </html>
