@@ -921,10 +921,12 @@ function loadGame() {
       gameState = parsed;
       return parsed;
     } catch(e) {
-      return getDefaultGameState();
+      gameState = getDefaultGameState();
+      return gameState;
     }
   }
-  return getDefaultGameState();
+  gameState = getDefaultGameState();
+  return gameState;
 }
 
 // ═══════════════════════════════════════════════════════════════════
