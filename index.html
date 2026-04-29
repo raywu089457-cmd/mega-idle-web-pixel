@@ -47,9 +47,11 @@ body{
   overflow:hidden;background:var(--cream);
 }
 
-/* Chinese text scale — only affects CJK characters */
+/* Chinese text scale — only applies to explicit .cn-text spans (prevents emoji scaling) */
 :lang(zh-TW), :lang(zh-CN), :lang(zh) {
   font-family: 'Noto Serif TC', 'Source Han Serif TC', 'Lora', Georgia, serif;
+}
+.cn-text {
   font-size: 1.5em;
   line-height: 1.7;
 }
