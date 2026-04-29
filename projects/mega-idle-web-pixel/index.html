@@ -47,11 +47,31 @@ body{
   overflow:hidden;background:var(--cream);
 }
 
-/* Chinese text scale — only affects CJK characters */
+/* Chinese text scale — font-size on :lang prevents need for .cn-text class on every element */
 :lang(zh-TW), :lang(zh-CN), :lang(zh) {
   font-family: 'Noto Serif TC', 'Source Han Serif TC', 'Lora', Georgia, serif;
   font-size: 1.5em;
   line-height: 1.7;
+}
+/* Emoji/icon elements must NOT inherit the 1.5em scaling */
+:lang(zh-TW) .nav-ico, :lang(zh-TW) .hero-portrait, :lang(zh-TW) .res-ico,
+:lang(zh-TW) .mat-icon .ico, :lang(zh-TW) .building-ico, :lang(zh-TW) .zone-ico,
+:lang(zh-TW) .shop-ico, :lang(zh-TW) .inv-ico, :lang(zh-TW) .castle-img,
+:lang(zh-CN) .nav-ico, :lang(zh-CN) .hero-portrait, :lang(zh-CN) .res-ico,
+:lang(zh-CN) .mat-icon .ico, :lang(zh-CN) .building-ico, :lang(zh-CN) .zone-ico,
+:lang(zh-CN) .shop-ico, :lang(zh-CN) .inv-ico, :lang(zh-CN) .castle-img,
+:lang(zh) .nav-ico, :lang(zh) .hero-portrait, :lang(zh) .res-ico,
+:lang(zh) .mat-icon .ico, :lang(zh) .building-ico, :lang(zh) .zone-ico,
+:lang(zh) .shop-ico, :lang(zh) .inv-ico, :lang(zh) .castle-img {
+  font-size: inherit !important;
+}
+:lang(zh-TW) .hud-res .icon, :lang(zh-TW) .hud-center .ico,
+:lang(zh-CN) .hud-res .icon, :lang(zh-CN) .hud-center .ico,
+:lang(zh) .hud-res .icon, :lang(zh) .hud-center .ico {
+  font-size: inherit !important;
+}
+:lang(zh-TW) .btn-icon, :lang(zh-CN) .btn-icon, :lang(zh) .btn-icon {
+  font-size: inherit !important;
 }
 
 /* ── BACKGROUND ── */
@@ -68,11 +88,11 @@ body{
 .hud-resources{display:flex;gap:8px;}
 .hud-res{display:flex;align-items:center;gap:3px;font-size:20px;color:var(--text-dim);}
 .hud-res .icon{font-size:14px;}
-.hud-res .val{color:var(--text);font-weight:600;font-family:'Press Start 2P',monospace;font-size:10px;}
+.hud-res .val{color:var(--gold);font-weight:600;font-family:'Press Start 2P',monospace;font-size:10px;text-shadow:1px 1px 0 var(--charcoal);}
 .hud-center{flex:1;display:flex;justify-content:center;align-items:center;gap:6px;}
 .mat-icon{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;padding:4px 6px;}
 .mat-icon .ico{font-size:18px;}
-.mat-icon .amt{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--text-faint);}
+.mat-icon .amt{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--gold);text-shadow:1px 1px 0 var(--charcoal);}
 .hud-right{display:flex;align-items:center;gap:6px;}
 .btn-icon{width:36px;height:36px;background:var(--warm-wood);border:2px solid var(--charcoal);color:var(--parchment);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--charcoal);}
 
