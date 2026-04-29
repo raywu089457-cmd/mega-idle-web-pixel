@@ -50,19 +50,24 @@ body{
 /* Chinese text — Noto Serif TC + larger font for readability */
 :lang(zh-TW), :lang(zh-CN), :lang(zh) {
   font-family: 'Noto Serif TC', 'Source Han Serif TC', 'Lora', Georgia, serif;
-}
-.cn-text {
   font-size: 1.5em;
   line-height: 1.7;
 }
-/* Emoji/icon elements: explicit sizes, never inherit :lang font-size */
-.nav-ico, .hero-portrait, .res-ico,
-.mat-icon .ico, .building-ico, .zone-ico,
-.shop-ico, .inv-ico, .castle-img,
-.hud-res .icon, .hud-center .ico,
-.btn-icon, .mat-icon .amt, .hud-res .val {
-  font-size: unset;
-}
+/* Restore explicit pixel sizes for emoji/icon elements — blocks :lang inheritance */
+.nav-ico    { font-size: 30px !important; }
+.hero-portrait { font-size: unset; }
+.res-ico    { font-size: unset; }
+.mat-icon .ico { font-size: 18px !important; }
+.building-ico { font-size: unset; }
+.zone-ico   { font-size: unset; }
+.shop-ico   { font-size: unset; }
+.inv-ico    { font-size: unset; }
+.castle-img { font-size: 144px !important; }
+.hud-res .icon { font-size: 14px !important; }
+.hud-center .ico { font-size: unset; }
+.btn-icon   { font-size: unset; }
+.mat-icon .amt { font-size: unset; }
+.hud-res .val { font-size: unset; }
 
 /* ── BACKGROUND ── */
 .bg-layer{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#d2b48c 0%,#c4a67c 40%,#a08060 100%);}
