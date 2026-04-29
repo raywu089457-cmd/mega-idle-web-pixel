@@ -37,7 +37,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{
-  font-family:'Lora',Georgia,serif;
+  font-family:'Press Start 2P',monospace,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',monospace;
   background:var(--rich-soil);
   color:var(--text);
   position:relative;overflow:hidden;
@@ -47,8 +47,9 @@ body{
   overflow:hidden;background:var(--cream);
 }
 
-/* Chinese text — 1.5em scale, no forced font (falls back to element's own font) */
+/* Chinese text — fallback to system serif font for Chinese */
 :lang(zh-TW), :lang(zh-CN), :lang(zh) {
+  font-family: 'Noto Serif TC', 'Source Han Serif TC', serif;
   font-size: 1.5em;
   line-height: 1.7;
 }
