@@ -14,7 +14,7 @@ const Game = (function () {
   let lastAutoSave = 0;
 
   const TICK_INTERVAL_MS = 1000; // 1 second
-  const AUTO_SAVE_INTERVAL = 1; // save every tick (1 second)
+  const AUTO_SAVE_INTERVAL = 1; // save every 1 tick (1 second)
 
   // ─── Initialization ─────────────────────────────────────────────────────────
 
