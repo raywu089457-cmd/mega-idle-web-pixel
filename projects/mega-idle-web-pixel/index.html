@@ -52,9 +52,6 @@ body{
   font-size: 1.5em;
   line-height: 1.7;
 }
-/* Resource panel: double Chinese, numbers half — block :lang scaling */
-#panel-res .res-name.cn-text { font-size: 2em !important; }
-#panel-res .res-val, #panel-res .res-max { font-size: 5px !important; }
 /* Restore explicit pixel sizes for emoji/icon elements — blocks :lang inheritance */
 .nav-ico    { font-size: 30px !important; }
 .hero-portrait { font-size: unset; }
@@ -1052,7 +1049,7 @@ function renderResourcesPanel() {
     const rate = prodRates[rid] || 0;
     return `<div class="res-card">
       <div class="res-top">
-        <div class="res-info"><span class="res-ico">${cfg.icon}</span><div><div class="res-name cn-text">${cfg.name}</div><div class="res-val"><span id="r-${rid}">${fmtFull(val)}</span> / <span class="res-max">${fmtFull(cap)}</span></div></div></div>
+        <div class="res-info"><span class="res-ico">${cfg.icon}</span><div><div class="res-name">${cfg.name}</div><div class="res-val"><span id="r-${rid}">${fmtFull(val)}</span> / <span class="res-max">${fmtFull(cap)}</span></div></div></div>
         <div class="rate" id="rate-${rid}">+${rate}/s</div>
       </div>
       <div class="progress-bar"><div class="progress-fill ${barClass}" id="pb-${rid}" style="width:${Math.min(100,fill)}%"></div></div>
