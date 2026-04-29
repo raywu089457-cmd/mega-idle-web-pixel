@@ -47,9 +47,8 @@ body{
   overflow:hidden;background:var(--cream);
 }
 
-/* Chinese text — fallback to system serif font for Chinese */
+/* Chinese text — 1.5em scale, no forced font (falls back to element's own font) */
 :lang(zh-TW), :lang(zh-CN), :lang(zh) {
-  font-family: 'Noto Serif TC', 'Source Han Serif TC', serif;
   font-size: 1.5em;
   line-height: 1.7;
 }
