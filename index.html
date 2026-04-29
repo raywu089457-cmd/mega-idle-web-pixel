@@ -52,9 +52,9 @@ body{
   font-size: 1.5em;
   line-height: 1.7;
 }
-/* Resource panel: Chinese double, numbers half */
-.res-name.cn-text { font-size: 2em; }
-.res-val, .res-max { font-size: 5px; }
+/* Resource panel: double Chinese, numbers half — block :lang scaling */
+#panel-res .res-name.cn-text { font-size: 2em !important; }
+#panel-res .res-val, #panel-res .res-max { font-size: 5px !important; }
 /* Restore explicit pixel sizes for emoji/icon elements — blocks :lang inheritance */
 .nav-ico    { font-size: 30px !important; }
 .hero-portrait { font-size: unset; }
