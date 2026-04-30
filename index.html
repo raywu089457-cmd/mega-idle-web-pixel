@@ -440,7 +440,7 @@ body{
       <div class="divider"></div>
       <div class="setting-row">
         <button class="btn btn-gold btn-sm" onclick="saveGame();showToast('遊戲已儲存！','success')">💾 儲存遊戲</button>
-        <button class="btn btn-red btn-sm" onclick="if(confirm('確定要重新開始嗎？')){SaveManager.delete().then(()=>location.reload());}">🗑 重新開始</button>
+        <button class="btn btn-red btn-sm" id="btn-reset" onclick="doReset()">🗑 重新開始</button>
       </div>
     </div>
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeSettings()">關閉</button></div>
@@ -929,6 +929,17 @@ let dispatchZoneId = null;
 let activePanel = null;
 let activeHeroTab = 'hero-territory';
 let activeReportTab = 'wander';
+
+async function doReset() {
+  if (!confirm('確定要重新開始嗎？所有進度將會消失！')) return;
+  try {
+    await SaveManager.delete();
+    localStorage.removeItem('kingdomBuilderSave');
+  } catch(e) {
+    console.error('Reset error:', e);
+  }
+  location.reload();
+}
 
 function saveGame() {
   if (!gameState) return;
