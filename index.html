@@ -726,18 +726,57 @@ function HeroSystem_processWanderingTick() {
   if (nextWanderingSpawnIn <= 0 && wanderingHeroes.length < maxW) spawnWanderingHero();
   for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
     const hero = wanderingHeroes[i];
-    if (Math.random() < 0.90) {
-      const res = resolveCombat(hero);
-      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: Math.floor(res.goldReward * 0.2), magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0 }, res.combatLog);
-      if (res.victory) {
-        ResourceSystem_add('gold', Math.floor(res.goldReward * 0.2));
-        if (res.magicStones > 0) ResourceSystem_add('magicStones', Math.floor(res.magicStones * 0.2));
-      }
+    // Start new combat
+    if (Math.random() < 0.90 && !wanderingCombats[hero.id]) {
+      const eHp = 50 + hero.level * 20, eAtk = 5 + hero.level * 3, eDef = 3 + hero.level * 2;
+      const eName = genEnemyName(hero.level);
+      const hMaxHp = hero.hp || hero.maxHp;
+      wanderingCombats[hero.id] = {
+        hero,
+        enemyHp: eHp,
+        enemyAtk: eAtk,
+        enemyDef: eDef,
+        enemyName: eName,
+        heroHp: hMaxHp,
+        round: 0,
+        log: [],
+        goldReward: 20 + hero.level * 10,
+        magicStoneChance: hero.dropMagicStoneChance
+      };
+      wanderingCombats[hero.id].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 遭遇 ' + eName + '！' });
     }
     hero.ticksUntilStateChange -= 1;
     if (hero.ticksUntilStateChange <= 0) {
       if (Math.random() < BW.leaving) { wanderingHeroes.splice(i, 1); continue; }
       hero.ticksUntilStateChange = Math.floor(Math.random() * 60) + 30;
+    }
+  }
+  // Process one round for each ongoing wandering combat
+  for (const heroId in wanderingCombats) {
+    const c = wanderingCombats[heroId];
+    c.round++;
+    const hDmg = Math.max(1, c.hero.atk - c.enemyDef + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, c.enemyAtk - c.hero.def + Math.floor(Math.random() * 5));
+    c.enemyHp -= hDmg;
+    c.heroHp -= eDmg;
+    c.log.push({ type: 'round', text: '【第' + c.round + '回合】' + c.hero.name + ' 攻擊 ' + c.enemyName + ' 造成 ' + hDmg + ' 傷害，敵人反擊造成 ' + eDmg + ' 傷害' });
+    // Check if combat ended
+    if (c.enemyHp <= 0 || c.heroHp <= 0 || c.round >= 10) {
+      const victory = c.enemyHp <= 0;
+      const goldR = victory ? c.goldReward : 0;
+      const mStones = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+      if (victory) {
+        c.hero.hp = Math.max(1, c.heroHp);
+        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mStones > 0 ? ' 和 ' + mStones + ' 魔法石' : '') + '！' });
+        addBattleReport(c.hero.name, 'wander', 'victory', { gold: Math.floor(goldR * 0.2), magicStones: mStones > 0 ? Math.floor(mStones * 0.2) : 0 }, c.log);
+        ResourceSystem_add('gold', Math.floor(goldR * 0.2));
+        if (mStones > 0) ResourceSystem_add('magicStones', Math.floor(mStones * 0.2));
+      } else {
+        c.hero.hp = Math.max(1, c.heroHp);
+        c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 從 ' + c.enemyName + ' 撤退' });
+        addBattleReport(c.hero.name, 'wander', 'retreat', { gold: 0, magicStones: 0 }, c.log);
+      }
+      delete wanderingCombats[heroId];
     }
   }
 }
@@ -774,17 +813,59 @@ function HeroSystem_processExplorationTick(zoneId) {
   let expData = explorers[0].explorationProgress || 0;
   expData += 0.5 + (explorers.reduce((s, h) => s + (h.atk + h.def) / 2, 0) / 100);
   for (const hero of explorers) {
-    if (Math.random() < 0.90) {
-      const res = resolveZoneCombat(hero, zone);
-      addBattleReport(hero.name, zone.name, res.victory ? 'victory' : 'retreat', { gold: res.goldReward, magicStones: res.magicStones }, res.combatLog);
-      if (res.victory) {
-        ResourceSystem_add('gold', res.goldReward);
-        if (res.magicStones > 0) ResourceSystem_add('magicStones', res.magicStones);
-        hero.hp = Math.max(1, res.heroRemainingHp);
+    // Start new combat if not already in one
+    const combatKey = hero.id + '_' + zoneId;
+    if (Math.random() < 0.90 && !territoryCombats[combatKey]) {
+      const eHp = 30 + zone.difficulty * 25 + hero.level * 5;
+      const eAtk = 3 + zone.difficulty * 4 + hero.level * 2;
+      const eDef = 2 + zone.difficulty * 3 + hero.level * 2;
+      const eName = genZoneEnemyName(zone);
+      const hMaxHp = hero.hp || hero.maxHp;
+      territoryCombats[combatKey] = {
+        hero,
+        zone,
+        enemyHp: eHp,
+        enemyAtk: eAtk,
+        enemyDef: eDef,
+        enemyName: eName,
+        heroHp: hMaxHp,
+        round: 0,
+        log: [],
+        goldReward: zone.difficulty * 15 + hero.level * 5,
+        magicStoneChance: zone.magicStoneChance
+      };
+      territoryCombats[combatKey].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' 遭遇 ' + eName + '！' });
+    }
+  }
+  // Process one round for each ongoing territory combat in this zone
+  for (const hero of explorers) {
+    const combatKey = hero.id + '_' + zoneId;
+    const c = territoryCombats[combatKey];
+    if (!c) continue;
+    c.round++;
+    const hDmg = Math.max(1, c.hero.atk - c.enemyDef + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, c.enemyAtk - c.hero.def + Math.floor(Math.random() * 5));
+    c.enemyHp -= hDmg;
+    c.heroHp -= eDmg;
+    c.log.push({ type: 'round', text: '【第' + c.round + '回合】' + c.hero.name + ' 造成 ' + hDmg + ' 傷害，' + c.enemyName + ' 造成 ' + eDmg + ' 傷害' });
+    // Check if combat ended
+    if (c.enemyHp <= 0 || c.heroHp <= 0 || c.round >= 10) {
+      const victory = c.enemyHp <= 0;
+      const goldR = victory ? c.goldReward : 0;
+      const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+      if (victory) {
+        c.hero.hp = Math.max(1, c.heroHp);
+        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣！' });
+        addBattleReport(c.hero.name, zone.name, 'victory', { gold: goldR, magicStones: mS }, c.log);
+        ResourceSystem_add('gold', goldR);
+        if (mS > 0) ResourceSystem_add('magicStones', mS);
       } else {
-        hero.hp = Math.max(1, res.heroRemainingHp);
-        if (hero.hp <= 1) { hero.status = 'resting'; hero.currentZone = null; hero.explorationProgress = 0; }
+        c.hero.hp = Math.max(1, c.heroHp);
+        if (c.hero.hp <= 1) { c.hero.status = 'resting'; c.hero.currentZone = null; c.hero.explorationProgress = 0; }
+        c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 僥倖逃脫' });
+        addBattleReport(c.hero.name, zone.name, 'retreat', { gold: 0, magicStones: 0 }, c.log);
       }
+      delete territoryCombats[combatKey];
     }
   }
   if (expData >= 100) {
@@ -933,6 +1014,10 @@ let activeHeroTab = 'hero-territory';
 let activeReportTab = 'wander';
 let expandedReports = new Set(); // Track expanded report IDs
 
+// ── COMBAT STATE TRACKING (per-second round resolution) ──
+const wanderingCombats = {};  // { [heroId]: { hero, enemyHp, enemyAtk, enemyDef, enemyName, heroHp, round, log, goldReward, magicStoneChance } }
+const territoryCombats = {};  // { [heroId_zoneId]: { hero, zone, enemyHp, enemyAtk, enemyDef, enemyName, heroHp, round, log, goldReward, magicStoneChance } }
+
 async function doReset() {
   if (!confirm('確定要重新開始嗎？所有進度將會消失！')) return;
   // Clear localStorage FIRST to ensure no race with auto-save
@@ -952,8 +1037,10 @@ async function doReset() {
     tickCount: 0
   };
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(defaultState));
-  // CRITICAL: Clear gameState so saveGame() becomes a no-op during the 500ms window
+  // CRITICAL: Clear gameState and combat tracking so saveGame() becomes a no-op during the 500ms window
   gameState = null;
+  Object.keys(wanderingCombats).forEach(k => delete wanderingCombats[k]);
+  Object.keys(territoryCombats).forEach(k => delete territoryCombats[k]);
   // Also clear IndexedDB for consistency
   try {
     await SaveManager.delete();
