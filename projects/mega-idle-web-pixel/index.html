@@ -291,16 +291,19 @@ body{
   <div class="hud-left">
     <div class="kingdom-name" id="hud-kingdom-name">⚔ 星辰王國</div>
     <div class="hud-resources">
-      <div class="hud-res"><span class="icon">🪙</span><span class="val" id="hud-gold">500</span></div>
-      <div class="hud-res"><span class="icon">💎</span><span class="val" id="hud-magic">0</span></div>
+      <div class="hud-res resource-item" id="hud-res-gold"><span class="icon">🪙</span><span class="val" id="hud-gold">500</span></div>
+      <div class="hud-res resource-item" id="hud-res-magic"><span class="icon">💎</span><span class="val" id="hud-magic">0</span></div>
     </div>
   </div>
   <div class="hud-center" id="hud-mats">
-    <div class="mat-icon" title="劣等水果"><div class="ico">🍎</div><div class="amt" id="hc-fruit">0</div></div>
-    <div class="mat-icon" title="髒水"><div class="ico">💧</div><div class="amt" id="hc-water">0</div></div>
-    <div class="mat-icon" title="腐朽木頭"><div class="ico">🪵</div><div class="amt" id="hc-wood">0</div></div>
-    <div class="mat-icon" title="鏽跡斑斑的鐵"><div class="ico">⚙</div><div class="amt" id="hc-iron">0</div></div>
-    <div class="mat-icon" title="低等藥材"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
+    <div class="mat-icon resource-item" title="劣等水果"><div class="ico">🍎</div><div class="amt" id="hc-fruit">0</div></div>
+    <div class="mat-icon resource-item" title="髒水"><div class="ico">💧</div><div class="amt" id="hc-water">0</div></div>
+    <div class="mat-icon resource-item" title="腐朽木頭"><div class="ico">🪵</div><div class="amt" id="hc-wood">0</div></div>
+    <div class="mat-icon resource-item" title="鏽跡斑斑的鐵"><div class="ico">⚙</div><div class="amt" id="hc-iron">0</div></div>
+    <div class="mat-icon resource-item" title="低等藥材"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
+    <div class="mat-icon resource-item" title="強化素材 T1"><div class="ico">🔶</div><div class="amt" id="hc-up1">0</div></div>
+    <div class="mat-icon resource-item" title="強化素材 T2"><div class="ico">🔷</div><div class="amt" id="hc-up2">0</div></div>
+    <div class="mat-icon resource-item" title="強化素材 T3"><div class="ico">🔘</div><div class="amt" id="hc-up3">0</div></div>
   </div>
   <div class="hud-right">
     <button class="btn-icon" id="btn-settings" title="設定">⚙️</button>
@@ -451,6 +454,9 @@ const RESOURCES = {
   woodRotten: { name: '腐朽木頭', icon: '🪵', initial: 0, capacity: 500 },
   ironRusty: { name: '鏽跡斑斑的鐵', icon: '⚙️', initial: 0, capacity: 500 },
   herbLow: { name: '低等藥材', icon: '🌿', initial: 0, capacity: 500 },
+  upgrade_mat_t1: { name: '強化素材 T1', icon: '🔶', initial: 0, capacity: 100 },
+  upgrade_mat_t2: { name: '強化素材 T2', icon: '🔷', initial: 0, capacity: 50 },
+  upgrade_mat_t3: { name: '強化素材 T3', icon: '🔘', initial: 0, capacity: 20 },
 };
 const MATERIAL_TYPES = ['fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
 const BUILDINGS = {
@@ -459,6 +465,7 @@ const BUILDINGS = {
   weaponShop: { id: 'weaponShop', name: '武器鋪', nameAlt: 'Weapon Shop', description: '鑄造各種武器，提升英雄攻擊力。', level: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️', effectText: '🗡 可製作初級武器' },
   potionShop: { id: 'potionShop', name: '藥水鋪', nameAlt: 'Potion Shop', description: '調配各種藥水，補充英雄體力。', level: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️', effectText: '💊 可製作初級藥水' },
   armorShop: { id: 'armorShop', name: '鎧甲鋪', nameAlt: 'Armor Shop', description: '打造堅固鎧甲，增強英雄防禦力。', level: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️', effectText: '🛡 最高級防具可製作' },
+  kingdomVault: { id: 'kingdomVault', name: '王國金庫', nameAlt: 'Kingdom Vault', description: '王國的財政核心，每級增加金幣和材料容量上限。', level: 0, maxLevel: 10, baseCost: { gold: 2000 }, costMultiplier: 2.5, icon: '🏦', effectText: '💰 +5000金幣容量 | 📦 +100材料容量/級', requiresCastleLevel: 2 },
 };
 const HERO_CLASSES = {
   warrior: { name: '戰士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
@@ -474,6 +481,10 @@ const WANDERING_HERO_TYPES = [
   { typeId: 'wandering_mage_2', class: 'mage', name: '雲游術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
   { typeId: 'wandering_rogue_1', class: 'rogue', name: '街頭頑童', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
   { typeId: 'wandering_rogue_2', class: 'rogue', name: '盜賊大師', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+  { typeId: 'wandering_cleric_1', class: 'cleric', name: '流浪治療師', level: 2, dropGold: 22, dropMagicStoneChance: 0.1 },
+  { typeId: 'wandering_cleric_2', class: 'cleric', name: '寺廟見習僧', level: 6, dropGold: 55, dropMagicStoneChance: 0.18 },
+  { typeId: 'wandering_ranger_1', class: 'ranger', name: '森林斥候', level: 2, dropGold: 23, dropMagicStoneChance: 0.11 },
+  { typeId: 'wandering_ranger_2', class: 'ranger', name: '荒野向導', level: 7, dropGold: 65, dropMagicStoneChance: 0.19 },
 ];
 const ZONES = [
   { id: 1, name: '平靜郊野', nameAlt: 'Countryside', difficulty: 1, recommendedLevel: 1, rewards: { gold: { min: 50, max: 100 }, materials: ['fruitPoor', 'waterDirty'] }, magicStoneChance: 0.1, icon: '🌾' },
@@ -516,7 +527,7 @@ function createWanderingHero(typeDef) {
     maxHp: classDef.baseHp + (typeDef.level - 1) * 10,
     atk: classDef.baseAtk + (typeDef.level - 1) * 3,
     def: classDef.baseDef + (typeDef.level - 1) * 2,
-    status: 'wandering', dropGold: typeDef.dropGold,
+    status: 'wandering', dropGold: typeDef.dropGold, gold: 0,
     dropMagicStoneChance: typeDef.dropMagicStoneChance,
     ticksUntilStateChange: Math.floor(Math.random() * 120) + 60,
   };
@@ -536,9 +547,9 @@ function getBuildingCost(buildingId, targetLevel) {
 function getDefaultGameState() {
   return {
     version: 1, lastOnline: Date.now(),
-    resources: { gold: 500, magicStones: 0, fruitPoor: 0, waterDirty: 0, woodRotten: 0, ironRusty: 0, herbLow: 0 },
+    resources: { gold: 500, magicStones: 0, fruitPoor: 0, waterDirty: 0, woodRotten: 0, ironRusty: 0, herbLow: 0, upgrade_mat_t1: 0, upgrade_mat_t2: 0, upgrade_mat_t3: 0 },
     heroes: [], wanderingHeroes: [],
-    buildings: { monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } },
+    buildings: { monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 }, kingdomVault: { level: 0 } },
     mapProgress: { currentZone: 1, unlockedZones: [1], clearedZones: [] },
     shopInventory: {}, tickCount: 0,
   };
@@ -565,7 +576,10 @@ function ResourceSystem_init(savedState) {
 function ResourceSystem_add(resourceId, amount) {
   if (!resources[resourceId]) return 0;
   const prev = resources[resourceId].value;
-  const newValue = Math.min(prev + amount, RESOURCES[resourceId].capacity);
+  let capacity = RESOURCES[resourceId].capacity;
+  if (resourceId === 'gold') capacity += getVaultGoldBonus();
+  else if (MATERIAL_TYPES.includes(resourceId)) capacity += getVaultMatBonus();
+  const newValue = Math.min(prev + amount, capacity);
   const actualAdded = newValue - prev;
   resources[resourceId].value = newValue;
   resourceListeners.forEach(l => { try { l('add', { resourceId, amount: actualAdded, total: newValue }); } catch(e) {} });
@@ -583,11 +597,16 @@ function ResourceSystem_get(resourceId) { return resources[resourceId]?.value ??
 function ResourceSystem_getAll() { const r = {}; for (const [k, v] of Object.entries(resources)) r[k] = v.value; return r; }
 function ResourceSystem_canAfford(cost) { for (const [id, amt] of Object.entries(cost)) if (ResourceSystem_get(id) < amt) return false; return true; }
 function ResourceSystem_spend(cost) { if (!ResourceSystem_canAfford(cost)) return false; for (const [id, amt] of Object.entries(cost)) ResourceSystem_subtract(id, amt); return true; }
+function getVaultGoldBonus() { const lvl = buildingStates['kingdomVault']?.level ?? 0; return lvl * 5000; }
+function getVaultMatBonus() { const lvl = buildingStates['kingdomVault']?.level ?? 0; return lvl * 100; }
 function ResourceSystem_getCapacity(resourceId) { return resources[resourceId]?.capacity ?? 0; }
 function ResourceSystem_getFillPercent(resourceId) { const s = resources[resourceId]; if (!s || s.capacity === 0) return 0; return (s.value / s.capacity) * 100; }
+function ResourceSystem_getCapacityStatus(resourceId) { const p = ResourceSystem_getFillPercent(resourceId); if (p >= 100) return 'full'; if (p >= 90) return 'critical'; if (p >= 80) return 'warning'; return 'normal'; }
 function ResourceSystem_produceMaterials(monumentLevel = 1) {
   const results = {};
-  for (const mat of MATERIAL_TYPES) results[mat] = ResourceSystem_add(mat, (Math.floor(Math.random() * 3) + 1) * monumentLevel);
+  const TICK_BONUS = 30; // 30 seconds per tick, produce 30x to maintain rate
+  const vaultBonus = 1 + (buildingStates['kingdomVault']?.level ?? 0) * 0.1;
+  for (const mat of MATERIAL_TYPES) results[mat] = ResourceSystem_add(mat, Math.floor((Math.floor(Math.random() * 3) + 1) * monumentLevel * TICK_BONUS * vaultBonus));
   return results;
 }
 function ResourceSystem_addListener(cb) { resourceListeners.push(cb); }
@@ -599,7 +618,7 @@ function ResourceSystem_getConfig(rid) { return RESOURCES[rid] ?? null; }
 let buildingStates = {};
 function BuildingSystem_init(savedState) {
   const saved = savedState?.buildings || {};
-  for (const [id, def] of Object.entries({ monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } })) {
+  for (const [id, def] of Object.entries({ monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 }, kingdomVault: { level: 0 } })) {
     buildingStates[id] = { level: saved[id]?.level ?? def.level };
   }
 }
@@ -621,7 +640,7 @@ function BuildingSystem_upgrade(id) {
 }
 function BuildingSystem_getWanderingSpawnInterval() { return Math.max(2, 12 - (BuildingSystem_getLevel('tavern') * 2)); }
 function BuildingSystem_getMaxWanderingHeroes() { return Math.min(5, 2 + BuildingSystem_getLevel('tavern')); }
-function BuildingSystem_getTerritoryHeroSlots(currentCount = 0) { const t = BuildingSystem_getLevel('tavern'); return { current: currentCount, max: 3 + (t - 1) * 2 }; }
+function BuildingSystem_getTerritoryHeroSlots(currentCount = 0) { const t = BuildingSystem_getLevel('tavern'); return { current: currentCount, max: 10 + (t - 1) * 2 }; }
 
 // ═══════════════════════════════════════════════════════════════════
 // HERO SYSTEM
@@ -665,6 +684,7 @@ function HeroSystem_recruitWanderingHero(id) {
   if (!ResourceSystem_spend({ gold: rc })) return false;
   const t = createTerritoryHero(w.class, w.name, w.level);
   t.dropMagicStoneChance = w.dropMagicStoneChance;
+  t.gold = w.gold || 0;
   wanderingHeroes.splice(idx, 1); territoryHeroes.push(t); return true;
 }
 function HeroSystem_getRecruitCost(id) { const h = wanderingHeroes.find(x => x.id === id); return h ? h.level * 100 : 0; }
@@ -706,9 +726,12 @@ function HeroSystem_processWanderingTick() {
     const hero = wanderingHeroes[i];
     if (Math.random() < 0.90) {
       const res = resolveCombat(hero);
-      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: Math.floor(res.goldReward * 0.2), magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0 });
+      const kingdomGold = Math.floor(res.goldReward * 0.2);
+      const retainedGold = res.goldReward - kingdomGold;
+      hero.gold = (hero.gold || 0) + retainedGold;
+      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: kingdomGold, magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0, retainedGold });
       if (res.victory) {
-        ResourceSystem_add('gold', Math.floor(res.goldReward * 0.2));
+        ResourceSystem_add('gold', kingdomGold);
         if (res.magicStones > 0) ResourceSystem_add('magicStones', Math.floor(res.magicStones * 0.2));
       }
     }
@@ -1037,9 +1060,11 @@ function switchTab(btn, targetId) {
 // ═══════════════════════════════════════════════════════════════════
 function renderResourcesPanel() {
   const grid = document.getElementById('res-grid');
-  const RES_ORDER = ['gold', 'magicStones', 'fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
+  const RES_ORDER = ['gold', 'magicStones', 'fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow', 'upgrade_mat_t1', 'upgrade_mat_t2', 'upgrade_mat_t3'];
   const prod = BuildingSystem_getLevel('monument');
-  const prodRates = { gold: 0, magicStones: 0, fruitPoor: prod, waterDirty: prod, woodRotten: prod, ironRusty: prod, herbLow: prod };
+  const vaultLvl = buildingStates['kingdomVault']?.level ?? 0;
+  const vaultBonus = 1 + vaultLvl * 0.1;
+  const prodRates = { gold: 0, magicStones: 0, fruitPoor: Math.floor(prod * vaultBonus), waterDirty: Math.floor(prod * vaultBonus), woodRotten: Math.floor(prod * vaultBonus), ironRusty: Math.floor(prod * vaultBonus), herbLow: Math.floor(prod * vaultBonus), upgrade_mat_t1: 0, upgrade_mat_t2: 0, upgrade_mat_t3: 0 };
   grid.innerHTML = RES_ORDER.map(rid => {
     const cfg = RESOURCES[rid];
     const val = ResourceSystem_get(rid);
@@ -1113,7 +1138,9 @@ function renderHeroCard(hero, type) {
   } else {
     const recCost = HeroSystem_getRecruitCost(hero.id);
     const canRec = ResourceSystem_get('gold') >= recCost;
+    const heroGold = hero.gold || 0;
     actions = `<div class="hero-actions">
+      ${heroGold > 0 ? `<span class="stat" style="color:var(--gold);font-size:12px;">💰 ${fmtFull(heroGold)}</span>` : ''}
       <button class="btn btn-gold btn-sm" ${canRec ? '' : 'disabled'} onclick="recruitHero('${hero.id}')">招募 🪙 ${fmtFull(recCost)}</button>
     </div>`;
   }
@@ -1425,16 +1452,35 @@ function updateHUD() {
   const m = ResourceSystem_get('magicStones');
   document.getElementById('hud-gold').textContent = fmtFull(g);
   document.getElementById('hud-magic').textContent = fmtFull(m);
+
+  // Update capacity status classes for gold and magic stones
+  updateResourceStatus('gold', 'hud-res-gold');
+  updateResourceStatus('magicStones', 'hud-res-magic');
+
   for (const mat of MATERIAL_TYPES) {
     const el = document.getElementById('hc-' + mat.replace('Poor','').replace('Dirty','').replace('Rotten','').replace('Rusty','').replace('Low',''));
     if (el) el.textContent = fmt(ResourceSystem_get(mat));
   }
+}
+
+function updateResourceStatus(resourceId, elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const status = ResourceSystem_getCapacityStatus(resourceId);
+  el.classList.remove('warning', 'critical', 'full');
+  if (status !== 'normal') el.classList.add(status);
 }
 function updateHUDMats() {
   const matIds = ['fruit', 'water', 'wood', 'iron', 'herb'];
   matIds.forEach((m, i) => {
     const el = document.getElementById('hc-' + m);
     if (el) el.textContent = fmt(ResourceSystem_get(MATERIAL_TYPES[i]));
+  });
+  const upMatIds = ['up1', 'up2', 'up3'];
+  const upMatKeys = ['upgrade_mat_t1', 'upgrade_mat_t2', 'upgrade_mat_t3'];
+  upMatIds.forEach((m, i) => {
+    const el = document.getElementById('hc-' + m);
+    if (el) el.textContent = fmt(ResourceSystem_get(upMatKeys[i]));
   });
 }
 
@@ -1495,10 +1541,10 @@ function init() {
     document.getElementById('modal-welcome').classList.add('open');
   }
 
-  setInterval(gameTick, 1000);
+  setInterval(gameTick, 30000); // 30-second ticks (was 1000ms)
 
-  // Auto-save every 30s
-  setInterval(saveGame, 1000);
+  // Auto-save every 15 minutes
+  setInterval(saveGame, 30000);
 
   // Visibility handling
   document.addEventListener('visibilitychange', () => {

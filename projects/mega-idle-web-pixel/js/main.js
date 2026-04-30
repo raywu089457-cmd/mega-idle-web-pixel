@@ -13,8 +13,8 @@ const Game = (function () {
   let tickCount = 0;
   let lastAutoSave = 0;
 
-  const TICK_INTERVAL_MS = 1000; // 1 second
-  const AUTO_SAVE_INTERVAL = 1; // save every 1 tick (1 second)
+  const TICK_INTERVAL_MS = 30000; // 30 seconds (was 1 second)
+  const AUTO_SAVE_INTERVAL = 30; // save every 30 ticks (15 minutes at 30s/tick)
 
   // ─── Initialization ─────────────────────────────────────────────────────────
 

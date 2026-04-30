@@ -75,9 +75,10 @@ const OfflineSystem = (function () {
     const totalSeconds = Math.floor((returnTime - lastOnline) / 1000);
     const cappedSeconds = Math.min(totalSeconds, MAX_OFFLINE_SECONDS);
 
-    // Material production
-    const avgProductionPerTick = 2 * monumentLevel; // 1-3 avg = 2
-    const ticks = cappedSeconds;
+    // Material production (now based on 30-second ticks)
+    const TICK_INTERVAL = 30; // seconds per tick
+    const avgProductionPerTick = 2 * monumentLevel; // 1-3 avg = 2 per 30 seconds
+    const ticks = Math.floor(cappedSeconds / TICK_INTERVAL); // number of 30-second ticks
     const materialEfficiency = avgProductionPerTick * OFFLINE_EFFICIENCY;
 
     const materialsProduced = {};
@@ -92,9 +93,9 @@ const OfflineSystem = (function () {
     }
 
     // Wandering hero gold (simplified estimate)
-    // Average wandering hero generates ~50 gold per minute
-    const avgGoldPerMinute = 50;
-    const goldProduced = Math.floor(avgGoldPerMinute * (cappedSeconds / 60) * OFFLINE_EFFICIENCY);
+    // Average wandering hero generates ~50 gold per minute (at 30s tick, ~25 gold per tick)
+    const avgGoldPerTick = 25;
+    const goldProduced = Math.floor(avgGoldPerTick * ticks * OFFLINE_EFFICIENCY);
     ResourceSystem.add('gold', goldProduced);
 
     // Wandering hero magic stones (very rare offline)
@@ -127,7 +128,9 @@ const OfflineSystem = (function () {
     const totalSeconds = Math.floor((returnTime - lastOnline) / 1000);
     const cappedSeconds = Math.min(totalSeconds, MAX_OFFLINE_SECONDS);
 
+    const TICK_INTERVAL = 30;
     const avgProductionPerTick = 2 * monumentLevel;
+    const ticks = Math.floor(cappedSeconds / TICK_INTERVAL);
     const materialEfficiency = avgProductionPerTick * OFFLINE_EFFICIENCY;
 
     const materialsProduced = {};
@@ -135,11 +138,11 @@ const OfflineSystem = (function () {
 
     for (const mat of materialTypes) {
       const variance = 0.8 + Math.random() * 0.4;
-      materialsProduced[mat] = Math.floor(materialEfficiency * cappedSeconds * variance);
+      materialsProduced[mat] = Math.floor(materialEfficiency * ticks * variance);
     }
 
-    const avgGoldPerMinute = 50;
-    const goldProduced = Math.floor(avgGoldPerMinute * (cappedSeconds / 60) * OFFLINE_EFFICIENCY);
+    const avgGoldPerTick = 25;
+    const goldProduced = Math.floor(avgGoldPerTick * ticks * OFFLINE_EFFICIENCY);
 
     return {
       totalSeconds,

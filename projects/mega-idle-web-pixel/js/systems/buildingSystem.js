@@ -156,11 +156,12 @@ const BuildingSystem = (function () {
 
   /**
    * Get the tavern territory hero slot count.
+   * Base: 10 at tavern level 1, +2 per additional level.
    * @returns {{current: number, max: number}}
    */
   function getTerritoryHeroSlots() {
     const tavernLevel = getLevel('tavern');
-    const maxTerritory = 2 + (tavernLevel * 2); // 4 at Lv1, 6 at Lv2, 8 at Lv3, 10 at Lv4, 12 at Lv5
+    const maxTerritory = 10 + (tavernLevel - 1) * 2; // 10 at Lv1, 12 at Lv2, 14 at Lv3, 16 at Lv4, 18 at Lv5
     const current = HeroSystem.getTerritoryHeroes().length;
     return { current, max: maxTerritory };
   }

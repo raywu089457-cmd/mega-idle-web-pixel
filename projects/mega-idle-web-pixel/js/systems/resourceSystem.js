@@ -171,22 +171,37 @@ const ResourceSystem = (function () {
     return (state.value / state.capacity) * 100;
   }
 
+  /**
+   * Get capacity status for UI warnings.
+   * @param {string} resourceId
+   * @returns {'normal'|'warning'|'critical'|'full'}
+   */
+  function getCapacityStatus(resourceId) {
+    const percent = getFillPercent(resourceId);
+    if (percent >= 100) return 'full';
+    if (percent >= 90) return 'critical';
+    if (percent >= 80) return 'warning';
+    return 'normal';
+  }
+
   // ─── Tick Production ────────────────────────────────────────────────────────
 
   /**
-   * Produce 1-3 of each material type (called every second by tick system).
+   * Produce 1-3 of each material type (called every 30 seconds by tick system).
    * Monument level multiplier applies.
+   * Now produces 30x the base amount to maintain ~2 materials/sec rate at 30s tick.
    * @param {number} monumentLevel - monument upgrade level (1-10)
    * @returns {Object} production results { resourceId: amountProduced }
    */
   function produceMaterials(monumentLevel = 1) {
     const results = {};
     const multiplier = monumentLevel;
+    const TICK_BONUS = 30; // 30 seconds per tick, produce 30x to maintain rate
 
     for (const material of MATERIAL_TYPES) {
-      // 1-3 base production per material per tick, scaled by monument level
+      // 1-3 base production per material per tick, scaled by monument level and tick duration
       const baseProduction = Math.floor(Math.random() * 3) + 1;
-      const produced = add(material, baseProduction * multiplier);
+      const produced = add(material, baseProduction * multiplier * TICK_BONUS);
       results[material] = produced;
     }
 
@@ -256,6 +271,7 @@ const ResourceSystem = (function () {
     spend,
     getCapacity,
     getFillPercent,
+    getCapacityStatus,
     produceMaterials,
     addListener,
     removeListener,

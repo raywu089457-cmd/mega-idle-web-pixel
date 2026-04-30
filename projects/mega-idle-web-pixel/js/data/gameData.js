@@ -116,6 +116,10 @@ const GameData = (function () {
     { typeId: 'wandering_mage_2', class: 'mage', name: 'Itinerant Sorcerer', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
     { typeId: 'wandering_rogue_1', class: 'rogue', name: 'Street Urchin', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
     { typeId: 'wandering_rogue_2', class: 'rogue', name: 'Master Thief', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+    { typeId: 'wandering_cleric_1', class: 'cleric', name: 'Itinerant Healer', level: 2, dropGold: 22, dropMagicStoneChance: 0.1 },
+    { typeId: 'wandering_cleric_2', class: 'cleric', name: 'Temple Acolyte', level: 6, dropGold: 55, dropMagicStoneChance: 0.18 },
+    { typeId: 'wandering_ranger_1', class: 'ranger', name: 'Forest Scout', level: 2, dropGold: 23, dropMagicStoneChance: 0.11 },
+    { typeId: 'wandering_ranger_2', class: 'ranger', name: 'Wilderness Guide', level: 7, dropGold: 65, dropMagicStoneChance: 0.19 },
   ];
 
   /**
