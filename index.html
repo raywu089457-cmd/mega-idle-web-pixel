@@ -932,12 +932,9 @@ let activeReportTab = 'wander';
 
 async function doReset() {
   if (!confirm('確定要重新開始嗎？所有進度將會消失！')) return;
-  try {
-    await SaveManager.delete();
-  } catch(e) {
-    console.error('Reset error:', e);
-  }
-  // Write fresh default state to localStorage before reload
+  // Clear localStorage FIRST to ensure no race with auto-save
+  localStorage.removeItem('kingdomBuilderSave');
+  // Write fresh default state
   const defaultState = {
     version: 1,
     lastOnline: Date.now(),
@@ -952,8 +949,12 @@ async function doReset() {
     tickCount: 0
   };
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(defaultState));
-  // Use timeout to ensure localStorage is written before reload
-  setTimeout(() => { location.reload(); }, 100);
+  // Also clear IndexedDB for consistency
+  try {
+    await SaveManager.delete();
+  } catch(e) {}
+  // Wait 500ms to ensure localStorage write completes before reload
+  setTimeout(() => { location.reload(); }, 500);
 }
 
 function saveGame() {
