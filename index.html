@@ -121,6 +121,8 @@ body{
 .tab-btn{padding:12px 24px;font-family:'Press Start 2P',monospace;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;margin-bottom:-2px;}
 .tab-btn.active{color:var(--rich-soil);border-bottom-color:var(--rich-soil);}
 .tab-btn:hover{color:var(--rich-soil);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 
 /* ── RESOURCE CARDS ── */
 .res-grid{display:flex;flex-direction:column;gap:8px;}
@@ -929,6 +931,7 @@ let dispatchZoneId = null;
 let activePanel = null;
 let activeHeroTab = 'hero-territory';
 let activeReportTab = 'wander';
+let expandedReports = new Set(); // Track expanded report IDs
 
 async function doReset() {
   if (!confirm('確定要重新開始嗎？所有進度將會消失！')) return;
@@ -1201,22 +1204,49 @@ function renderReportsTab(activeTab) {
   if (filtered.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;">暫無戰報</div>`;
   } else {
-    list.innerHTML = filtered.slice(0, 20).map(r => {
+    list.innerHTML = filtered.slice(0, 20).map((r, idx) => {
       const timeAgo = getTimeAgo(r.time);
       const combatDetails = (r.combatLog || []).map(entry => `<div style="font-size:12px;padding:2px 0;color:${entry.type === 'result' ? 'var(--gold)' : 'var(--text-dim)'}">${entry.text || entry}</div>`).join('');
       const rewardDetails = r.rewards ? `<div style="margin-top:8px;font-size:11px;">${r.rewards.gold ? `<span>🪙 ${r.rewards.gold}</span>` : ''}${r.rewards.magicStones ? `<span style="margin-left:8px">💎 ${r.rewards.magicStones}</span>` : ''}</div>` : '';
-      return `<div class="report-entry">
-        <div class="report-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.report-expand').classList.toggle('open')">
+      const reportId = 'report-' + idx;
+      const isExpanded = expandedReports.has(reportId);
+      return `<div class="report-entry" data-report-id="${reportId}">
+        <div class="report-head ${isExpanded ? 'open' : ''}" onclick="toggleReportExpand('${reportId}', this)">
           <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
           <div class="report-info">
             <div class="report-title">${r.heroName} × ${r.zoneName} — ${r.result === 'victory' ? '勝利' : '撤退'}</div>
             <div class="report-time">${timeAgo}</div>
           </div>
-          <div class="report-expand">▾</div>
+          <div class="report-expand ${isExpanded ? 'open' : ''}">▾</div>
         </div>
-        <div class="report-body" style="padding:12px 16px;font-size:12px;color:var(--text-dim);">${combatDetails}${rewardDetails}</div>
+        <div class="report-body ${isExpanded ? 'open' : ''}" style="padding:12px 16px;font-size:12px;color:var(--text-dim);">${combatDetails}${rewardDetails}</div>
       </div>`;
     }).join('');
+  }
+  // Attach event delegation for report clicks
+  list.onclick = (e) => {
+    const head = e.target.closest('.report-head');
+    if (head) {
+      const entry = head.closest('.report-entry');
+      const reportId = entry.dataset.reportId;
+      toggleReportExpand(reportId, head);
+    }
+  };
+}
+
+function toggleReportExpand(reportId, headEl) {
+  const entry = headEl.closest('.report-entry');
+  const body = entry.querySelector('.report-body');
+  const expand = headEl.querySelector('.report-expand');
+  const isOpen = expandedReports.has(reportId);
+  if (isOpen) {
+    expandedReports.delete(reportId);
+    body.classList.remove('open');
+    expand.classList.remove('open');
+  } else {
+    expandedReports.add(reportId);
+    body.classList.add('open');
+    expand.classList.add('open');
   }
 }
 function setReportTab(tab) { activeReportTab = tab; renderReportsTab(tab); }
@@ -1228,7 +1258,7 @@ function getTimeAgo(ts) {
   if (diff < 86400) return Math.floor(diff / 3600) + ' 小時前';
   return Math.floor(diff / 86400) + ' 天前';
 }
-function clearReports() { battleReports = []; renderReportsTab(); showToast('戰報已清除', 'info'); }
+function clearReports() { battleReports = []; expandedReports.clear(); renderReportsTab(); showToast('戰報已清除', 'info'); }
 
 // ═══════════════════════════════════════════════════════════════════
 // RENDER: BUILDINGS
