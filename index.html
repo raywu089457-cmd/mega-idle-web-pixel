@@ -726,7 +726,7 @@ function HeroSystem_processWanderingTick() {
     const hero = wanderingHeroes[i];
     if (Math.random() < 0.90) {
       const res = resolveCombat(hero);
-      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: Math.floor(res.goldReward * 0.2), magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0 });
+      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: Math.floor(res.goldReward * 0.2), magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0 }, res.combatLog);
       if (res.victory) {
         ResourceSystem_add('gold', Math.floor(res.goldReward * 0.2));
         if (res.magicStones > 0) ResourceSystem_add('magicStones', Math.floor(res.magicStones * 0.2));
@@ -774,7 +774,7 @@ function HeroSystem_processExplorationTick(zoneId) {
   for (const hero of explorers) {
     if (Math.random() < 0.90) {
       const res = resolveZoneCombat(hero, zone);
-      addBattleReport(hero.name, zone.name, res.victory ? 'victory' : 'retreat', { gold: res.goldReward, magicStones: res.magicStones });
+      addBattleReport(hero.name, zone.name, res.victory ? 'victory' : 'retreat', { gold: res.goldReward, magicStones: res.magicStones }, res.combatLog);
       if (res.victory) {
         ResourceSystem_add('gold', res.goldReward);
         if (res.magicStones > 0) ResourceSystem_add('magicStones', res.magicStones);
@@ -909,12 +909,12 @@ function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
 // BATTLE REPORTS (UI STATE)
 // ═══════════════════════════════════════════════════════════════════
 let battleReports = [];
-function addBattleReport(heroName, zoneName, result, rewards) {
+function addBattleReport(heroName, zoneName, result, rewards, combatLog) {
   battleReports.unshift({
     heroName, zoneName, result,
     rewards: rewards || {},
     time: Date.now(),
-    combatLog: []
+    combatLog: combatLog || []
   });
   if (battleReports.length > 50) battleReports.pop();
 }
@@ -1203,6 +1203,8 @@ function renderReportsTab(activeTab) {
   } else {
     list.innerHTML = filtered.slice(0, 20).map(r => {
       const timeAgo = getTimeAgo(r.time);
+      const combatDetails = (r.combatLog || []).map(entry => `<div style="font-size:12px;padding:2px 0;color:${entry.type === 'result' ? 'var(--gold)' : 'var(--text-dim)'}">${entry.text || entry}</div>`).join('');
+      const rewardDetails = r.rewards ? `<div style="margin-top:8px;font-size:11px;">${r.rewards.gold ? `<span>🪙 ${r.rewards.gold}</span>` : ''}${r.rewards.magicStones ? `<span style="margin-left:8px">💎 ${r.rewards.magicStones}</span>` : ''}</div>` : '';
       return `<div class="report-entry">
         <div class="report-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.report-expand').classList.toggle('open')">
           <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
@@ -1212,7 +1214,7 @@ function renderReportsTab(activeTab) {
           </div>
           <div class="report-expand">▾</div>
         </div>
-        <div class="report-body"></div>
+        <div class="report-body" style="padding:12px 16px;font-size:12px;color:var(--text-dim);">${combatDetails}${rewardDetails}</div>
       </div>`;
     }).join('');
   }
