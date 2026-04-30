@@ -8,6 +8,9 @@ permissions:
   pages: write
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: https://raywu089457-cmd.github.io/mega-idle-web-pixel/
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
