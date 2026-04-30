@@ -726,6 +726,8 @@ function HeroSystem_processWanderingTick() {
   if (nextWanderingSpawnIn <= 0 && wanderingHeroes.length < maxW) spawnWanderingHero();
   for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
     const hero = wanderingHeroes[i];
+    // Skip resting heroes - they recover HP and don't fight or leave
+    if (hero.status === 'resting') continue;
     // Start new combat
     if (Math.random() < 0.90 && !wanderingCombats[hero.id]) {
       const eHp = 50 + hero.level * 20, eAtk = 5 + hero.level * 3, eDef = 3 + hero.level * 2;
@@ -773,6 +775,7 @@ function HeroSystem_processWanderingTick() {
         if (mStones > 0) ResourceSystem_add('magicStones', Math.floor(mStones * 0.2));
       } else {
         c.hero.hp = Math.max(1, c.heroHp);
+        if (c.heroHp <= 1) { c.hero.status = 'resting'; }
         c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 從 ' + c.enemyName + ' 撤退' });
         addBattleReport(c.hero.name, 'wander', 'retreat', { gold: 0, magicStones: 0 }, c.log);
       }
@@ -882,9 +885,12 @@ function HeroSystem_processExplorationTick(zoneId) {
   return null;
 }
 function HeroSystem_processRestingTick() {
-  for (const h of territoryHeroes.filter(x => x.status === 'resting')) {
+  for (const h of [...territoryHeroes, ...wanderingHeroes].filter(x => x.status === 'resting')) {
     h.hp = Math.min(h.maxHp, h.hp + Math.ceil(h.maxHp * 0.001));
-    if (h.hp >= h.maxHp * 0.8) { h.status = 'idle'; }
+    if (h.hp >= h.maxHp * 0.8) {
+      if (h.isTerritory) { h.status = 'idle'; }
+      else { h.status = 'wandering'; }
+    }
   }
 }
 function HeroSystem_addListener(cb) { heroListeners.push(cb); }
