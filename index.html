@@ -1211,7 +1211,7 @@ function renderReportsTab(activeTab) {
       const reportId = 'report-' + idx;
       const isExpanded = expandedReports.has(reportId);
       return `<div class="report-entry" data-report-id="${reportId}">
-        <div class="report-head ${isExpanded ? 'open' : ''}" onclick="toggleReportExpand('${reportId}', this)">
+        <div class="report-head ${isExpanded ? 'open' : ''}">
           <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
           <div class="report-info">
             <div class="report-title">${r.heroName} × ${r.zoneName} — ${r.result === 'victory' ? '勝利' : '撤退'}</div>
