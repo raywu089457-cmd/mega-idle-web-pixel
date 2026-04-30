@@ -943,15 +943,17 @@ async function doReset() {
     lastOnline: Date.now(),
     resources: { gold: 500, magicStones: 0, fruitPoor: 0, waterDirty: 0, woodRotten: 0, ironRusty: 0, herbLow: 0 },
     heroes: [],
-    buildings: {},
+    buildings: { monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } },
     mapProgress: { currentZone: 1, unlockedZones: [1], clearedZones: [] },
     shopInventory: {},
     shopLevel: 1,
     wanderingHeroes: [],
-    battleReports: []
+    battleReports: [],
+    tickCount: 0
   };
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(defaultState));
-  location.reload();
+  // Use timeout to ensure localStorage is written before reload
+  setTimeout(() => { location.reload(); }, 100);
 }
 
 function saveGame() {
