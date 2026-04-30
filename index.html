@@ -949,6 +949,8 @@ async function doReset() {
     tickCount: 0
   };
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(defaultState));
+  // CRITICAL: Clear gameState so saveGame() becomes a no-op during the 500ms window
+  gameState = null;
   // Also clear IndexedDB for consistency
   try {
     await SaveManager.delete();
