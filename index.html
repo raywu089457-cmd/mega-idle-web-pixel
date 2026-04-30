@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="description" content="王國傳說 — Idle Kingdom Builder">
+<meta name="theme-color" content="#5d4037">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>王國傳說 — Idle Kingdom Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Serif+TC:wght@400;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rich-soil: #5d4037;
+  --warm-wood: #8b5a2b;
+  --golden-wheat: #f4d03f;
+  --hover-hl: #f7d856;
+  --parchment: #fff8dc;
+  --cream: #faf0e6;
+  --light-tan: #d2b48c;
+  --dark-tan: #8b7355;
+  --burnt-orange: #d2691e;
+  --charcoal: #2c2c2c;
+  --gold: #f4d03f;
+  --green: #27AE60;
+  --red: #E74C3C;
+  --blue: #3498DB;
+  --purple: #9B59B6;
+  --text: #3e2723;
+  --text-dim: rgba(62,39,35,0.65);
+  --text-faint: rgba(62,39,35,0.4);
+  --card-bg: rgba(139,90,43,0.1);
+  --card-border: rgba(93,64,55,0.3);
+  --panel-h: 60px;
+  --nav-h: 56px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Press Start 2P',monospace,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',monospace;
+  background:var(--rich-soil);
+  color:var(--text);
+  position:relative;overflow:hidden;
+}
+#game-wrap{
+  position:relative;width:100%;max-width:480px;height:100vh;margin:0 auto;
+  overflow:hidden;background:var(--cream);
+}
+
+:lang(zh-TW) .res-name, :lang(zh-CN) .res-name, :lang(zh) .res-name { font-size: 14px; }
+/* Restore explicit pixel sizes for emoji/icon elements — blocks :lang inheritance */
+.nav-ico    { font-size: 30px !important; }
+.hero-portrait { font-size: unset; }
+.res-ico    { font-size: unset; }
+.mat-icon .ico { font-size: 18px !important; }
+.building-ico { font-size: unset; }
+.zone-ico   { font-size: unset; }
+.shop-ico   { font-size: unset; }
+.inv-ico    { font-size: unset; }
+.castle-img { font-size: 144px !important; }
+.hud-res .icon { font-size: 14px !important; }
+.hud-center .ico { font-size: unset; }
+.btn-icon   { font-size: unset; }
+.mat-icon .amt { font-size: unset; }
+.hud-res .val { font-size: unset; }
+
+/* ── BACKGROUND ── */
+.bg-layer{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#d2b48c 0%,#c4a67c 40%,#a08060 100%);}
+.bg-stars{display:none;}
+
+/* ── FLOAT CANVAS ── */
+#float-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200;}
+
+/* ── HUD ── */
+.hud{position:fixed;top:0;left:0;right:0;max-width:480px;height:var(--panel-h);margin:0 auto;z-index:100;background:var(--rich-soil);border-bottom:2px solid var(--charcoal);display:flex;align-items:center;padding:0 12px;gap:8px;box-shadow:2px 2px 0 var(--charcoal);}
+.hud-left{display:flex;flex-direction:column;gap:2px;min-width:100px;}
+.kingdom-name{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--golden-wheat);letter-spacing:1px;text-shadow:2px 2px 0 var(--charcoal);}
+.hud-resources{display:flex;gap:8px;}
+.hud-res{display:flex;align-items:center;gap:3px;font-size:20px;color:var(--text-dim);}
+.hud-res .icon{font-size:14px;}
+.hud-res .val{color:var(--gold);font-weight:600;font-family:'Press Start 2P',monospace;font-size:10px;text-shadow:1px 1px 0 var(--charcoal);}
+.hud-center{flex:1;display:flex;justify-content:center;align-items:center;gap:6px;}
+.mat-icon{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;padding:4px 6px;}
+.mat-icon .ico{font-size:18px;}
+.mat-icon .amt{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--gold);text-shadow:1px 1px 0 var(--charcoal);}
+.hud-right{display:flex;align-items:center;gap:6px;}
+.btn-icon{width:36px;height:36px;background:var(--warm-wood);border:2px solid var(--charcoal);color:var(--parchment);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--charcoal);}
+
+/* ── MAIN CANVAS ── */
+.main-canvas{position:fixed;top:var(--panel-h);left:0;right:0;max-width:480px;bottom:var(--nav-h);margin:0 auto;z-index:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.castle-scene{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.castle-img{font-size:144px;filter:drop-shadow(2px 2px 0 var(--charcoal));animation:float 4s ease-in-out infinite;user-select:none;transition:transform 0.15s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.castle-label{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--rich-soil);letter-spacing:2px;text-shadow:2px 2px 0 var(--light-tan);}
+.castle-sub{font-size:15px;color:var(--text-dim);}
+.click-hint{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(93,64,55,0.4);letter-spacing:1px;margin-top:4px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.4;}50%{opacity:0.9;}}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;height:var(--nav-h);padding-bottom:max(env(safe-area-inset-bottom),12px);margin:0 auto;z-index:100;background:var(--rich-soil);border-top:2px solid var(--charcoal);display:flex;box-shadow:-2px -2px 0 var(--charcoal);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--dark-tan);font-family:'Lora',serif;font-size:11px;padding:4px 0;position:relative;min-height:44px;}
+.nav-btn .nav-ico{font-size:30px;transition:transform 0.2s;}
+.nav-btn:hover,.nav-btn.active{color:var(--golden-wheat);}
+.nav-btn:hover .nav-ico,.nav-btn.active .nav-ico{transform:scale(1.15);}
+.nav-btn.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--golden-wheat);}
+
+/* ── PANELS ── */
+.panel{position:fixed;left:0;right:0;top:var(--panel-h);max-width:480px;margin:0 auto;z-index:50;background:var(--cream);border-top:2px solid var(--charcoal);max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);box-shadow:-2px -2px 0 var(--charcoal);}
+.panel.open{max-height:calc(100vh - var(--panel-h) - var(--nav-h) - max(env(safe-area-inset-bottom), 80px));}
+.panel-inner{height:calc(100vh - var(--panel-h) - var(--nav-h) - max(env(safe-area-inset-bottom), 80px) - 2px);overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(93,64,55,0.3) transparent;}
+.panel-inner::-webkit-scrollbar{width:3px;}.panel-inner::-webkit-scrollbar-thumb{background:rgba(93,64,55,0.3);}
+.panel-header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 0 10px;background:var(--cream);}
+#panel-res .panel-title,
+#panel-res .res-name,
+#panel-res .res-val,
+#panel-res .res-max { font-size: 14px; }
+.btn-close{background:var(--warm-wood);border:2px solid var(--charcoal);color:var(--parchment);cursor:pointer;padding:4px 8px;box-shadow:2px 2px 0 var(--charcoal);font-size:12px !important;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:2px solid var(--dark-tan);padding-bottom:0;}
+.tab-btn{padding:12px 24px;font-family:'Press Start 2P',monospace;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;margin-bottom:-2px;}
+.tab-btn.active{color:var(--rich-soil);border-bottom-color:var(--rich-soil);}
+.tab-btn:hover{color:var(--rich-soil);}
+
+/* ── RESOURCE CARDS ── */
+.res-grid{display:flex;flex-direction:column;gap:8px;}
+.res-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+.res-top{display:flex;align-items:center;justify-content:space-between;}
+.res-info{display:flex;align-items:center;gap:8px;}
+.res-ico{font-size:30px;}
+.res-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);}
+.res-val{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--rich-soil);}
+.res-max{font-size:16px;color:var(--text-faint);}
+.progress-bar{height:8px;background:rgba(139,90,43,0.2);overflow:hidden;}
+.progress-fill{height:100%;background:var(--rich-soil);transition:width 0.5s;}
+.progress-fill.warn{background:var(--burnt-orange);}
+.progress-fill.crit{background:var(--red);}
+.rate{font-size:7px;color:var(--green);margin-left:auto;}
+
+/* ── HERO CARDS ── */
+/* Hero panel Chinese text */
+#panel-hero .hero-slot-info,
+#panel-hero .hero-name,
+#panel-hero .hero-class,
+#panel-hero .stat,
+#panel-hero .hero-badge { font-size: 14px; }
+
+#panel-build .building-name,
+#panel-build .building-level,
+#panel-build .building-effect,
+#panel-build .max-badge,
+#panel-build .building-desc,
+#panel-build .cost-item { font-size: 14px; }
+
+/* Map panel Chinese text */
+#panel-map .section-label,
+#panel-map .explore-name,
+#panel-map .explore-hero,
+#panel-map .explore-pct,
+#panel-map .zone-name,
+#panel-map .zone-rec,
+#panel-map .zone-status { font-size: 14px; }
+
+/* Shop panel Chinese text */
+#panel-shop .shop-name,
+#panel-shop .shop-stock,
+#panel-shop .inv-title,
+#panel-shop .inv-name,
+#panel-shop .inv-qty { font-size: 14px; }
+.hero-portrait{width:88px;height:88px;background:rgba(139,90,43,0.15);border:2px solid var(--warm-wood);display:flex;align-items:center;justify-content:center;font-size:39px;flex-shrink:0;}
+.hero-info{flex:1;}
+.badge-idle{background:rgba(244,208,63,0.2);color:var(--rich-soil);border:2px solid var(--rich-soil);}
+.badge-exploring{background:rgba(52,152,219,0.2);color:var(--blue);border:2px solid var(--blue);}
+.badge-resting{background:rgba(155,89,182,0.2);color:var(--purple);border:2px solid var(--purple);}
+.badge-wandering{background:rgba(155,89,182,0.1);color:var(--purple);border:2px solid var(--purple);}
+.hero-actions{display:flex;gap:6px;}
+
+/* ── BUTTONS ── */
+.btn{padding:14px 28px;font-family:'Press Start 2P',monospace;font-size:15px;cursor:pointer;border:2px solid var(--charcoal);display:inline-flex;align-items:center;gap:8px;box-shadow:2px 2px 0 var(--charcoal);}
+.btn-gold{background:var(--golden-wheat);border-color:var(--charcoal);color:var(--rich-soil);}
+.btn-gold:hover{background:var(--hover-hl);}
+.btn-outline{background:transparent;border-color:var(--warm-wood);color:var(--rich-soil);}
+.btn-outline:hover{background:var(--card-bg);}
+.btn-blue{background:rgba(52,152,219,0.15);border-color:var(--blue);color:var(--blue);}
+.btn-purple{background:rgba(155,89,182,0.15);border-color:var(--purple);color:var(--purple);}
+.btn-red{background:rgba(231,76,60,0.15);border-color:var(--red);color:var(--red);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-sm{padding:10px 20px;font-size:15px;}
+
+/* ── BUILDINGS ── */
+.building-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.building-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;display:flex;flex-direction:column;gap:6px;}
+.building-header{display:flex;align-items:center;justify-content:space-between;}
+.building-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--rich-soil);}
+.building-level{font-family:'Press Start 2P',monospace;font-size:7px;padding:4px 12px;background:rgba(244,208,63,0.1);color:var(--rich-soil);border:2px solid var(--rich-soil);}
+.building-ico{font-size:42px;text-align:center;margin:4px 0;}
+.building-desc{font-family:'Lora',serif;font-size:13px;color:var(--text-faint);line-height:1.4;}
+.building-effect{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--green);}
+.building-cost{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.cost-item{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text-dim);}
+.max-badge{text-align:center;padding:10px;background:rgba(244,208,63,0.06);color:var(--dark-tan);font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1px;}
+
+/* ── MAP / ZONES ── */
+.active-explore{margin-bottom:12px;}
+.section-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-faint);letter-spacing:1px;margin-bottom:12px;}
+.explore-item{background:var(--card-bg);border:2px solid rgba(52,152,219,0.3);padding:16px 20px;margin-bottom:12px;}
+.explore-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.explore-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--blue);}
+.explore-hero{font-size:13px;color:var(--text-faint);}
+.explore-pct{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--text-dim);}
+.zone-list{display:flex;flex-direction:column;gap:12px;}
+.zone-card{background:var(--card-bg);border:2px solid var(--card-border);padding:20px 24px;display:flex;align-items:center;gap:20px;}
+.zone-card.locked{opacity:0.45;filter:grayscale(0.5);}
+.zone-card.cleared{border-color:rgba(244,208,63,0.4);}
+.zone-card.unlocked{border-color:rgba(39,174,96,0.35);}
+.zone-ico{font-size:36px;flex-shrink:0;}
+.zone-info{flex:1;}
+.zone-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text);}
+.zone-stars{font-size:30px;color:var(--golden-wheat);}
+.zone-rec{font-size:13px;color:var(--text-faint);}
+.zone-status{font-size:10px;flex-shrink:0;}
+
+/* ── SHOP ── */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.shop-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+.shop-ico{font-size:48px;}
+.shop-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--rich-soil);}
+.shop-stock{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-faint);}
+.inventory{margin-top:4px;}
+.inv-title{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);margin-bottom:16px;border-bottom:2px solid var(--dark-tan);padding-bottom:12px;}
+.inv-list{display:flex;flex-direction:column;gap:8px;}
+.inv-item{display:flex;align-items:center;gap:16px;background:var(--card-bg);padding:14px 20px;border:2px solid var(--card-border);}
+.inv-ico{font-size:12px;}
+.inv-name{flex:1;font-size:15px;color:var(--text-dim);}
+.inv-qty{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--rich-soil);}
+
+/* ── REPORT SUB TABS ── */
+.report-sub-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.report-sub-btn{padding:10px 20px;font-family:'Press Start 2P',monospace;font-size:7px;background:var(--card-bg);border:2px solid var(--card-border);color:var(--text-faint);cursor:pointer;}
+.report-sub-btn.active{background:rgba(244,208,63,0.2);border-color:var(--rich-soil);color:var(--rich-soil);}
+.clear-btn-row{display:flex;justify-content:flex-end;margin-bottom:8px;}
+.report-entry{background:var(--card-bg);margin-bottom:12px;overflow:hidden;border:2px solid var(--card-border);}
+.report-head{display:flex;align-items:center;gap:16px;padding:16px 20px;cursor:pointer;}
+.report-result{font-family:'Press Start 2P',monospace;font-size:7px;}
+.report-info{flex:1;}
+.report-title{font-size:15px;color:var(--text);}
+.report-time{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-faint);}
+.report-expand{font-size:15px;color:var(--text-faint);transition:transform 0.2s;}
+.report-expand.open{transform:rotate(180deg);}
+.report-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;border-top:0px solid var(--dark-tan);}
+.report-body.open{max-height:500px;border-top-width:1px;}
+.combat-log{padding:20px;display:flex;flex-direction:column;gap:6px;}
+.log-line{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);padding:4px 0;border-bottom:1px solid rgba(139,90,43,0.1);}
+.log-line:last-child{border-bottom:none;}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--cream);border:2px solid var(--charcoal);padding:20px;max-width:320px;width:90%;box-shadow:4px 4px 0 var(--charcoal);transform:translateY(20px);transition:transform 0.25s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--rich-soil);margin-bottom:14px;text-align:center;}
+.modal-body{display:flex;flex-direction:column;gap:10px;}
+.offline-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(139,90,43,0.1);}
+.offline-label{font-size:15px;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
+.offline-val{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--rich-soil);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+.setting-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);}
+.slider{-webkit-appearance:none;width:100px;height:3px;background:rgba(139,90,43,0.2);outline:none;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--golden-wheat);cursor:pointer;border:2px solid var(--charcoal);}
+.toggle{width:36px;height:18px;background:rgba(139,90,43,0.2);position:relative;cursor:pointer;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--parchment);transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(18px);}
+
+/* ── DISPATCH MODAL ── */
+.dispatch-zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.dispatch-zone{background:var(--card-bg);border:2px solid var(--card-border);padding:8px;cursor:pointer;}
+.dispatch-zone.locked{opacity:0.4;cursor:not-allowed;}
+.dispatch-zone.selected{border-color:var(--rich-soil);background:rgba(244,208,63,0.1);}
+.dispatch-zone:not(.locked):hover{border-color:var(--warm-wood);}
+.dz-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text);}
+.dz-stars{font-size:24px;color:var(--golden-wheat);}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;top:70px;right:12px;max-width:480px;z-index:400;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.toast{padding:8px 14px;font-family:'Press Start 2P',monospace;font-size:7px;box-shadow:2px 2px 0 var(--charcoal);animation:toastIn 0.3s ease forwards;opacity:0;}
+.toast.show{opacity:1;}
+.toast-success{background:var(--green);color:#fff;border:2px solid var(--green);}
+.toast-error{background:var(--red);color:#fff;border:2px solid var(--red);}
+.toast-info{background:var(--blue);color:#fff;border:2px solid var(--blue);}
+@keyframes toastIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(20px);}}
+
+/* ── DIVIDER ── */
+.divider{height:2px;background:var(--dark-tan);margin:8px 0;}
+
+@media(max-width:400px){
+  .building-grid{grid-template-columns:1fr;}
+  .shop-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-stars"></div>
+<canvas id="float-canvas"></canvas>
+<div id="game-wrap">
+
+<!-- ── HUD ── -->
+<header class="hud" id="hud">
+  <div class="hud-left">
+    <div class="kingdom-name" id="hud-kingdom-name">⚔ 星辰王國</div>
+    <div class="hud-resources">
+      <div class="hud-res"><span class="icon">🪙</span><span class="val" id="hud-gold">500</span></div>
+      <div class="hud-res"><span class="icon">💎</span><span class="val" id="hud-magic">0</span></div>
+    </div>
+  </div>
+  <div class="hud-center" id="hud-mats">
+    <div class="mat-icon" title="劣等水果"><div class="ico">🍎</div><div class="amt" id="hc-fruit">0</div></div>
+    <div class="mat-icon" title="髒水"><div class="ico">💧</div><div class="amt" id="hc-water">0</div></div>
+    <div class="mat-icon" title="腐朽木頭"><div class="ico">🪵</div><div class="amt" id="hc-wood">0</div></div>
+    <div class="mat-icon" title="鏽跡斑斑的鐵"><div class="ico">⚙</div><div class="amt" id="hc-iron">0</div></div>
+    <div class="mat-icon" title="低等藥材"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
+  </div>
+  <div class="hud-right">
+    <button class="btn-icon" id="btn-settings" title="設定">⚙️</button>
+  </div>
+</header>
+
+<!-- ── MAIN CANVAS ── -->
+<main class="main-canvas">
+  <div class="castle-scene">
+    <div class="castle-img" id="castle-click">🏰</div>
+    <div class="castle-label">星辰王國</div>
+    <div class="castle-sub" id="castle-level">卡斯特城堡 Lv.1</div>
+    <div class="click-hint"></div>
+  </div>
+</main>
+
+<!-- ── PANELS ── -->
+
+<!-- 資源面板 -->
+<div class="panel" id="panel-res">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">📦 資源</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="res-grid" id="res-grid"></div>
+  </div>
+</div>
+
+<!-- 英雄面板 -->
+<div class="panel" id="panel-hero">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">⚔ 英雄</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'hero-territory')">領地英雄</button>
+      <button class="tab-btn" onclick="switchTab(this,'hero-wander')">流浪英雄</button>
+      <button class="tab-btn" onclick="switchTab(this,'hero-reports')">戰報</button>
+    </div>
+    <div class="tab-content active" id="hero-territory"></div>
+    <div class="tab-content" id="hero-wander"></div>
+    <div class="tab-content" id="hero-reports"></div>
+  </div>
+</div>
+
+<!-- 建築面板 -->
+<div class="panel" id="panel-build">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">🏗 建築</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="building-grid" id="building-grid"></div>
+  </div>
+</div>
+
+<!-- 地圖面板 -->
+<div class="panel" id="panel-map">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">🗺 地圖探索</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="active-explore" id="active-explore"></div>
+    <div class="section-label">探索地圖</div>
+    <div class="zone-list" id="zone-list"></div>
+  </div>
+</div>
+
+<!-- 商店面板 -->
+<div class="panel" id="panel-shop">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">🛒 工坊商店</div>
+      <button class="btn-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="shop-grid" id="shop-grid"></div>
+    <div class="inventory">
+      <div class="inv-title">📦 我的物品</div>
+      <div class="inv-list" id="inv-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-btn" id="nav-res" onclick="openPanel('res')"><div class="nav-ico">📦</div>資源</button>
+  <button class="nav-btn" id="nav-hero" onclick="openPanel('hero')"><div class="nav-ico">⚔️</div>英雄</button>
+  <button class="nav-btn" id="nav-build" onclick="openPanel('build')"><div class="nav-ico">🏗️</div>建築</button>
+  <button class="nav-btn" id="nav-map" onclick="openPanel('map')"><div class="nav-ico">🗺️</div>地圖</button>
+  <button class="nav-btn" id="nav-shop" onclick="openPanel('shop')"><div class="nav-ico">🛒</div>商店</button>
+</nav>
+
+<!-- ── TOAST ── -->
+<div id="toast-container"></div>
+
+<!-- ── WELCOME BACK MODAL ── -->
+<div class="modal-overlay" id="modal-welcome">
+  <div class="modal">
+    <div class="modal-title">🌙 歡迎回來！</div>
+    <div class="modal-body" id="modal-welcome-body"></div>
+    <div class="modal-actions"><button class="btn btn-gold" onclick="collectOffline()">✦ 全部收取</button></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-title">⚙️ 遊戲設定</div>
+    <div class="modal-body">
+      <div class="setting-row"><div class="setting-label">🎵 音樂音量</div><input type="range" class="slider" min="0" max="100" value="60"></div>
+      <div class="setting-row"><div class="setting-label">🔊 音效音量</div><input type="range" class="slider" min="0" max="100" value="80"></div>
+      <div class="setting-row"><div class="setting-label">🔔 推播通知</div><div class="toggle on" id="toggle-notif" onclick="this.classList.toggle('on')"></div></div>
+      <div class="divider"></div>
+      <div class="setting-row">
+        <button class="btn btn-gold btn-sm" onclick="saveGame();showToast('遊戲已儲存！','success')">💾 儲存遊戲</button>
+        <button class="btn btn-red btn-sm" onclick="if(confirm('確定要重新開始嗎？')){localStorage.clear();location.reload();}">🗑 重新開始</button>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeSettings()">關閉</button></div>
+  </div>
+</div>
+
+<!-- ── DISPATCH MODAL ── -->
+<div class="modal-overlay" id="modal-dispatch">
+  <div class="modal">
+    <div class="modal-title">⚔ 出征派遣</div>
+    <div id="dispatch-hero-name" style="text-align:center;font-size:15px;color:var(--text-faint);margin-bottom:10px;"></div>
+    <div class="dispatch-zone-grid" id="dispatch-zone-grid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeDispatch()">取消</button>
+      <button class="btn btn-gold btn-sm" onclick="doDispatch()">確認出征</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// GAME DATA — All game data definitions (保留原有系統合併)
+// ═══════════════════════════════════════════════════════════════════
+const RESOURCES = {
+  gold: { name: 'Gold', icon: '🪙', initial: 500, capacity: 10000 },
+  magicStones: { name: 'Ancient Magic Stones', icon: '💎', initial: 0, capacity: 999 },
+  fruitPoor: { name: '劣等水果', icon: '🍎', initial: 0, capacity: 500 },
+  waterDirty: { name: '髒水', icon: '💧', initial: 0, capacity: 500 },
+  woodRotten: { name: '腐朽木頭', icon: '🪵', initial: 0, capacity: 500 },
+  ironRusty: { name: '鏽跡斑斑的鐵', icon: '⚙️', initial: 0, capacity: 500 },
+  herbLow: { name: '低等藥材', icon: '🌿', initial: 0, capacity: 500 },
+};
+const MATERIAL_TYPES = ['fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
+const BUILDINGS = {
+  monument: { id: 'monument', name: '古老石碑', nameAlt: 'Ancient Monument', description: '古老的石碑，散發著神秘的能量，自動生產各種基礎材料。', level: 1, maxLevel: 10, baseCost: { gold: 500, woodRotten: 50, ironRusty: 20 }, costMultiplier: 2.0, icon: '🗿', effectText: '⚡ +2🍎 +1💧 +3🪵/s' },
+  tavern: { id: 'tavern', name: '酒館', nameAlt: 'Tavern', description: '熱鬧的酒館吸引流浪英雄，增加招募機會。', level: 1, maxLevel: 5, baseCost: { gold: 300, woodRotten: 80 }, costMultiplier: 1.5, icon: '🍺', effectText: '🎲 每日訪客 +2' },
+  weaponShop: { id: 'weaponShop', name: '武器鋪', nameAlt: 'Weapon Shop', description: '鑄造各種武器，提升英雄攻擊力。', level: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️', effectText: '🗡 可製作初級武器' },
+  potionShop: { id: 'potionShop', name: '藥水鋪', nameAlt: 'Potion Shop', description: '調配各種藥水，補充英雄體力。', level: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️', effectText: '💊 可製作初級藥水' },
+  armorShop: { id: 'armorShop', name: '鎧甲鋪', nameAlt: 'Armor Shop', description: '打造堅固鎧甲，增強英雄防禦力。', level: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️', effectText: '🛡 最高級防具可製作' },
+};
+const HERO_CLASSES = {
+  warrior: { name: '戰士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
+  mage: { name: '法師', baseHp: 70, baseAtk: 25, baseDef: 5, icon: '🧙' },
+  rogue: { name: '盜賊', baseHp: 85, baseAtk: 18, baseDef: 8, icon: '🗡️' },
+  cleric: { name: '牧師', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '⛪' },
+  ranger: { name: '弓手', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
+};
+const WANDERING_HERO_TYPES = [
+  { typeId: 'wandering_warrior_1', class: 'warrior', name: '僱傭士兵', level: 1, dropGold: 20, dropMagicStoneChance: 0.1 },
+  { typeId: 'wandering_warrior_2', class: 'warrior', name: '資深僱傭兵', level: 5, dropGold: 50, dropMagicStoneChance: 0.15 },
+  { typeId: 'wandering_mage_1', class: 'mage', name: '流浪法師', level: 2, dropGold: 25, dropMagicStoneChance: 0.12 },
+  { typeId: 'wandering_mage_2', class: 'mage', name: '雲游術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
+  { typeId: 'wandering_rogue_1', class: 'rogue', name: '街頭頑童', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
+  { typeId: 'wandering_rogue_2', class: 'rogue', name: '盜賊大師', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+];
+const ZONES = [
+  { id: 1, name: '平靜郊野', nameAlt: 'Countryside', difficulty: 1, recommendedLevel: 1, rewards: { gold: { min: 50, max: 100 }, materials: ['fruitPoor', 'waterDirty'] }, magicStoneChance: 0.1, icon: '🌾' },
+  { id: 2, name: '黑暗森林', nameAlt: 'Dark Forest', difficulty: 2, recommendedLevel: 3, rewards: { gold: { min: 100, max: 200 }, materials: ['woodRotten', 'herbLow'] }, magicStoneChance: 0.15, icon: '🌲' },
+  { id: 3, name: '廢棄礦坑', nameAlt: 'Abandoned Mine', difficulty: 3, recommendedLevel: 5, rewards: { gold: { min: 150, max: 300 }, materials: ['ironRusty', 'woodRotten'] }, magicStoneChance: 0.2, icon: '⛏' },
+  { id: 4, name: '沼澤深淵', nameAlt: 'Swamp Depths', difficulty: 4, recommendedLevel: 7, rewards: { gold: { min: 200, max: 400 }, materials: ['herbLow', 'waterDirty'] }, magicStoneChance: 0.25, icon: '🏚' },
+  { id: 5, name: '龍族廢墟', nameAlt: 'Dragon Ruins', difficulty: 5, recommendedLevel: 10, rewards: { gold: { min: 300, max: 600 }, materials: ['ironRusty', 'magicStones'] }, magicStoneChance: 0.3, icon: '🐉' },
+];
+const ITEMS = {
+  woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️' },
+  ironDagger: { id: 'ironDagger', name: '鐵匕首', type: 'weapon', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪' },
+  healthPotion: { id: 'healthPotion', name: '生命藥水', type: 'potion', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪' },
+  ironArmor: { id: 'ironArmor', name: '鐵甲', type: 'armor', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️' },
+  mysticStaff: { id: 'mysticStaff', name: '神秘法杖', type: 'weapon', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮' },
+};
+
+function createTerritoryHero(classType, name, level = 1) {
+  const classDef = HERO_CLASSES[classType];
+  if (!classDef) return null;
+  return {
+    id: 'territory_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    isTerritory: true, class: classType,
+    name: name || (classDef.name + ' #' + Math.floor(Math.random() * 1000)),
+    level,
+    hp: classDef.baseHp + (level - 1) * 10,
+    maxHp: classDef.baseHp + (level - 1) * 10,
+    atk: classDef.baseAtk + (level - 1) * 3,
+    def: classDef.baseDef + (level - 1) * 2,
+    status: 'idle', currentZone: null, explorationProgress: 0,
+  };
+}
+
+function createWanderingHero(typeDef) {
+  const classDef = HERO_CLASSES[typeDef.class];
+  return {
+    id: 'wandering_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    isTerritory: false, typeId: typeDef.typeId, class: typeDef.class,
+    name: typeDef.name, level: typeDef.level,
+    hp: classDef.baseHp + (typeDef.level - 1) * 10,
+    maxHp: classDef.baseHp + (typeDef.level - 1) * 10,
+    atk: classDef.baseAtk + (typeDef.level - 1) * 3,
+    def: classDef.baseDef + (typeDef.level - 1) * 2,
+    status: 'wandering', dropGold: typeDef.dropGold,
+    dropMagicStoneChance: typeDef.dropMagicStoneChance,
+    ticksUntilStateChange: Math.floor(Math.random() * 120) + 60,
+  };
+}
+
+function getBuildingCost(buildingId, targetLevel) {
+  const building = BUILDINGS[buildingId];
+  if (!building) return null;
+  const multiplier = Math.pow(building.costMultiplier, targetLevel - 1);
+  const cost = {};
+  for (const [resourceId, baseAmount] of Object.entries(building.baseCost)) {
+    cost[resourceId] = Math.floor(baseAmount * multiplier);
+  }
+  return cost;
+}
+
+function getDefaultGameState() {
+  return {
+    version: 1, lastOnline: Date.now(),
+    resources: { gold: 500, magicStones: 0, fruitPoor: 0, waterDirty: 0, woodRotten: 0, ironRusty: 0, herbLow: 0 },
+    heroes: [], wanderingHeroes: [],
+    buildings: { monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } },
+    mapProgress: { currentZone: 1, unlockedZones: [1], clearedZones: [] },
+    shopInventory: {}, tickCount: 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RESOURCE SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let resources = {};
+let resourceListeners = [];
+function ResourceSystem_init(savedState) {
+  if (savedState && savedState.resources) {
+    resources = {};
+    for (const [key, config] of Object.entries(RESOURCES)) {
+      resources[key] = { value: savedState.resources[key] ?? config.initial, capacity: config.capacity };
+    }
+  } else {
+    resources = {};
+    for (const [key, config] of Object.entries(RESOURCES)) {
+      resources[key] = { value: config.initial, capacity: config.capacity };
+    }
+  }
+}
+function ResourceSystem_add(resourceId, amount) {
+  if (!resources[resourceId]) return 0;
+  const prev = resources[resourceId].value;
+  const newValue = Math.min(prev + amount, RESOURCES[resourceId].capacity);
+  const actualAdded = newValue - prev;
+  resources[resourceId].value = newValue;
+  resourceListeners.forEach(l => { try { l('add', { resourceId, amount: actualAdded, total: newValue }); } catch(e) {} });
+  return actualAdded;
+}
+function ResourceSystem_subtract(resourceId, amount) {
+  if (!resources[resourceId]) return false;
+  const prev = resources[resourceId].value;
+  if (prev < amount) return false;
+  resources[resourceId].value = prev - amount;
+  resourceListeners.forEach(l => { try { l('subtract', { resourceId, amount, total: resources[resourceId].value }); } catch(e) {} });
+  return true;
+}
+function ResourceSystem_get(resourceId) { return resources[resourceId]?.value ?? 0; }
+function ResourceSystem_getAll() { const r = {}; for (const [k, v] of Object.entries(resources)) r[k] = v.value; return r; }
+function ResourceSystem_canAfford(cost) { for (const [id, amt] of Object.entries(cost)) if (ResourceSystem_get(id) < amt) return false; return true; }
+function ResourceSystem_spend(cost) { if (!ResourceSystem_canAfford(cost)) return false; for (const [id, amt] of Object.entries(cost)) ResourceSystem_subtract(id, amt); return true; }
+function ResourceSystem_getCapacity(resourceId) { return resources[resourceId]?.capacity ?? 0; }
+function ResourceSystem_getFillPercent(resourceId) { const s = resources[resourceId]; if (!s || s.capacity === 0) return 0; return (s.value / s.capacity) * 100; }
+function ResourceSystem_produceMaterials(monumentLevel = 1) {
+  const results = {};
+  for (const mat of MATERIAL_TYPES) results[mat] = ResourceSystem_add(mat, (Math.floor(Math.random() * 3) + 1) * monumentLevel);
+  return results;
+}
+function ResourceSystem_addListener(cb) { resourceListeners.push(cb); }
+function ResourceSystem_getConfig(rid) { return RESOURCES[rid] ?? null; }
+
+// ═══════════════════════════════════════════════════════════════════
+// BUILDING SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let buildingStates = {};
+function BuildingSystem_init(savedState) {
+  const saved = savedState?.buildings || {};
+  for (const [id, def] of Object.entries({ monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } })) {
+    buildingStates[id] = { level: saved[id]?.level ?? def.level };
+  }
+}
+function BuildingSystem_getLevel(id) { return buildingStates[id]?.level ?? 1; }
+function BuildingSystem_getAll() {
+  const r = {};
+  for (const [id, state] of Object.entries(buildingStates)) {
+    const def = BUILDINGS[id];
+    if (!def) continue;
+    r[id] = { id, name: def.name, description: def.description, effect: def.effect, level: state.level, maxLevel: def.maxLevel, cost: getBuildingCost(id, state.level + 1), canUpgrade: state.level < def.maxLevel, icon: def.icon, effectText: def.effectText };
+  }
+  return r;
+}
+function BuildingSystem_upgrade(id) {
+  const def = BUILDINGS[id]; if (!def) return false;
+  const cur = BuildingSystem_getLevel(id); if (cur >= def.maxLevel) return false;
+  const cost = getBuildingCost(id, cur + 1); if (!ResourceSystem_spend(cost)) return false;
+  buildingStates[id].level += 1; return true;
+}
+function BuildingSystem_getWanderingSpawnInterval() { return Math.max(2, 12 - (BuildingSystem_getLevel('tavern') * 2)); }
+function BuildingSystem_getMaxWanderingHeroes() { return Math.min(5, 2 + BuildingSystem_getLevel('tavern')); }
+function BuildingSystem_getTerritoryHeroSlots(currentCount = 0) { const t = BuildingSystem_getLevel('tavern'); return { current: currentCount, max: 3 + (t - 1) * 2 }; }
+
+// ═══════════════════════════════════════════════════════════════════
+// HERO SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let territoryHeroes = [];
+let wanderingHeroes = [];
+let nextWanderingSpawnIn = 0;
+let heroListeners = [];
+const BW = { fighting: 0.60, shopping: 0.30, leaving: 0.10 };
+
+function HeroSystem_init(savedState) {
+  territoryHeroes = savedState?.heroes || [];
+  wanderingHeroes = savedState?.wanderingHeroes || [];
+  nextWanderingSpawnIn = savedState?.nextWanderingSpawnIn || getRandomSpawnTime();
+}
+function HeroSystem_addTerritoryHero(hero) {
+  const slots = BuildingSystem_getTerritoryHeroSlots(territoryHeroes.length);
+  if (territoryHeroes.length >= slots.max) return false;
+  territoryHeroes.push(hero); return true;
+}
+function HeroSystem_getTerritoryHeroes() { return [...territoryHeroes]; }
+function HeroSystem_getTerritoryHero(id) { return territoryHeroes.find(h => h.id === id) || null; }
+function HeroSystem_sendToExplore(id, zoneId) {
+  const h = HeroSystem_getTerritoryHero(id); if (!h || h.status !== 'idle') return false;
+  h.status = 'exploring'; h.currentZone = zoneId; h.explorationProgress = 0; return true;
+}
+function HeroSystem_returnToIdle(id) {
+  const h = HeroSystem_getTerritoryHero(id); if (!h) return;
+  h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0;
+}
+function HeroSystem_trainHero(id, cost) {
+  const h = HeroSystem_getTerritoryHero(id); if (!h || !ResourceSystem_spend(cost)) return false;
+  h.level += 1; h.maxHp += 10; h.hp = h.maxHp; h.atk += 3; h.def += 2; return true;
+}
+function HeroSystem_getWanderingHeroes() { return [...wanderingHeroes]; }
+function HeroSystem_recruitWanderingHero(id) {
+  const idx = wanderingHeroes.findIndex(h => h.id === id); if (idx === -1) return false;
+  const slots = BuildingSystem_getTerritoryHeroSlots(territoryHeroes.length);
+  if (territoryHeroes.length >= slots.max) return false;
+  const w = wanderingHeroes[idx]; const rc = w.level * 100;
+  if (!ResourceSystem_spend({ gold: rc })) return false;
+  const t = createTerritoryHero(w.class, w.name, w.level);
+  t.dropMagicStoneChance = w.dropMagicStoneChance;
+  wanderingHeroes.splice(idx, 1); territoryHeroes.push(t); return true;
+}
+function HeroSystem_getRecruitCost(id) { const h = wanderingHeroes.find(x => x.id === id); return h ? h.level * 100 : 0; }
+function getRandomSpawnTime() { const i = BuildingSystem_getWanderingSpawnInterval(); return Math.floor(Math.random() * i) + i; }
+function spawnWanderingHero() {
+  const typeDef = WANDERING_HERO_TYPES[Math.floor(Math.random() * WANDERING_HERO_TYPES.length)];
+  wanderingHeroes.push(createWanderingHero(typeDef));
+  nextWanderingSpawnIn = getRandomSpawnTime();
+}
+function genEnemyName(level) {
+  const t = [{ min: 1, n: ['Goblin Scout', 'Wild Wolf', 'Forest Bandit'] }, { min: 3, n: ['Orc Warrior', 'Cave Troll', 'Dark Mage'] }, { min: 5, n: ['Shadow Knight', 'Dire Beast', 'Cursed Knight'] }, { min: 8, n: ['Ancient Dragon', 'Demon Lord', 'Void Walker'] }].filter(e => level >= e.min).pop();
+  return t.n[Math.floor(Math.random() * t.n.length)];
+}
+function resolveCombat(hero) {
+  const eHp = 50 + hero.level * 20, eAtk = 5 + hero.level * 3, eDef = 3 + hero.level * 2;
+  const eName = genEnemyName(hero.level);
+  const hMaxHp = hero.hp || hero.maxHp;
+  const log = [];
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' encounters ' + eName + '!' });
+  let hHp = hMaxHp, eHp2 = eHp;
+  for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
+    const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
+    eHp2 -= hDmg; hHp -= eDmg;
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' attacks ' + eName + ' for ' + hDmg + ' dmg, enemy strikes back for ' + eDmg + ' dmg' });
+  }
+  const vic = eHp2 <= 0;
+  const goldR = vic ? 20 + hero.level * 10 : 0;
+  const mStones = vic && Math.random() < hero.dropMagicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+  if (vic) { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '🏆 Victory! ' + hero.name + ' earned ' + goldR + ' gold' + (mStones > 0 ? ' and ' + mStones + ' magic stones' : '') + '!' }); }
+  else { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '💨 Retreat! ' + hero.name + ' fled from ' + eName }); }
+  return { victory: vic, goldReward: goldR, magicStones: mStones, combatLog: log };
+}
+function HeroSystem_processWanderingTick() {
+  nextWanderingSpawnIn -= 1;
+  const maxW = BuildingSystem_getMaxWanderingHeroes();
+  if (nextWanderingSpawnIn <= 0 && wanderingHeroes.length < maxW) spawnWanderingHero();
+  for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
+    const hero = wanderingHeroes[i];
+    if (Math.random() < 0.90) {
+      const res = resolveCombat(hero);
+      addBattleReport(hero.name, 'wander', res.victory ? 'victory' : 'retreat', { gold: Math.floor(res.goldReward * 0.2), magicStones: res.magicStones > 0 ? Math.floor(res.magicStones * 0.2) : 0 });
+      if (res.victory) {
+        ResourceSystem_add('gold', Math.floor(res.goldReward * 0.2));
+        if (res.magicStones > 0) ResourceSystem_add('magicStones', Math.floor(res.magicStones * 0.2));
+      }
+    }
+    hero.ticksUntilStateChange -= 1;
+    if (hero.ticksUntilStateChange <= 0) {
+      if (Math.random() < BW.leaving) { wanderingHeroes.splice(i, 1); continue; }
+      hero.ticksUntilStateChange = Math.floor(Math.random() * 60) + 30;
+    }
+  }
+}
+function genZoneEnemyName(zone) {
+  const n = { 1: ['Goblin Scout', 'Wild Wolf', 'Forest Rat'], 2: ['Forest Orc', 'Cave Spider', 'Dark Druid'], 3: ['Mine Golem', 'Skeletal Warrior', 'Swamp Witch'], 4: ['Swamp Beast', 'Poison Serpent', 'Dark Cultist'], 5: ['Ancient Dragon', 'Demon Knight', 'Void Titan'] };
+  const p = n[zone.id] || n[1]; return p[Math.floor(Math.random() * p.length)];
+}
+function resolveZoneCombat(hero, zone) {
+  const eHp = 30 + zone.difficulty * 25 + hero.level * 5;
+  const eAtk = 3 + zone.difficulty * 4 + hero.level * 2;
+  const eDef = 2 + zone.difficulty * 3 + hero.level * 2;
+  const eName = genZoneEnemyName(zone);
+  const hMaxHp = hero.hp || hero.maxHp;
+  const log = [];
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' explores ' + zone.name + ' and encounters ' + eName + '!' });
+  let hHp = hMaxHp, eHp2 = eHp;
+  for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
+    const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
+    eHp2 -= hDmg; hHp -= eDmg;
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' deals ' + hDmg + ' dmg, ' + eName + ' deals ' + eDmg + ' dmg' });
+  }
+  const vic = eHp2 <= 0;
+  const goldR = vic ? zone.difficulty * 15 + hero.level * 5 : 0;
+  const mS = vic && Math.random() < zone.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+  if (vic) log.push({ type: 'result', text: '🏆 Victory! ' + hero.name + ' earned ' + goldR + ' gold!' });
+  else log.push({ type: 'result', text: '💨 Narrow escape! ' + hero.name + ' barely escaped' });
+  return { victory: vic, goldReward: goldR, magicStones: mS, combatLog: log, heroRemainingHp: hHp };
+}
+function HeroSystem_processExplorationTick(zoneId) {
+  const zone = ZONES.find(z => z.id === zoneId); if (!zone) return null;
+  const explorers = territoryHeroes.filter(h => h.status === 'exploring' && h.currentZone === zoneId);
+  if (explorers.length === 0) return null;
+  let expData = explorers[0].explorationProgress || 0;
+  expData += 0.5 + (explorers.reduce((s, h) => s + (h.atk + h.def) / 2, 0) / 100);
+  for (const hero of explorers) {
+    if (Math.random() < 0.90) {
+      const res = resolveZoneCombat(hero, zone);
+      addBattleReport(hero.name, zone.name, res.victory ? 'victory' : 'retreat', { gold: res.goldReward, magicStones: res.magicStones });
+      if (res.victory) {
+        ResourceSystem_add('gold', res.goldReward);
+        if (res.magicStones > 0) ResourceSystem_add('magicStones', res.magicStones);
+        hero.hp = Math.max(1, res.heroRemainingHp);
+      } else {
+        hero.hp = Math.max(1, res.heroRemainingHp);
+        if (hero.hp <= 1) { hero.status = 'resting'; hero.currentZone = null; hero.explorationProgress = 0; }
+      }
+    }
+  }
+  if (expData >= 100) {
+    explorers.forEach(h => { h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0; });
+    const gR = zone.rewards.gold.min + Math.floor(Math.random() * (zone.rewards.gold.max - zone.rewards.gold.min));
+    ResourceSystem_add('gold', gR);
+    const matD = {};
+    for (const mat of zone.rewards.materials) { const a = Math.floor(Math.random() * 5) + 1; ResourceSystem_add(mat, a); matD[mat] = a; }
+    let mSD = 0;
+    if (Math.random() < zone.magicStoneChance) { mSD = Math.floor(Math.random() * 3) + 1; ResourceSystem_add('magicStones', mSD); }
+    return { zoneId, goldReward: gR, materials: matD, magicStones: mSD };
+  }
+  explorers.forEach(h => { h.explorationProgress = expData; });
+  return null;
+}
+function HeroSystem_processRestingTick() {
+  for (const h of territoryHeroes.filter(x => x.status === 'resting')) {
+    h.hp = Math.min(h.maxHp, h.hp + Math.ceil(h.maxHp * 0.001));
+    if (h.hp >= h.maxHp * 0.8) { h.status = 'idle'; }
+  }
+}
+function HeroSystem_addListener(cb) { heroListeners.push(cb); }
+
+// ═══════════════════════════════════════════════════════════════════
+// SHOP SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let shopInventory = {};
+let shopLevel = 1;
+let shopListeners = [];
+const MAX_INV = 100;
+function ShopSystem_init(savedState) { shopInventory = savedState?.shopInventory || {}; shopLevel = savedState?.shopLevel || 1; }
+function ShopSystem_getItems() { return Object.values(ITEMS); }
+function ShopSystem_getItem(id) { return ITEMS[id] || null; }
+function ShopSystem_craftItem(id) {
+  const item = ShopSystem_getItem(id); if (!item) return false;
+  if (!ResourceSystem_canAfford(item.cost)) return false;
+  if ((shopInventory[id] || 0) >= MAX_INV) return false;
+  if (!ResourceSystem_spend(item.cost)) return false;
+  shopInventory[id] = (shopInventory[id] || 0) + 1; return true;
+}
+function ShopSystem_getInventory() { return { ...shopInventory }; }
+function ShopSystem_processAutoProduction() {
+  if (Math.random() > 0.1 * shopLevel) return null;
+  const recipes = ShopSystem_getItems().filter(item => ResourceSystem_canAfford(item.cost));
+  if (recipes.length === 0) return null;
+  const it = recipes[Math.floor(Math.random() * recipes.length)];
+  if (!ResourceSystem_spend(it.cost)) return null;
+  shopInventory[it.id] = (shopInventory[it.id] || 0) + 1; return { item: it };
+}
+function ShopSystem_addListener(cb) { shopListeners.push(cb); }
+function ShopSystem_getShopLevel() { return shopLevel; }
+
+// ═══════════════════════════════════════════════════════════════════
+// MAP SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let mapProgress = { currentZone: 1, unlockedZones: [1], clearedZones: [] };
+let activeExplorations = [];
+let mapListeners = [];
+function MapSystem_init(savedState) { mapProgress = savedState?.mapProgress || { currentZone: 1, unlockedZones: [1], clearedZones: [] }; activeExplorations = []; }
+function MapSystem_getZones() { return [...ZONES]; }
+function MapSystem_getProgress() { return { currentZone: mapProgress.currentZone, unlockedZones: [...mapProgress.unlockedZones], clearedZones: [...mapProgress.clearedZones] }; }
+function MapSystem_getUnlockedZones() { return mapProgress.unlockedZones.map(id => ZONES.find(z => z.id === id)).filter(Boolean); }
+function MapSystem_isZoneUnlocked(id) { return mapProgress.unlockedZones.includes(id); }
+function MapSystem_isZoneCleared(id) { return mapProgress.clearedZones.includes(id); }
+function MapSystem_startExploration(heroId, zoneId) {
+  const hero = HeroSystem_getTerritoryHero(heroId); if (!hero) return false;
+  if (!MapSystem_isZoneUnlocked(zoneId)) return false;
+  if (hero.status !== 'idle') return false;
+  const zone = ZONES.find(z => z.id === zoneId); if (!zone) return false;
+  hero.status = 'exploring'; hero.currentZone = zoneId;
+  activeExplorations.push({ heroId, zoneId, progress: 0, startTime: Date.now(), zoneName: zone.name });
+  return true;
+}
+function MapSystem_processExplorations() {
+  const completed = [];
+  for (let i = activeExplorations.length - 1; i >= 0; i--) {
+    const exp = activeExplorations[i];
+    const hero = HeroSystem_getTerritoryHero(exp.heroId);
+    if (!hero || hero.status !== 'exploring') { activeExplorations.splice(i, 1); continue; }
+    const zone = ZONES.find(z => z.id === exp.zoneId);
+    if (!zone) { activeExplorations.splice(i, 1); continue; }
+    const res = HeroSystem_processExplorationTick(zone.id);
+    if (res) {
+      activeExplorations.splice(i, 1);
+      if (!MapSystem_isZoneCleared(zone.id)) mapProgress.clearedZones.push(zone.id);
+      const nextZ = ZONES.find(z => z.id === zone.id + 1);
+      if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) { mapProgress.unlockedZones.push(nextZ.id); mapProgress.currentZone = nextZ.id; }
+      completed.push({ heroId: exp.heroId, zoneId: zone.id, zoneName: zone.name, rewards: res });
+    } else {
+      exp.progress = hero.explorationProgress || 0;
+    }
+  }
+  return completed;
+}
+function MapSystem_addListener(cb) { mapListeners.push(cb); }
+
+// ═══════════════════════════════════════════════════════════════════
+// OFFLINE SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let lastOnlineTimestamp = null;
+let isOffline = false;
+const MAX_OFFLINE = 8 * 3600;
+const OFFLINE_EFF = 0.5;
+function OfflineSystem_init(savedState) { lastOnlineTimestamp = savedState?.lastOnline || Date.now(); }
+function OfflineSystem_markOffline() { lastOnlineTimestamp = Date.now(); isOffline = true; }
+function OfflineSystem_markOnline() {
+  if (!isOffline) return null;
+  const away = Math.floor((Date.now() - lastOnlineTimestamp) / 1000);
+  if (away < 60) { isOffline = false; return null; }
+  const summary = OfflineSystem_calculateOfflineProgress(lastOnlineTimestamp, Date.now());
+  isOffline = false; return summary;
+}
+function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
+  const total = Math.floor((returnTime - lastOnline) / 1000);
+  const capped = Math.min(total, MAX_OFFLINE);
+  const matP = {};
+  for (const mat of MATERIAL_TYPES) { const v = 0.8 + Math.random() * 0.4; const p = Math.floor(2 * capped * v * OFFLINE_EFF); matP[mat] = p; ResourceSystem_add(mat, p); }
+  const gP = Math.floor(50 * (capped / 60) * OFFLINE_EFF); ResourceSystem_add('gold', gP);
+  const mS = Math.floor(Math.random() * 3); if (mS > 0) ResourceSystem_add('magicStones', mS);
+  return { totalSeconds: total, cappedSeconds: capped, isCapped: total > MAX_OFFLINE, materialsProduced: matP, goldProduced: gP, magicStonesProduced: mS };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// BATTLE REPORTS (UI STATE)
+// ═══════════════════════════════════════════════════════════════════
+let battleReports = [];
+function addBattleReport(heroName, zoneName, result, rewards) {
+  battleReports.unshift({
+    heroName, zoneName, result,
+    rewards: rewards || {},
+    time: Date.now(),
+    combatLog: []
+  });
+  if (battleReports.length > 50) battleReports.pop();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GAME STATE & SAVE
+// ═══════════════════════════════════════════════════════════════════
+let gameState = null;
+let pendingOfflineSummary = null;
+let dispatchHeroId = null;
+let dispatchZoneId = null;
+let activePanel = null;
+let activeHeroTab = 'hero-territory';
+let activeReportTab = 'wander';
+
+function saveGame() {
+  if (!gameState) return;
+  gameState.lastOnline = Date.now();
+  gameState.resources = ResourceSystem_getAll();
+  gameState.heroes = territoryHeroes;
+  gameState.wanderingHeroes = wanderingHeroes;
+  gameState.buildings = {};
+  for (const [id, state] of Object.entries(buildingStates)) gameState.buildings[id] = { level: state.level };
+  gameState.mapProgress = mapProgress;
+  gameState.shopInventory = shopInventory;
+  gameState.shopLevel = shopLevel;
+  gameState.nextWanderingSpawnIn = nextWanderingSpawnIn;
+  gameState.battleReports = battleReports;
+  localStorage.setItem('kingdomBuilderSave', JSON.stringify(gameState));
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('kingdomBuilderSave');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      gameState = parsed;
+      return parsed;
+    } catch(e) {
+      gameState = getDefaultGameState();
+      return gameState;
+    }
+  }
+  gameState = getDefaultGameState();
+  return gameState;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FLOATING NUMBERS (Canvas)
+// ═══════════════════════════════════════════════════════════════════
+const floatCanvas = document.getElementById('float-canvas');
+const floatCtx = floatCanvas.getContext('2d');
+let floats = [];
+function resizeFloatCanvas() { floatCanvas.width = window.innerWidth; floatCanvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeFloatCanvas); resizeFloatCanvas();
+function spawnFloat(text, fromCenter) {
+  const wrap = document.getElementById('game-wrap');
+  const rect = wrap.getBoundingClientRect();
+  const x = fromCenter
+    ? rect.left + rect.width / 2 + (Math.random() - 0.5) * 60
+    : rect.left + 40 + Math.random() * (rect.width - 80);
+  const y = floatCanvas.height - 120;
+  floats.push({ x, y, text, alpha: 1, vy: -1.2 - Math.random() * 0.8, size: fromCenter ? 14 : 12 });
+}
+function rafLoop() {
+  const wrap = document.getElementById('game-wrap');
+  const rect = wrap.getBoundingClientRect();
+  floatCtx.clearRect(0, 0, floatCanvas.width, floatCanvas.height);
+  floatCtx.save();
+  floatCtx.translate(rect.left, 0);
+  floats = floats.filter(f => f.alpha > 0);
+  for (const f of floats) {
+    f.y += f.vy; f.alpha -= 0.016;
+    floatCtx.globalAlpha = Math.max(0, f.alpha);
+    floatCtx.font = `bold ${f.size}px 'Press Start 2P', monospace`;
+    floatCtx.fillStyle = '#5d4037';
+    floatCtx.textAlign = 'center';
+    floatCtx.fillText(f.text, f.x - rect.left, f.y);
+  }
+  floatCtx.globalAlpha = 1;
+  floatCtx.restore();
+  requestAnimationFrame(rafLoop);
+}
+rafLoop();
+
+// ═══════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : Math.floor(n); }
+function fmtFull(n) { return Math.floor(n).toLocaleString(); }
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type} show`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => t.remove(), 300);
+  }, 2000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PANEL SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+function openPanel(id) {
+  if (activePanel === id) { closePanel(); return; }
+  if (activePanel) {
+    document.getElementById('panel-' + activePanel)?.classList.remove('open');
+    document.getElementById('nav-' + activePanel)?.classList.remove('active');
+  }
+  activePanel = id;
+  document.getElementById('panel-' + id)?.classList.add('open');
+  document.getElementById('nav-' + id)?.classList.add('active');
+  if (id === 'res') renderResourcesPanel();
+  if (id === 'hero') renderHeroesPanel();
+  if (id === 'build') renderBuildingPanel();
+  if (id === 'map') renderMapPanel();
+  if (id === 'shop') renderShopPanel();
+}
+function closePanel() {
+  if (!activePanel) return;
+  document.getElementById('panel-' + activePanel)?.classList.remove('open');
+  document.getElementById('nav-' + activePanel)?.classList.remove('active');
+  activePanel = null;
+}
+function switchTab(btn, targetId) {
+  const panel = btn.closest('.panel-inner');
+  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(targetId)?.classList.add('active');
+  if (targetId === 'hero-territory' || targetId === 'hero-wander') { activeHeroTab = targetId; renderHeroesTab(targetId); }
+  if (targetId === 'hero-reports') renderReportsTab();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: RESOURCES
+// ═══════════════════════════════════════════════════════════════════
+function renderResourcesPanel() {
+  const grid = document.getElementById('res-grid');
+  const RES_ORDER = ['gold', 'magicStones', 'fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
+  const prod = BuildingSystem_getLevel('monument');
+  const prodRates = { gold: 0, magicStones: 0, fruitPoor: prod, waterDirty: prod, woodRotten: prod, ironRusty: prod, herbLow: prod };
+  grid.innerHTML = RES_ORDER.map(rid => {
+    const cfg = RESOURCES[rid];
+    const val = ResourceSystem_get(rid);
+    const cap = ResourceSystem_getCapacity(rid);
+    const fill = ResourceSystem_getFillPercent(rid);
+    const barClass = fill >= 90 ? 'crit' : fill >= 80 ? 'warn' : '';
+    const rate = prodRates[rid] || 0;
+    return `<div class="res-card">
+      <div class="res-top">
+        <div class="res-info"><span class="res-ico">${cfg.icon}</span><div><div class="res-name">${cfg.name}</div><div class="res-val"><span id="r-${rid}">${fmtFull(val)}</span> / <span class="res-max">${fmtFull(cap)}</span></div></div></div>
+        <div class="rate" id="rate-${rid}">+${rate}/s</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${barClass}" id="pb-${rid}" style="width:${Math.min(100,fill)}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: HEROES
+// ═══════════════════════════════════════════════════════════════════
+function renderHeroesPanel() {
+  // Check if hero tab has hero-reports active by seeing which tab-btn inside hero panel is active
+  const heroPanel = document.getElementById('panel-hero');
+  const activeTabBtn = heroPanel?.querySelector('.tab-btn.active');
+  const activeTabId = activeTabBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+  if (activeTabId === 'hero-reports') { renderReportsTab(); return; }
+  renderHeroesTab(activeHeroTab);
+}
+function renderHeroesTab(tab) {
+  const territoryDiv = document.getElementById('hero-territory');
+  const wanderDiv = document.getElementById('hero-wander');
+  const territory = HeroSystem_getTerritoryHeroes();
+  const wandering = HeroSystem_getWanderingHeroes();
+  const slots = BuildingSystem_getTerritoryHeroSlots(territory.length);
+
+  territoryDiv.innerHTML = `<div class="hero-slot-info">🏰 卡斯特城堡 Lv.${BuildingSystem_getLevel('tavern')} — 英雄空位: ${territory.length}/${slots.max}</div>
+    <div class="hero-cards" id="territory-cards"></div>`;
+  wanderDiv.innerHTML = `<div class="hero-slot-info">🌟 今日訪客 — ${wandering.length} 位英雄路過</div>
+    <div class="hero-cards" id="wander-cards"></div>`;
+
+  const tcards = document.getElementById('territory-cards');
+  if (territory.length === 0) {
+    tcards.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;font-style:italic;">尚無領土英雄，訓練流浪英雄來招募！</div>`;
+  } else {
+    tcards.innerHTML = territory.map(h => renderHeroCard(h, 'territory')).join('');
+  }
+
+  const wcards = document.getElementById('wander-cards');
+  if (wandering.length === 0) {
+    wcards.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;font-style:italic;">目前沒有流浪英雄拜訪。</div>`;
+  } else {
+    wcards.innerHTML = wandering.map(h => renderHeroCard(h, 'wandering')).join('');
+  }
+}
+
+function renderHeroCard(hero, type) {
+  const cls = HERO_CLASSES[hero.class] || HERO_CLASSES.warrior;
+  const statusMap = { idle: 'badge-idle', exploring: 'badge-exploring', resting: 'badge-resting', wandering: 'badge-wandering' };
+  const statusText = { idle: '待機', exploring: '探索中', resting: '休息中', wandering: '流浪中' };
+  const sc = statusMap[hero.status] || 'badge-idle';
+  const st = statusText[hero.status] || hero.status;
+
+  let actions = '';
+  if (type === 'territory') {
+    const trainCost = hero.level * 150;
+    const canTrain = ResourceSystem_get('gold') >= trainCost;
+    actions = `<div class="hero-actions">
+      <button class="btn btn-gold btn-sm" onclick="openDispatchModal('${hero.id}')">出征</button>
+      <button class="btn btn-outline btn-sm" ${canTrain ? '' : 'disabled'} onclick="trainHero('${hero.id}')">訓練 ${fmt(trainCost)}g</button>
+    </div>`;
+  } else {
+    const recCost = HeroSystem_getRecruitCost(hero.id);
+    const canRec = ResourceSystem_get('gold') >= recCost;
+    actions = `<div class="hero-actions">
+      <button class="btn btn-gold btn-sm" ${canRec ? '' : 'disabled'} onclick="recruitHero('${hero.id}')">招募 🪙 ${fmtFull(recCost)}</button>
+    </div>`;
+  }
+
+  return `<div class="hero-card ${hero.status}">
+    <div class="hero-top">
+      <div class="hero-portrait">${cls.icon}</div>
+      <div class="hero-info">
+        <div class="hero-name">${hero.name}</div>
+        <div class="hero-class">Lv.${hero.level} ${cls.name}</div>
+        <div class="hero-stats">
+          <div class="stat">HP <span>${fmtFull(hero.hp)}</span></div>
+          <div class="stat">ATK <span>${hero.atk}</span></div>
+          <div class="stat">DEF <span>${hero.def}</span></div>
+        </div>
+      </div>
+      <div class="hero-badge ${sc}">${st}</div>
+    </div>
+    ${actions}
+  </div>`;
+}
+
+function renderReportsTab(activeTab) {
+  const tab = activeTab || activeReportTab;
+  const div = document.getElementById('hero-reports');
+  div.innerHTML = `<div class="report-sub-tabs">
+      <button class="report-sub-btn ${tab === 'wander' ? 'active' : ''}" onclick="setReportTab('wander')">流浪戰報</button>
+      <button class="report-sub-btn ${tab === 'zone' ? 'active' : ''}" onclick="setReportTab('zone')">領地戰報</button>
+    </div>
+    <div class="clear-btn-row"><button class="btn btn-red btn-sm" onclick="clearReports()">清除全部</button></div>
+    <div id="report-list"></div>`;
+  const list = document.getElementById('report-list');
+  const filtered = tab === 'wander'
+    ? battleReports.filter(r => r.zoneName === 'wander')
+    : battleReports.filter(r => r.zoneName !== 'wander');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;">暫無戰報</div>`;
+  } else {
+    list.innerHTML = filtered.slice(0, 20).map(r => {
+      const timeAgo = getTimeAgo(r.time);
+      return `<div class="report-entry">
+        <div class="report-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.report-expand').classList.toggle('open')">
+          <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
+          <div class="report-info">
+            <div class="report-title">${r.heroName} × ${r.zoneName} — ${r.result === 'victory' ? '勝利' : '撤退'}</div>
+            <div class="report-time">${timeAgo}</div>
+          </div>
+          <div class="report-expand">▾</div>
+        </div>
+        <div class="report-body"></div>
+      </div>`;
+    }).join('');
+  }
+}
+function setReportTab(tab) { activeReportTab = tab; renderReportsTab(tab); }
+
+function getTimeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return diff + ' 秒前';
+  if (diff < 3600) return Math.floor(diff / 60) + ' 分前';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' 小時前';
+  return Math.floor(diff / 86400) + ' 天前';
+}
+function clearReports() { battleReports = []; renderReportsTab(); showToast('戰報已清除', 'info'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: BUILDINGS
+// ═══════════════════════════════════════════════════════════════════
+function renderBuildingPanel() {
+  const grid = document.getElementById('building-grid');
+  const bldgs = BuildingSystem_getAll();
+  grid.innerHTML = Object.values(bldgs).map(b => {
+    const costHtml = b.cost ? Object.entries(b.cost).map(([rid, amt]) => `<div class="cost-item">${RESOURCES[rid]?.icon || '🪙'} ${fmtFull(amt)}</div>`).join('') : '';
+    const canAfford = b.cost ? ResourceSystem_canAfford(b.cost) : false;
+    if (b.canUpgrade) {
+      return `<div class="building-card">
+        <div class="building-header">
+          <div class="building-name">${b.name}</div>
+          <div class="building-level">Lv.${b.level}</div>
+        </div>
+        <div class="building-ico">${b.icon}</div>
+        <div class="building-desc">${b.description}</div>
+        <div class="building-effect">${b.effectText}</div>
+        <div class="divider"></div>
+        <div class="building-cost">${costHtml}</div>
+        <button class="btn btn-gold btn-sm" ${canAfford ? '' : 'disabled'} onclick="upgradeBuilding('${b.id}')">升級 Lv.${b.level + 1}</button>
+      </div>`;
+    } else {
+      return `<div class="building-card">
+        <div class="building-header">
+          <div class="building-name">${b.name}</div>
+          <div class="building-level">MAX</div>
+        </div>
+        <div class="building-ico">${b.icon}</div>
+        <div class="building-desc">${b.description}</div>
+        <div class="building-effect">${b.effectText}</div>
+        <div class="max-badge">✦ MAX LEVEL ✦</div>
+      </div>`;
+    }
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: MAP
+// ═══════════════════════════════════════════════════════════════════
+function renderMapPanel() {
+  const activeDiv = document.getElementById('active-explore');
+  const zoneList = document.getElementById('zone-list');
+  const prog = MapSystem_getProgress();
+  const zones = MapSystem_getZones();
+
+  // Active explorations
+  const explorers = territoryHeroes.filter(h => h.status === 'exploring');
+  if (explorers.length > 0) {
+    activeDiv.innerHTML = `<div class="section-label">進行中的探索</div>` + explorers.map(h => {
+      const zone = zones.find(z => z.id === h.currentZone);
+      const pct = Math.min(100, Math.floor((h.explorationProgress || 0)));
+      return `<div class="explore-item">
+        <div class="explore-top">
+          <div class="explore-name">${zone?.icon || '📍'} ${zone?.name || '未知區域'}</div>
+          <div class="explore-hero">英雄：${h.name}</div>
+          <div class="explore-pct">${pct}%</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,#1a5276,var(--blue))"></div></div>
+      </div>`;
+    }).join('');
+  } else {
+    activeDiv.innerHTML = '';
+  }
+
+  // Zone list
+  zoneList.innerHTML = zones.map(zone => {
+    const unlocked = prog.unlockedZones.includes(zone.id);
+    const cleared = prog.clearedZones.includes(zone.id);
+    const stars = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
+    let cls = 'zone-card';
+    if (!unlocked) cls += ' locked';
+    else if (cleared) cls += ' cleared';
+    else cls += ' unlocked';
+
+    let btn = '';
+    if (!unlocked) {
+      btn = `<button class="btn btn-outline btn-sm" disabled>🔒 鎖定</button>`;
+    } else if (cleared) {
+      btn = `<button class="btn btn-outline btn-sm" disabled>✓ 已通關</button>`;
+    } else {
+      btn = `<button class="btn btn-gold btn-sm" onclick="showToast('從英雄面板派遣英雄探索！','info')">探索</button>`;
+    }
+
+    return `<div class="${cls}">
+      <div class="zone-ico">${zone.icon}</div>
+      <div class="zone-info">
+        <div class="zone-name">${zone.name}</div>
+        <div class="zone-stars">${stars}</div>
+        <div class="zone-rec">推薦等級 Lv.${zone.recommendedLevel}+</div>
+      </div>
+      ${btn}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER: SHOP
+// ═══════════════════════════════════════════════════════════════════
+function renderShopPanel() {
+  const grid = document.getElementById('shop-grid');
+  const invList = document.getElementById('inv-list');
+  const items = ShopSystem_getItems();
+  const inv = ShopSystem_getInventory();
+
+  grid.innerHTML = items.map(item => {
+    const costHtml = Object.entries(item.cost).map(([rid, amt]) => `<div class="cost-item">${RESOURCES[rid]?.icon || ''} ${fmtFull(amt)}</div>`).join('');
+    const canCraft = ResourceSystem_canAfford(item.cost);
+    return `<div class="shop-card">
+      <div class="shop-ico">${item.icon}</div>
+      <div class="shop-name">${item.name}</div>
+      <div class="shop-stock">庫存: ${inv[item.id] || 0}</div>
+      <div class="building-cost" style="justify-content:center">${costHtml}</div>
+      <button class="btn btn-gold btn-sm" ${canCraft ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作 ${item.price}g</button>
+    </div>`;
+  }).join('');
+
+  const invItems = Object.entries(inv).filter(([, q]) => q > 0);
+  if (invItems.length === 0) {
+    invList.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text-faint);font-size:15px;font-style:italic;">暫無物品</div>`;
+  } else {
+    invList.innerHTML = invItems.map(([iid, qty]) => {
+      const it = ITEMS[iid];
+      return `<div class="inv-item"><div class="inv-ico">${it?.icon || '📦'}</div><div class="inv-name">${it?.name || iid}</div><div class="inv-qty">×${qty}</div></div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DISPATCH MODAL
+// ═══════════════════════════════════════════════════════════════════
+function openDispatchModal(heroId) {
+  dispatchHeroId = heroId;
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  document.getElementById('dispatch-hero-name').textContent = '英雄：' + hero.name;
+  const prog = MapSystem_getProgress();
+  const zones = MapSystem_getZones();
+  document.getElementById('dispatch-zone-grid').innerHTML = zones.map(z => {
+    const unlocked = prog.unlockedZones.includes(z.id);
+    const stars = '★'.repeat(z.difficulty) + '☆'.repeat(5 - z.difficulty);
+    return `<div class="dispatch-zone ${unlocked ? '' : 'locked'}" data-zone="${z.id}" onclick="selectDispatchZone(${z.id},${unlocked})">
+      <div class="dz-name">${z.icon} ${z.name}</div>
+      <div class="dz-stars">${stars}${unlocked ? '' : ' 🔒'}</div>
+    </div>`;
+  }).join('');
+  dispatchZoneId = null;
+  document.getElementById('modal-dispatch').classList.add('open');
+}
+function selectDispatchZone(zoneId, unlocked) {
+  if (!unlocked) { dispatchZoneId = null; showToast('該區域未解鎖', 'error'); return; }
+  dispatchZoneId = zoneId;
+  document.querySelectorAll('.dispatch-zone').forEach(z => z.classList.remove('selected'));
+  document.querySelector(`.dispatch-zone[data-zone="${zoneId}"]`)?.classList.add('selected');
+}
+function closeDispatch() { document.getElementById('modal-dispatch').classList.remove('open'); dispatchHeroId = null; dispatchZoneId = null; }
+function doDispatch() {
+  if (!dispatchHeroId || !dispatchZoneId) { showToast('請選擇探索地點', 'error'); return; }
+  const zone = ZONES.find(z => z.id === dispatchZoneId);
+  if (!zone) return;
+  const ok = MapSystem_startExploration(dispatchHeroId, dispatchZoneId);
+  if (ok) {
+    showToast(`${territoryHeroes.find(h=>h.id===dispatchHeroId)?.name || '英雄'} 出征！前往 ${zone.name}`, 'success');
+    closeDispatch();
+    renderMapPanel();
+    if (activePanel === 'hero') renderHeroesTab('hero-territory');
+  } else {
+    showToast('無法派遣，請確認英雄狀態', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════
+function trainHero(heroId) {
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  const cost = hero.level * 150;
+  if (!ResourceSystem_spend({ gold: cost })) { showToast('金幣不足！', 'error'); return; }
+  HeroSystem_trainHero(heroId, { gold: cost });
+  showToast(`${hero.name} 訓練成功！🎉`, 'success');
+  renderHeroesTab('hero-territory');
+}
+function recruitHero(heroId) {
+  const hero = wanderingHeroes.find(h => h.id === heroId);
+  if (!hero) return;
+  const cost = HeroSystem_getRecruitCost(heroId);
+  if (!ResourceSystem_spend({ gold: cost })) { showToast('金幣不足！', 'error'); return; }
+  if (!HeroSystem_recruitWanderingHero(heroId)) { showToast('無法招募！', 'error'); return; }
+  showToast(`${hero.name} 加入了您的王國！🎉`, 'success');
+  renderHeroesTab('hero-wander');
+  renderHeroesTab('hero-territory');
+}
+function upgradeBuilding(id) {
+  const ok = BuildingSystem_upgrade(id);
+  if (!ok) { showToast('升級失敗！', 'error'); return; }
+  const b = BUILDINGS[id];
+  showToast(`${b?.name || '建築'} 升級成功！`, 'success');
+  renderBuildingPanel();
+}
+function craftItem(id) {
+  const ok = ShopSystem_craftItem(id);
+  if (!ok) { showToast('材料不足！', 'error'); return; }
+  const it = ITEMS[id];
+  showToast(`${it?.name || '物品'} 製作成功！`, 'success');
+  renderShopPanel();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════════════
+document.getElementById('btn-settings').onclick = () => document.getElementById('modal-settings').classList.add('open');
+function closeSettings() { document.getElementById('modal-settings').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// CASTLE CLICK
+// ═══════════════════════════════════════════════════════════════════
+// Castle click disabled
+
+// ═══════════════════════════════════════════════════════════════════
+// OFFLINE COLLECT
+// ═══════════════════════════════════════════════════════════════════
+function collectOffline() {
+  if (!pendingOfflineSummary) return;
+  const s = pendingOfflineSummary;
+  // Resources already added by OfflineSystem_calculateOfflineProgress() during OfflineSystem_markOnline() in init()
+  // Only spawn floating numbers for visual feedback
+  const entries = Object.entries(s.materialsProduced);
+  for (let i = 0; i < entries.length; i++) {
+    spawnFloat(RESOURCES[entries[i][0]]?.icon + '+' + entries[i][1], true);
+  }
+  if (s.goldProduced > 0) spawnFloat('🪙+' + s.goldProduced, true);
+  pendingOfflineSummary = null;
+  document.getElementById('modal-welcome').classList.remove('open');
+  showToast('離線收益已收取！', 'success');
+  updateHUD();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HUD UPDATE
+// ═══════════════════════════════════════════════════════════════════
+function updateHUD() {
+  const g = ResourceSystem_get('gold');
+  const m = ResourceSystem_get('magicStones');
+  document.getElementById('hud-gold').textContent = fmtFull(g);
+  document.getElementById('hud-magic').textContent = fmtFull(m);
+  for (const mat of MATERIAL_TYPES) {
+    const el = document.getElementById('hc-' + mat.replace('Poor','').replace('Dirty','').replace('Rotten','').replace('Rusty','').replace('Low',''));
+    if (el) el.textContent = fmt(ResourceSystem_get(mat));
+  }
+}
+function updateHUDMats() {
+  const matIds = ['fruit', 'water', 'wood', 'iron', 'herb'];
+  matIds.forEach((m, i) => {
+    const el = document.getElementById('hc-' + m);
+    if (el) el.textContent = fmt(ResourceSystem_get(MATERIAL_TYPES[i]));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN TICK LOOP
+// ═══════════════════════════════════════════════════════════════════
+function gameTick() {
+  const mLv = BuildingSystem_getLevel('monument');
+  ResourceSystem_produceMaterials(mLv);
+  HeroSystem_processWanderingTick();
+  MapSystem_processExplorations();
+  HeroSystem_processRestingTick();
+  ShopSystem_processAutoProduction();
+  updateHUD();
+  updateHUDMats();
+  // Always refresh open panels every tick so data is always live
+  if (activePanel === 'res') renderResourcesPanel();
+  if (activePanel === 'hero') renderHeroesPanel();
+  if (activePanel === 'build') renderBuildingPanel();
+  if (activePanel === 'map') renderMapPanel();
+  if (activePanel === 'shop') renderShopPanel();
+  saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+function init() {
+  const saved = loadGame();
+  if (saved.battleReports) battleReports = saved.battleReports;
+  ResourceSystem_init(saved);
+  BuildingSystem_init(saved);
+  HeroSystem_init(saved);
+  ShopSystem_init(saved);
+  MapSystem_init(saved);
+  OfflineSystem_init(saved);
+
+  if (saved.heroes.length === 0) {
+    const starter = createTerritoryHero('warrior', 'Sir Aldric', 1);
+    HeroSystem_addTerritoryHero(starter);
+  }
+
+  updateHUD();
+
+  // Check offline
+  const offline = OfflineSystem_markOnline();
+  if (offline && offline.cappedSeconds > 60) {
+    pendingOfflineSummary = offline;
+    const body = document.getElementById('modal-welcome-body');
+    const hours = Math.floor(offline.cappedSeconds / 3600);
+    const mins = Math.floor((offline.cappedSeconds % 3600) / 60);
+    body.innerHTML = `
+      <div style="text-align:center;font-size:15px;color:var(--text-faint);margin-bottom:4px;">您離開了 <span style="color:var(--gold)">${hours} 小時 ${mins} 分</span></div>
+      <div class="offline-item"><div class="offline-label">🪙 金幣</div><div class="offline-val">+${fmtFull(offline.goldProduced)}</div></div>
+      ${Object.entries(offline.materialsProduced).map(([mat, amt]) => `<div class="offline-item"><div class="offline-label">${RESOURCES[mat]?.icon || ''} ${RESOURCES[mat]?.name || mat}</div><div class="offline-val">+${fmtFull(amt)}</div></div>`).join('')}
+      ${offline.magicStonesProduced > 0 ? `<div class="offline-item"><div class="offline-label">💎 魔法石</div><div class="offline-val">+${offline.magicStonesProduced}</div></div>` : ''}
+    `;
+    document.getElementById('modal-welcome').classList.add('open');
+  }
+
+  setInterval(gameTick, 1000);
+
+  // Auto-save every 30s
+  setInterval(saveGame, 1000);
+
+  // Visibility handling
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      OfflineSystem_markOffline();
+      saveGame();
+    }
+  });
+}
+
+init();
+</script>
+</div>
+</body>
+</html>
