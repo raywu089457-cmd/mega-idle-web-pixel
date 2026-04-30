@@ -937,7 +937,20 @@ async function doReset() {
   } catch(e) {
     console.error('Reset error:', e);
   }
-  localStorage.removeItem('kingdomBuilderSave');
+  // Write fresh default state to localStorage before reload
+  const defaultState = {
+    version: 1,
+    lastOnline: Date.now(),
+    resources: { gold: 500, magicStones: 0, fruitPoor: 0, waterDirty: 0, woodRotten: 0, ironRusty: 0, herbLow: 0 },
+    heroes: [],
+    buildings: {},
+    mapProgress: { currentZone: 1, unlockedZones: [1], clearedZones: [] },
+    shopInventory: {},
+    shopLevel: 1,
+    wanderingHeroes: [],
+    battleReports: []
+  };
+  localStorage.setItem('kingdomBuilderSave', JSON.stringify(defaultState));
   location.reload();
 }
 
