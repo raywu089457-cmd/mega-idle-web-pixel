@@ -934,10 +934,10 @@ async function doReset() {
   if (!confirm('確定要重新開始嗎？所有進度將會消失！')) return;
   try {
     await SaveManager.delete();
-    localStorage.removeItem('kingdomBuilderSave');
   } catch(e) {
     console.error('Reset error:', e);
   }
+  localStorage.removeItem('kingdomBuilderSave');
   location.reload();
 }
 
