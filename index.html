@@ -705,19 +705,19 @@ function resolveCombat(hero) {
   const eName = genEnemyName(hero.level);
   const hMaxHp = hero.hp || hero.maxHp;
   const log = [];
-  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' encounters ' + eName + '!' });
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 遭遇 ' + eName + '！' });
   let hHp = hMaxHp, eHp2 = eHp;
   for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
     const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
     const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
     eHp2 -= hDmg; hHp -= eDmg;
-    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' attacks ' + eName + ' for ' + hDmg + ' dmg, enemy strikes back for ' + eDmg + ' dmg' });
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' 攻擊 ' + eName + ' 造成 ' + hDmg + ' 傷害，敵人反擊造成 ' + eDmg + ' 傷害' });
   }
   const vic = eHp2 <= 0;
   const goldR = vic ? 20 + hero.level * 10 : 0;
   const mStones = vic && Math.random() < hero.dropMagicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
-  if (vic) { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '🏆 Victory! ' + hero.name + ' earned ' + goldR + ' gold' + (mStones > 0 ? ' and ' + mStones + ' magic stones' : '') + '!' }); }
-  else { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '💨 Retreat! ' + hero.name + ' fled from ' + eName }); }
+  if (vic) { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '🏆 勝利！' + hero.name + ' 獲得 ' + goldR + ' 金幣' + (mStones > 0 ? ' 和 ' + mStones + ' 魔法石' : '') + '！' }); }
+  else { hero.hp = Math.max(1, hHp); log.push({ type: 'result', text: '💨 撤退！' + hero.name + ' 從 ' + eName + ' 撤退' }); }
   return { victory: vic, goldReward: goldR, magicStones: mStones, combatLog: log };
 }
 function HeroSystem_processWanderingTick() {
@@ -752,19 +752,19 @@ function resolveZoneCombat(hero, zone) {
   const eName = genZoneEnemyName(zone);
   const hMaxHp = hero.hp || hero.maxHp;
   const log = [];
-  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' explores ' + zone.name + ' and encounters ' + eName + '!' });
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' 遭遇 ' + eName + '！' });
   let hHp = hMaxHp, eHp2 = eHp;
   for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
     const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
     const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
     eHp2 -= hDmg; hHp -= eDmg;
-    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' deals ' + hDmg + ' dmg, ' + eName + ' deals ' + eDmg + ' dmg' });
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' 造成 ' + hDmg + ' 傷害，' + eName + ' 造成 ' + eDmg + ' 傷害' });
   }
   const vic = eHp2 <= 0;
   const goldR = vic ? zone.difficulty * 15 + hero.level * 5 : 0;
   const mS = vic && Math.random() < zone.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
-  if (vic) log.push({ type: 'result', text: '🏆 Victory! ' + hero.name + ' earned ' + goldR + ' gold!' });
-  else log.push({ type: 'result', text: '💨 Narrow escape! ' + hero.name + ' barely escaped' });
+  if (vic) log.push({ type: 'result', text: '🏆 勝利！' + hero.name + ' 獲得 ' + goldR + ' 金幣！' });
+  else log.push({ type: 'result', text: '💨 撤退！' + hero.name + ' 僥倖逃脫' });
   return { victory: vic, goldReward: goldR, magicStones: mS, combatLog: log, heroRemainingHp: hHp };
 }
 function HeroSystem_processExplorationTick(zoneId) {
