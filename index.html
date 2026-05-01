@@ -115,6 +115,7 @@ body{
 #panel-res .res-val,
 #panel-res .res-max { font-size: 14px; }
 .btn-close{background:var(--warm-wood);border:2px solid var(--charcoal);color:var(--parchment);cursor:pointer;padding:4px 8px;box-shadow:2px 2px 0 var(--charcoal);font-size:12px !important;}
+.hero-tab-bar{position:fixed;bottom:var(--nav-h);left:0;right:0;max-width:480px;margin:0 auto;padding-bottom:max(env(safe-area-inset-bottom),4px);background:var(--cream);border-top:2px solid var(--dark-tan);display:flex;gap:4px;z-index:49;padding:6px 12px 6px;}
 
 /* ── TABS ── */
 .tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:2px solid var(--dark-tan);padding-bottom:0;}
@@ -181,6 +182,8 @@ body{
 #panel-shop .inv-title,
 #panel-shop .inv-name,
 #panel-shop .inv-qty { font-size: 14px; }
+.wallet-display{font-size:14px;color:var(--golden-wheat);margin-top:2px;font-family:'Press Start 2P',monospace;}
+.wallet-display span{color:#fff;}
 .hero-portrait{width:88px;height:88px;background:rgba(139,90,43,0.15);border:2px solid var(--warm-wood);display:flex;align-items:center;justify-content:center;font-size:39px;flex-shrink:0;}
 .hero-info{flex:1;}
 .badge-idle{background:rgba(244,208,63,0.2);color:var(--rich-soil);border:2px solid var(--rich-soil);}
@@ -377,14 +380,14 @@ body{
       <div class="panel-title">⚔ 英雄</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab(this,'hero-territory')">領地英雄</button>
-      <button class="tab-btn" onclick="switchTab(this,'hero-wander')">流浪英雄</button>
-      <button class="tab-btn" onclick="switchTab(this,'hero-reports')">戰報</button>
-    </div>
     <div class="tab-content active" id="hero-territory"></div>
     <div class="tab-content" id="hero-wander"></div>
     <div class="tab-content" id="hero-reports"></div>
+  </div>
+  <div class="hero-tab-bar">
+    <button class="report-sub-btn active" onclick="setHeroTab('territory')">領地英雄</button>
+    <button class="report-sub-btn" onclick="setHeroTab('wander')">流浪英雄</button>
+    <button class="report-sub-btn" onclick="setHeroTab('reports')">戰報</button>
   </div>
 </div>
 
@@ -505,6 +508,8 @@ const HERO_CLASSES = {
   rogue: { name: '盜賊', baseHp: 85, baseAtk: 18, baseDef: 8, icon: '🗡️' },
   cleric: { name: '牧師', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '⛪' },
   ranger: { name: '弓手', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
+  archer: { name: '弓箭手', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
+  priest: { name: '牧師', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '✝️' },
 };
 const ENGLISH_NAMES = [
   'Aaron','Abigail','Adam','Adrian','Aiden','Alan','Albert','Alex','Alice','Allen',
@@ -549,6 +554,10 @@ const WANDERING_HERO_TYPES = [
   { typeId: 'wandering_mage_2', class: 'mage', name: '雲游術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
   { typeId: 'wandering_rogue_1', class: 'rogue', name: '街頭頑童', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
   { typeId: 'wandering_rogue_2', class: 'rogue', name: '盜賊大師', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+  { typeId: 'wandering_archer_1', class: 'archer', name: '流浪弓手', level: 3, dropGold: 35, dropMagicStoneChance: 0.12 },
+  { typeId: 'wandering_archer_2', class: 'archer', name: '精準射手', level: 6, dropGold: 55, dropMagicStoneChance: 0.17 },
+  { typeId: 'wandering_priest_1', class: 'priest', name: '旅行修士', level: 2, dropGold: 22, dropMagicStoneChance: 0.14 },
+  { typeId: 'wandering_priest_2', class: 'priest', name: '聖殿騎士', level: 7, dropGold: 58, dropMagicStoneChance: 0.2 },
 ];
 const ZONES = [
   { id: 1, name: '平靜郊野', nameAlt: 'Countryside', difficulty: 1, recommendedLevel: 1, rewards: { gold: { min: 50, max: 100 }, materials: ['fruitPoor', 'waterDirty'] }, magicStoneChance: 0.1, icon: '🌾' },
@@ -1407,7 +1416,7 @@ function renderHeroCard(hero, type) {
   }
 
   const walletHtml = type === 'wandering' && hero.wallet !== undefined
-    ? `<div style="font-size:10px;color:var(--gold);margin-top:2px;">💰 ${hero.wallet} 💎 ${hero.diamonds || 0}</div>`
+    ? `<div class="wallet-display">💰 <span>${hero.wallet}</span> 💎 <span>${hero.diamonds || 0}</span></div>`
     : '';
   const hpPct = Math.min(1, Math.max(0, hero.hp / (hero.maxHp || 100)));
   const hpFillClass = hpPct > 0.5 ? 'high' : hpPct > 0.25 ? 'med' : '';
@@ -1437,6 +1446,17 @@ function renderHeroCard(hero, type) {
     </div>
     ${actions}
   </div>`;
+}
+function setHeroTab(tab) {
+  const bar = document.querySelector('.hero-tab-bar');
+  bar.querySelectorAll('.report-sub-btn').forEach(b => b.classList.remove('active'));
+  const btnMap = { territory: bar.querySelector('[onclick="setHeroTab(\'territory\')"]'), wander: bar.querySelector('[onclick="setHeroTab(\'wander\')"]'), reports: bar.querySelector('[onclick="setHeroTab(\'reports\')"]') };
+  btnMap[tab]?.classList.add('active');
+  const targetMap = { territory: 'hero-territory', wander: 'hero-wander', reports: 'hero-reports' };
+  document.querySelectorAll('#panel-hero .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(targetMap[tab])?.classList.add('active');
+  if (tab === 'territory' || tab === 'wander') renderHeroesTab('hero-' + tab);
+  if (tab === 'reports') renderReportsTab();
 }
 
 function renderReportsTab(activeTab) {
