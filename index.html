@@ -832,6 +832,7 @@ function HeroSystem_processWanderingTick() {
         if (canPayWallet && canPayDiamonds) {
           hero.wallet -= item.walletCost;
           hero.diamonds -= item.diamondsCost;
+          ResourceSystem_add('gold', item.walletCost);
           const healAmt = Math.floor((hero.maxHp || 100) * item.healPct);
           hero.hp = Math.min(hero.hp + healAmt, hero.maxHp || 100);
         }
