@@ -1493,7 +1493,7 @@ function renderReportsTab(activeTab) {
     list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;">暫無戰報</div>`;
   } else {
     list.innerHTML = filtered.slice(0, 20).map((r) => {
-      const combatDetails = (r.combatLog || []).map(entry => `<div style="font-size:12px;padding:2px 0;color:${entry.type === 'result' ? 'var(--gold)' : 'var(--text-dim)'}">${entry.text || entry}</div>`).join('');
+      const combatDetails = (r.combatLog || []).map(entry => `<div style="font-size:12px;padding:2px 0;color:${entry.type === 'result' ? '#fff' : 'var(--text-dim)'}">${entry.text || entry}</div>`).join('');
       const rewardDetails = r.rewards ? `<div style="margin-top:8px;font-size:11px;">${r.rewards.gold ? `<span>🪙 ${r.rewards.gold}</span>` : ''}${r.rewards.magicStones ? `<span style="margin-left:8px">💎 ${r.rewards.magicStones}</span>` : ''}</div>` : '';
       const reportId = 'report-' + r.time;
       const isExpanded = expandedReports.has(reportId);
