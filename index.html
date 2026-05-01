@@ -1449,7 +1449,7 @@ function renderHeroCard(hero, type) {
           <div class="equip-slot" title="武器">🗡️ ${hero.equipment?.weapon ? hero.equipment.weapon.name : '—'}</div>
           <div class="equip-slot" title="盔甲">🛡️ ${hero.equipment?.armor ? hero.equipment.armor.name : '—'}</div>
         </div>
-        ${type === 'territory' ? `<div class="inv-btn-slot" onclick="openInventoryModal('${hero.id}')">📦 背包${(hero.inventory?.length || 0) > 0 ? ' ' + hero.inventory.length : ''}</div>` : ''}
+        ${type === 'territory' ? `<div class="inv-btn-slot" onclick="openInventoryModal('${hero.id}')">🎒 背包${(hero.inventory?.length || 0) > 0 ? ' ' + hero.inventory.length : ''}</div>` : ''}
       </div>
       <div class="hero-badge ${sc}">${st}</div>
     </div>
