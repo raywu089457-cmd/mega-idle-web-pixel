@@ -1145,7 +1145,7 @@ function addBattleReport(heroName, zoneName, result, rewards, combatLog) {
     time: Date.now(),
     combatLog: combatLog || []
   });
-  if (battleReports.length > 50) battleReports.pop();
+  if (battleReports.length > 100) battleReports.pop();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1466,7 +1466,7 @@ function renderReportsTab(activeTab) {
           <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
           <div class="report-info">
             <div class="report-title">${r.zoneName === 'wander' ? r.heroName : r.heroName + ' × ' + r.zoneName} — ${r.result === 'victory' ? '勝利' : '撤退'}</div>
-            <div class="report-time">${timeAgo}</div>
+            <div class="report-time" title="${formatFullTime(r.time)}">${timeAgo}</div>
           </div>
           <div class="report-expand ${isExpanded ? 'open' : ''}">▾</div>
         </div>
@@ -1513,6 +1513,13 @@ function getTimeAgo(ts) {
   if (diff < 3600) return Math.floor(diff / 60) + ' 分前';
   if (diff < 86400) return Math.floor(diff / 3600) + ' 小時前';
   return Math.floor(diff / 86400) + ' 天前';
+}
+function formatFullTime(ts) {
+  const d = new Date(ts);
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${m}:${s}`;
 }
 function clearReports() { battleReports = []; expandedReports.clear(); renderReportsTab(); showToast('戰報已清除', 'info'); }
 
