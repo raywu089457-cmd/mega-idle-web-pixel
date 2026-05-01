@@ -482,7 +482,7 @@ body{
 <!-- ── INVENTORY MODAL ── -->
 <div class="modal-overlay" id="modal-inventory">
   <div class="modal">
-    <div class="modal-title">📦 背包</div>
+    <div class="modal-title">🎒 背包</div>
     <div id="inv-modal-hero" style="text-align:center;font-size:13px;color:var(--text-faint);margin-bottom:12px;"></div>
     <div id="inv-modal-list" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;"></div>
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeInventory()">關閉</button></div>
@@ -574,11 +574,13 @@ const ZONES = [
   { id: 5, name: '龍族廢墟', nameAlt: 'Dragon Ruins', difficulty: 5, recommendedLevel: 10, rewards: { gold: { min: 300, max: 600 }, materials: ['ironRusty', 'magicStones'] }, magicStoneChance: 0.3, icon: '🐉' },
 ];
 const ITEMS = {
-  woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️' },
-  ironDagger: { id: 'ironDagger', name: '鐵匕首', type: 'weapon', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪' },
+  woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior' },
+  ironDagger: { id: 'ironDagger', name: '鐵匕首', type: 'weapon', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪', forClass: 'rogue' },
   healthPotion: { id: 'healthPotion', name: '生命藥水', type: 'potion', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪' },
   ironArmor: { id: 'ironArmor', name: '鐵甲', type: 'armor', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️' },
-  mysticStaff: { id: 'mysticStaff', name: '神秘法杖', type: 'weapon', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮' },
+  mysticStaff: { id: 'mysticStaff', name: '神秘法杖', type: 'weapon', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮', forClass: 'mage' },
+  huntersBow: { id: 'huntersBow', name: '獵人弓', type: 'weapon', price: 90, cost: { woodRotten: 50, ironRusty: 30 }, icon: '🏹', forClass: 'archer' },
+  holyMace: { id: 'holyMace', name: '聖光權杖', type: 'weapon', price: 95, cost: { ironRusty: 35, herbLow: 40 }, icon: '✝️', forClass: 'priest' },
 };
 
 function createTerritoryHero(classType, name, level = 1) {
@@ -796,11 +798,12 @@ const ENEMY_DROPS = {
   'Void Walker': { id: 'void-essence', icon: '🌀', name: '虛空精華' },
 };
 const ZONE_ENEMY_DROPS = {
-  1: { id: 'forest-dust', icon: '🍂', name: '森林粉塵' },
-  2: { id: 'dark-spore', icon: '🍄', name: '黑暗孢子' },
-  3: { id: 'mine-fragment', icon: '⛏', name: '礦石碎片' },
-  4: { id: 'swamp-essence', icon: '🌫️', name: '沼澤精華' },
-  5: { id: 'ancient-relic', icon: '🏺', name: '遠古遺物' },
+  1: [{ id: 'forest-dust', icon: '🍂', name: '森林粉塵' }, { id: 'woodenSword', icon: '🗡️', name: '木製劍', isItem: true }, { id: 'woodenSword', icon: '🗡️', name: '木製劍', isItem: true }],
+  2: [{ id: 'dark-spore', icon: '🍄', name: '黑暗孢子' }, { id: 'ironDagger', icon: '🔪', name: '鐵匕首', isItem: true }, { id: 'mysticStaff', icon: '🔮', name: '神秘法杖', isItem: true }],
+  3: [{ id: 'mine-fragment', icon: '⛏', name: '礦石碎片' }, { id: 'huntersBow', icon: '🏹', name: '獵人弓', isItem: true }, { id: 'ironDagger', icon: '🔪', name: '鐵匕首', isItem: true }],
+  4: [{ id: 'swamp-essence', icon: '🌫️', name: '沼澤精華' }, { id: 'ironDagger', icon: '🔪', name: '鐵匕首', isItem: true }, { id: 'huntersBow', icon: '🏹', name: '獵人弓', isItem: true }],
+  5: [{ id: 'ancient-relic', icon: '🏺', name: '遠古遺物' }, { id: 'huntersBow', icon: '🏹', name: '獵人弓', isItem: true }, { id: 'holyMace', icon: '✝️', name: '聖光權杖', isItem: true }],
+  6: [{ id: 'dragon-scale', icon: '🐉', name: '龍鱗片' }, { id: 'huntersBow', icon: '🏹', name: '獵人弓', isItem: true }, { id: 'holyMace', icon: '✝️', name: '聖光權杖', isItem: true }],
 };
 function genEnemyName(level) {
   const t = [{ min: 1, n: ['Goblin Scout', 'Wild Wolf', 'Forest Bandit'] }, { min: 3, n: ['Orc Warrior', 'Cave Troll', 'Dark Mage'] }, { min: 5, n: ['Shadow Knight', 'Dire Beast', 'Cursed Knight'] }, { min: 8, n: ['Ancient Dragon', 'Demon Lord', 'Void Walker'] }].filter(e => level >= e.min).pop();
@@ -996,11 +999,14 @@ function HeroSystem_processExplorationTick(zoneId) {
       const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
       if (victory) {
         c.hero.hp = Math.max(1, c.heroHp);
-        const dropInfo = ZONE_ENEMY_DROPS[zone.id] || null;
         let dropText = '';
-        if (dropInfo && c.hero.inventory) {
-          c.hero.inventory.push({ ...dropInfo });
-          dropText = ' + ' + dropInfo.icon + ' ' + dropInfo.name;
+        if (dropArr && c.hero.inventory) {
+          if (dropArr.isItem) {
+            const itemDef = ITEMS[dropArr.id];
+            if (itemDef) { c.hero.inventory.push({ ...itemDef }); dropText = ' + ' + itemDef.icon + ' ' + itemDef.name; }
+          } else {
+            c.hero.inventory.push({ ...dropArr }); dropText = ' + ' + dropArr.icon + ' ' + dropArr.name;
+          }
         }
         c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + dropText + '！' });
         addBattleReport(c.hero.name, zone.name, 'victory', { gold: goldR, magicStones: mS }, c.log);
@@ -1446,8 +1452,8 @@ function renderHeroCard(hero, type) {
           <div class="stat">ATK ${hero.atk} | DEF ${hero.def}</div>
         </div>
         <div class="hero-equip">
-          <div class="equip-slot" title="武器">🗡️ ${hero.equipment?.weapon ? hero.equipment.weapon.name : '—'}</div>
-          <div class="equip-slot" title="盔甲">🛡️ ${hero.equipment?.armor ? hero.equipment.armor.name : '—'}</div>
+          <div class="equip-slot" onclick="openEquipModal('${hero.id}')">🗡️ ${hero.equipment?.weapon ? hero.equipment.weapon.name : '—'}</div>
+          <div class="equip-slot" onclick="openEquipModal('${hero.id}')">🛡️ ${hero.equipment?.armor ? hero.equipment.armor.name : '—'}</div>
         </div>
         ${type === 'territory' ? `<div class="inv-btn-slot" onclick="openInventoryModal('${hero.id}')">🎒 背包${(hero.inventory?.length || 0) > 0 ? ' ' + hero.inventory.length : ''}</div>` : ''}
       </div>
@@ -1744,13 +1750,25 @@ function openInventoryModal(heroId) {
   const list = document.getElementById('inv-modal-list');
   const inv = hero.inventory || [];
   if (inv.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:var(--text-faint);font-size:13px;padding:20px;">背包是空的</div>';
+    list.innerHTML = '<div style="text-align:center;color:var(--text-faint);font-size:15px;padding:20px;">背包是空的</div>';
   } else {
-    list.innerHTML = inv.map(it => `<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--card-bg);border:2px solid var(--card-border);font-size:13px;">${it.icon || '📦'} <span>${it.name || '物品'}</span></div>`).join('');
+    list.innerHTML = inv.map(it => `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card-bg);border:2px solid var(--card-border);font-size:15px;">${it.icon || '📦'} <span>${it.name || '物品'}</span></div>`).join('');
   }
   document.getElementById('modal-inventory').classList.add('open');
 }
 function closeInventory() { document.getElementById('modal-inventory').classList.remove('open'); }
+
+function openEquipModal(heroId) {
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  document.getElementById('inv-modal-hero').textContent = hero.name + ' 的裝備';
+  const list = document.getElementById('inv-modal-list');
+  const eq = hero.equipment || {};
+  list.innerHTML = `
+    <div style="padding:12px;background:var(--card-bg);border:2px solid var(--card-border);font-size:15px;display:flex;align-items:center;gap:12px;">🗡️ <span>武器：${eq.weapon ? eq.weapon.name : '—'}</span></div>
+    <div style="padding:12px;background:var(--card-bg);border:2px solid var(--card-border);font-size:15px;display:flex;align-items:center;gap:12px;">🛡️ <span>盔甲：${eq.armor ? eq.armor.name : '—'}</span></div>`;
+  document.getElementById('modal-inventory').classList.add('open');
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // ACTIONS
