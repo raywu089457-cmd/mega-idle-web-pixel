@@ -746,6 +746,27 @@ function spawnWanderingHero() {
   wanderingHeroes.push(createWanderingHero(typeDef));
   nextWanderingSpawnIn = getRandomSpawnTime();
 }
+const ENEMY_DROPS = {
+  'Goblin Scout': { id: 'goblin-ear', icon: '👂', name: '哥布林耳朵' },
+  'Wild Wolf': { id: 'wolf-fang', icon: '🦷', name: '狼牙' },
+  'Forest Bandit': { id: 'bandit-cloth', icon: '🧣', name: '匪徒布料' },
+  'Orc Warrior': { id: 'orc-trophy', icon: '🦴', name: '獸人戰利品' },
+  'Cave Troll': { id: 'troll-hide', icon: '🧥', name: '洞穴怪皮' },
+  'Dark Mage': { id: 'dark-crystal', icon: '💠', name: '暗法水晶' },
+  'Shadow Knight': { id: 'shadow-shard', icon: '🌑', name: '暗影碎片' },
+  'Dire Beast': { id: 'beast-talon', icon: '🦅', name: '猛獸利爪' },
+  'Cursed Knight': { id: 'cursed-rune', icon: '🔮', name: '詛咒符文' },
+  'Ancient Dragon': { id: 'dragon-scale', icon: '🐉', name: '龍鱗' },
+  'Demon Lord': { id: 'demon-horn', icon: '🦄', name: '惡魔之角' },
+  'Void Walker': { id: 'void-essence', icon: '🌀', name: '虛空精華' },
+};
+const ZONE_ENEMY_DROPS = {
+  1: { id: 'forest-dust', icon: '🍂', name: '森林粉塵' },
+  2: { id: 'dark-spore', icon: '🍄', name: '黑暗孢子' },
+  3: { id: 'mine-fragment', icon: '⛏', name: '礦石碎片' },
+  4: { id: 'swamp-essence', icon: '🌫️', name: '沼澤精華' },
+  5: { id: 'ancient-relic', icon: '🏺', name: '遠古遺物' },
+};
 function genEnemyName(level) {
   const t = [{ min: 1, n: ['Goblin Scout', 'Wild Wolf', 'Forest Bandit'] }, { min: 3, n: ['Orc Warrior', 'Cave Troll', 'Dark Mage'] }, { min: 5, n: ['Shadow Knight', 'Dire Beast', 'Cursed Knight'] }, { min: 8, n: ['Ancient Dragon', 'Demon Lord', 'Void Walker'] }].filter(e => level >= e.min).pop();
   return t.n[Math.floor(Math.random() * t.n.length)];
@@ -842,7 +863,13 @@ function HeroSystem_processWanderingTick() {
       const mStones = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
       if (victory) {
         c.hero.hp = Math.max(1, c.heroHp);
-        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mStones > 0 ? ' 和 ' + mStones + ' 魔法石' : '') + '！' });
+        const dropInfo = ENEMY_DROPS[c.enemyName] || null;
+        let dropText = '';
+        if (dropInfo) {
+          c.hero.inventory.push({ ...dropInfo });
+          dropText = ' + ' + dropInfo.icon + ' ' + dropInfo.name;
+        }
+        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mStones > 0 ? ' 和 ' + mStones + ' 魔法石' : '') + (dropText) + '！' });
         addBattleReport(c.hero.name, 'wander', 'victory', { gold: goldR, magicStones: mStones }, c.log);
         c.hero.wallet += goldR;
         if (mStones > 0) c.hero.diamonds += mStones;
@@ -931,7 +958,13 @@ function HeroSystem_processExplorationTick(zoneId) {
       const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
       if (victory) {
         c.hero.hp = Math.max(1, c.heroHp);
-        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣！' });
+        const dropInfo = ZONE_ENEMY_DROPS[zone.id] || null;
+        let dropText = '';
+        if (dropInfo && c.hero.inventory) {
+          c.hero.inventory.push({ ...dropInfo });
+          dropText = ' + ' + dropInfo.icon + ' ' + dropInfo.name;
+        }
+        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + dropText + '！' });
         addBattleReport(c.hero.name, zone.name, 'victory', { gold: goldR, magicStones: mS }, c.log);
         ResourceSystem_add('gold', goldR);
         if (mS > 0) ResourceSystem_add('magicStones', mS);
