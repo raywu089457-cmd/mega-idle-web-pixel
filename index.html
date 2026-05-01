@@ -105,9 +105,9 @@ body{
 .nav-btn.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--golden-wheat);}
 
 /* ── PANELS ── */
-.panel{position:fixed;left:0;right:0;top:var(--panel-h);max-width:480px;margin:0 auto;z-index:50;background:var(--cream);border-top:2px solid var(--charcoal);max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);box-shadow:-2px -2px 0 var(--charcoal);}
+.panel{position:fixed;left:0;right:0;top:var(--panel-h);max-width:480px;margin:0 auto;z-index:50;background:var(--cream);border-top:2px solid var(--charcoal);max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);box-shadow:-2px -2px 0 var(--charcoal);display:flex;flex-direction:column;}
 .panel.open{max-height:calc(100vh - var(--panel-h) - var(--nav-h) - max(env(safe-area-inset-bottom), 80px));}
-.panel-inner{height:calc(100vh - var(--panel-h) - var(--nav-h) - max(env(safe-area-inset-bottom), 80px) - 2px);overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(93,64,55,0.3) transparent;}
+.panel-inner{flex:1;overflow-y:auto;padding:0 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(93,64,55,0.3) transparent;}
 .panel-inner::-webkit-scrollbar{width:3px;}.panel-inner::-webkit-scrollbar-thumb{background:rgba(93,64,55,0.3);}
 .panel-header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 0 10px;background:var(--cream);}
 #panel-res .panel-title,
@@ -115,7 +115,7 @@ body{
 #panel-res .res-val,
 #panel-res .res-max { font-size: 14px; }
 .btn-close{background:var(--warm-wood);border:2px solid var(--charcoal);color:var(--parchment);cursor:pointer;padding:4px 8px;box-shadow:2px 2px 0 var(--charcoal);font-size:12px !important;}
-.hero-tab-bar{display:flex;gap:4px;padding:10px 0 2px;border-top:2px solid var(--dark-tan);margin-top:4px;}
+.hero-tab-bar{display:flex;gap:4px;padding:8px 0 4px;border-top:2px solid var(--dark-tan);flex-shrink:0;}
 
 /* ── TABS ── */
 .tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:2px solid var(--dark-tan);padding-bottom:0;}
