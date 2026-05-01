@@ -115,15 +115,15 @@ body{
 #panel-res .res-val,
 #panel-res .res-max { font-size: 14px; }
 .btn-close{background:var(--warm-wood);border:2px solid var(--charcoal);color:var(--parchment);cursor:pointer;padding:4px 8px;box-shadow:2px 2px 0 var(--charcoal);font-size:12px !important;}
-.hero-tab-bar{display:flex;gap:4px;padding:8px 0 4px;border-top:2px solid var(--dark-tan);flex-shrink:0;margin-top:auto;}
+.hero-tab-bar{display:flex;gap:4px;padding:8px 0 4px;border-top:2px solid var(--dark-tan);flex-shrink:0;}
 
 /* ── TABS ── */
 .tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:2px solid var(--dark-tan);padding-bottom:0;}
 .tab-btn{padding:12px 24px;font-family:'Press Start 2P',monospace;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;margin-bottom:-2px;}
 .tab-btn.active{color:var(--rich-soil);border-bottom-color:var(--rich-soil);}
 .tab-btn:hover{color:var(--rich-soil);}
-.tab-content{display:none;}
-.tab-content.active{display:flex;flex-direction:column;min-height:calc(100vh - var(--panel-h) - var(--nav-h) - 180px);}
+.tab-content{display:none;overflow-y:auto;}
+.tab-content.active{display:flex;flex-direction:column;}
 
 /* ── RESOURCE CARDS ── */
 .res-grid{display:flex;flex-direction:column;gap:8px;}
@@ -383,11 +383,11 @@ body{
     <div class="tab-content active" id="hero-territory"></div>
     <div class="tab-content" id="hero-wander"></div>
     <div class="tab-content" id="hero-reports"></div>
-    <div class="hero-tab-bar">
-      <button class="report-sub-btn active" onclick="setHeroTab('territory')">領地英雄</button>
-      <button class="report-sub-btn" onclick="setHeroTab('wander')">流浪英雄</button>
-      <button class="report-sub-btn" onclick="setHeroTab('reports')">戰報</button>
-    </div>
+  </div>
+  <div class="hero-tab-bar">
+    <button class="report-sub-btn active" onclick="setHeroTab('territory')">領地英雄</button>
+    <button class="report-sub-btn" onclick="setHeroTab('wander')">流浪英雄</button>
+    <button class="report-sub-btn" onclick="setHeroTab('reports')">戰報</button>
   </div>
 </div>
 
