@@ -513,8 +513,16 @@ const ENGLISH_NAMES = [
   'Wayne','Wendy','William','Willie','Zachary','Alice','Adam','Eve','Ivan','Olga'
 ];
 
+function getUsedNames() {
+  const used = new Set([...territoryHeroes.map(h => h.name), ...wanderingHeroes.map(h => h.name)]);
+  return used;
+}
+
 function getRandomEnglishName() {
-  return ENGLISH_NAMES[Math.floor(Math.random() * ENGLISH_NAMES.length)];
+  const used = getUsedNames();
+  const pool = ENGLISH_NAMES.filter(n => !used.has(n));
+  if (pool.length === 0) return ENGLISH_NAMES[Math.floor(Math.random() * ENGLISH_NAMES.length)];
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 const WANDERING_HERO_TYPES = [
@@ -1319,6 +1327,7 @@ function renderHeroCard(hero, type) {
     actions = `<div class="hero-actions">
       <button class="btn btn-gold btn-sm" onclick="openDispatchModal('${hero.id}')">出征</button>
       <button class="btn btn-outline btn-sm" ${canTrain ? '' : 'disabled'} onclick="trainHero('${hero.id}')">訓練 ${fmt(trainCost)}g</button>
+      <button class="btn btn-red btn-sm" onclick="banishHero('${hero.id}')">驅逐</button>
     </div>`;
   } else {
     const recCost = HeroSystem_getRecruitCost(hero.id);
@@ -1620,6 +1629,14 @@ function recruitHero(heroId) {
   }
   showToast(`${hero.name} 加入了您的王國！🎉`, 'success');
   renderHeroesTab('hero-wander');
+  renderHeroesTab('hero-territory');
+}
+function banishHero(heroId) {
+  const hero = territoryHeroes.find(h => h.id === heroId);
+  if (!hero) return;
+  const idx = territoryHeroes.findIndex(h => h.id === heroId);
+  territoryHeroes.splice(idx, 1);
+  showToast(`${hero.name} 已被驅逐。`, 'info');
   renderHeroesTab('hero-territory');
 }
 function upgradeBuilding(id) {
