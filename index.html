@@ -176,6 +176,11 @@ body{
 .badge-resting{background:rgba(155,89,182,0.2);color:var(--purple);border:2px solid var(--purple);}
 .badge-wandering{background:rgba(155,89,182,0.1);color:var(--purple);border:2px solid var(--purple);}
 .hero-actions{display:flex;gap:6px;}
+.hero-equip{display:flex;gap:8px;margin-top:4px;}
+.equip-slot{font-size:11px;padding:2px 6px;background:rgba(139,90,43,0.1);border:1px solid var(--warm-wood);color:var(--text-dim);}
+.hero-inv{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.inv-item{font-size:14px;}
+.inv-more{font-size:10px;color:var(--text-faint);align-self:center;}
 
 /* ── BUTTONS ── */
 .btn{padding:14px 28px;font-family:'Press Start 2P',monospace;font-size:15px;cursor:pointer;border:2px solid var(--charcoal);display:inline-flex;align-items:center;gap:8px;box-shadow:2px 2px 0 var(--charcoal);}
@@ -1351,6 +1356,11 @@ function renderHeroCard(hero, type) {
           <div class="stat">ATK <span>${hero.atk}</span></div>
           <div class="stat">DEF <span>${hero.def}</span></div>
         </div>
+        <div class="hero-equip">
+          <div class="equip-slot" title="武器">🗡️ ${hero.equipment?.weapon ? hero.equipment.weapon.name : '—'}</div>
+          <div class="equip-slot" title="盔甲">🛡️ ${hero.equipment?.armor ? hero.equipment.armor.name : '—'}</div>
+        </div>
+        ${type === 'territory' ? '<div class="hero-inv">' + (hero.inventory || []).slice(0, 4).map(it => `<span class="inv-item">${it.icon || '📦'}</span>`).join('') + (hero.inventory?.length > 4 ? '<span class="inv-more">+' + (hero.inventory.length - 4) + '</span>' : '') + '</div>' : ''}
       </div>
       <div class="hero-badge ${sc}">${st}</div>
     </div>
