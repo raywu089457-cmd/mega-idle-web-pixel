@@ -484,7 +484,7 @@ const BUILDINGS = {
   monument: { id: 'monument', name: '古老石碑', nameAlt: 'Ancient Monument', description: '古老的石碑，散發著神秘的能量，自動生產各種基礎材料。', level: 1, maxLevel: 10, baseCost: { gold: 500, woodRotten: 50, ironRusty: 20 }, costMultiplier: 2.0, icon: '🗿', effectText: '⚡ +2🍎 +1💧 +3🪵/s' },
   tavern: { id: 'tavern', name: '酒館', nameAlt: 'Tavern', description: '熱鬧的酒館吸引流浪英雄，增加招募機會。', level: 1, maxLevel: 5, baseCost: { gold: 300, woodRotten: 80 }, costMultiplier: 1.5, icon: '🍺', effectText: '🎲 每日訪客 +2' },
   weaponShop: { id: 'weaponShop', name: '武器鋪', nameAlt: 'Weapon Shop', description: '鑄造各種武器，提升英雄攻擊力。', level: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️', effectText: '🗡 可製作初級武器' },
-  potionShop: { id: 'potionShop', name: '藥水鋪', nameAlt: 'Potion Shop', description: '調配各種藥水，補充英雄體力。', level: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️', effectText: '💊 可製作初級藥水' },
+  potionShop: { id: 'potionShop', name: '藥水鋪', nameAlt: 'Potion Shop', description: '調配各種藥水，補充英雄體力。', level: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️', effectText: '' },
   armorShop: { id: 'armorShop', name: '鎧甲鋪', nameAlt: 'Armor Shop', description: '打造堅固鎧甲，增強英雄防禦力。', level: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️', effectText: '🛡 最高級防具可製作' },
 };
 const HERO_CLASSES = {
@@ -674,7 +674,14 @@ function BuildingSystem_getAll() {
   for (const [id, state] of Object.entries(buildingStates)) {
     const def = BUILDINGS[id];
     if (!def) continue;
-    r[id] = { id, name: def.name, description: def.description, effect: def.effect, level: state.level, maxLevel: def.maxLevel, cost: getBuildingCost(id, state.level + 1), canUpgrade: state.level < def.maxLevel, icon: def.icon, effectText: def.effectText };
+    let effectText = def.effectText || '';
+    if (id === 'potionShop') {
+      const lvl = state.level;
+      const ticks = Math.max(1, 10 - (lvl - 1) * 2);
+      const amt = 1 + (lvl - 1) * 2;
+      effectText = '💊 每' + ticks + 'tick 生產 ' + amt + ' 瓶';
+    }
+    r[id] = { id, name: def.name, description: def.description, effect: def.effect, level: state.level, maxLevel: def.maxLevel, cost: getBuildingCost(id, state.level + 1), canUpgrade: state.level < def.maxLevel, icon: def.icon, effectText };
   }
   return r;
 }
@@ -1028,13 +1035,18 @@ function ShopSystem_processAutoProduction() {
   if (!potionShopAutoProduce) { potionShopTickCounter = 0; return null; }
   if (BuildingSystem_getLevel('potionShop') < 1) { potionShopTickCounter = 0; return null; }
   potionShopTickCounter++;
-  if (potionShopTickCounter < 10) return null;
+  const shopLvl = BuildingSystem_getLevel('potionShop');
+  const ticksNeeded = Math.max(1, 10 - (shopLvl - 1) * 2);
+  if (potionShopTickCounter < ticksNeeded) return null;
   potionShopTickCounter = 0;
   const hp = ITEMS['healthPotion'];
   if (!hp || !ResourceSystem_canAfford(hp.cost)) return null;
-  if ((shopInventory['healthPotion'] || 0) >= MAX_INV) return null;
+  const stock = shopInventory['healthPotion'] || 0;
+  if (stock >= MAX_INV) return null;
+  const produceAmt = 1 + (shopLvl - 1) * 2;
   if (!ResourceSystem_spend(hp.cost)) return null;
-  shopInventory['healthPotion'] = (shopInventory['healthPotion'] || 0) + 1; return { item: hp };
+  const actualAmt = Math.min(produceAmt, MAX_INV - stock);
+  shopInventory['healthPotion'] = stock + actualAmt; return { item: hp, amt: actualAmt };
 }
 function ShopSystem_addListener(cb) { shopListeners.push(cb); }
 function ShopSystem_getShopLevel() { return shopLevel; }
