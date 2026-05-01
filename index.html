@@ -605,7 +605,7 @@ function getDefaultGameState() {
     heroes: [], wanderingHeroes: [],
     buildings: { monument: { level: 1 }, tavern: { level: 1 }, weaponShop: { level: 1 }, potionShop: { level: 1 }, armorShop: { level: 1 } },
     mapProgress: { currentZone: 1, unlockedZones: [1], clearedZones: [] },
-    shopInventory: {}, tickCount: 0,
+    shopInventory: {}, tickCount: 0, potionShopAutoProduce: true,
   };
 }
 
@@ -829,9 +829,11 @@ function HeroSystem_processWanderingTick() {
         const item = consumables[Math.floor(Math.random() * consumables.length)];
         const canPayWallet = hero.wallet >= item.walletCost;
         const canPayDiamonds = hero.diamonds >= item.diamondsCost;
-        if (canPayWallet && canPayDiamonds) {
+        const inStock = (shopInventory['healthPotion'] || 0) > 0;
+        if (canPayWallet && canPayDiamonds && inStock) {
           hero.wallet -= item.walletCost;
           hero.diamonds -= item.diamondsCost;
+          shopInventory['healthPotion']--;
           ResourceSystem_add('gold', item.walletCost);
           const healAmt = Math.floor((hero.maxHp || 100) * item.healPct);
           hero.hp = Math.min(hero.hp + healAmt, hero.maxHp || 100);
@@ -1008,8 +1010,9 @@ function HeroSystem_addListener(cb) { heroListeners.push(cb); }
 let shopInventory = {};
 let shopLevel = 1;
 let shopListeners = [];
+let potionShopAutoProduce = true; // auto-production toggle for potion shop
 const MAX_INV = 100;
-function ShopSystem_init(savedState) { shopInventory = savedState?.shopInventory || {}; shopLevel = savedState?.shopLevel || 1; }
+function ShopSystem_init(savedState) { shopInventory = savedState?.shopInventory || {}; shopLevel = savedState?.shopLevel || 1; potionShopAutoProduce = savedState?.potionShopAutoProduce ?? true; }
 function ShopSystem_getItems() { return Object.values(ITEMS); }
 function ShopSystem_getItem(id) { return ITEMS[id] || null; }
 function ShopSystem_craftItem(id) {
@@ -1021,15 +1024,18 @@ function ShopSystem_craftItem(id) {
 }
 function ShopSystem_getInventory() { return { ...shopInventory }; }
 function ShopSystem_processAutoProduction() {
-  if (Math.random() > 0.1 * shopLevel) return null;
-  const recipes = ShopSystem_getItems().filter(item => ResourceSystem_canAfford(item.cost));
-  if (recipes.length === 0) return null;
-  const it = recipes[Math.floor(Math.random() * recipes.length)];
-  if (!ResourceSystem_spend(it.cost)) return null;
-  shopInventory[it.id] = (shopInventory[it.id] || 0) + 1; return { item: it };
+  if (!potionShopAutoProduce) return null;
+  if (BuildingSystem_getLevel('potionShop') < 1) return null;
+  if (Math.random() > 0.1) return null;
+  const hp = ITEMS['healthPotion'];
+  if (!hp || !ResourceSystem_canAfford(hp.cost)) return null;
+  if ((shopInventory['healthPotion'] || 0) >= MAX_INV) return null;
+  if (!ResourceSystem_spend(hp.cost)) return null;
+  shopInventory['healthPotion'] = (shopInventory['healthPotion'] || 0) + 1; return { item: hp };
 }
 function ShopSystem_addListener(cb) { shopListeners.push(cb); }
 function ShopSystem_getShopLevel() { return shopLevel; }
+function togglePotionShopAutoProduce() { potionShopAutoProduce = !potionShopAutoProduce; if (activePanel === 'build') renderBuildingPanel(); }
 
 // ═══════════════════════════════════════════════════════════════════
 // MAP SYSTEM
@@ -1147,7 +1153,8 @@ async function doReset() {
     shopLevel: 1,
     wanderingHeroes: [],
     battleReports: [],
-    tickCount: 0
+    tickCount: 0,
+    potionShopAutoProduce: true,
   };
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(defaultState));
   // CRITICAL: Clear gameState and combat tracking so saveGame() becomes a no-op during the 500ms window
@@ -1488,6 +1495,8 @@ function renderBuildingPanel() {
   grid.innerHTML = Object.values(bldgs).map(b => {
     const costHtml = b.cost ? Object.entries(b.cost).map(([rid, amt]) => `<div class="cost-item">${RESOURCES[rid]?.icon || '🪙'} ${fmtFull(amt)}</div>`).join('') : '';
     const canAfford = b.cost ? ResourceSystem_canAfford(b.cost) : false;
+    const isPotionShop = b.id === 'potionShop';
+    const autoToggle = isPotionShop ? `<button class="btn btn-sm ${potionShopAutoProduce ? 'btn-gold' : 'btn-outline'}" onclick="togglePotionShopAutoProduce()">自動生產 ${potionShopAutoProduce ? '開' : '關'}</button><div class="building-stock">庫存：${shopInventory['healthPotion'] || 0} 🧪</div>` : '';
     if (b.canUpgrade) {
       return `<div class="building-card">
         <div class="building-header">
@@ -1497,7 +1506,7 @@ function renderBuildingPanel() {
         <div class="building-ico">${b.icon}</div>
         <div class="building-desc">${b.description}</div>
         <div class="building-effect">${b.effectText}</div>
-        <div class="divider"></div>
+        ${autoToggle ? `<div class="divider"></div>${autoToggle}<div class="divider"></div>` : '<div class="divider"></div>'}
         <div class="building-cost">${costHtml}</div>
         <button class="btn btn-gold btn-sm" ${canAfford ? '' : 'disabled'} onclick="upgradeBuilding('${b.id}')">升級 Lv.${b.level + 1}</button>
       </div>`;
@@ -1510,6 +1519,7 @@ function renderBuildingPanel() {
         <div class="building-ico">${b.icon}</div>
         <div class="building-desc">${b.description}</div>
         <div class="building-effect">${b.effectText}</div>
+        ${autoToggle ? `<div class="divider"></div>${autoToggle}` : ''}
         <div class="max-badge">✦ MAX LEVEL ✦</div>
       </div>`;
     }
