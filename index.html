@@ -1455,18 +1455,17 @@ function renderReportsTab(activeTab) {
   if (filtered.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;">暫無戰報</div>`;
   } else {
-    list.innerHTML = filtered.slice(0, 20).map((r, idx) => {
-      const timeAgo = getTimeAgo(r.time);
+    list.innerHTML = filtered.slice(0, 20).map((r) => {
       const combatDetails = (r.combatLog || []).map(entry => `<div style="font-size:12px;padding:2px 0;color:${entry.type === 'result' ? 'var(--gold)' : 'var(--text-dim)'}">${entry.text || entry}</div>`).join('');
       const rewardDetails = r.rewards ? `<div style="margin-top:8px;font-size:11px;">${r.rewards.gold ? `<span>🪙 ${r.rewards.gold}</span>` : ''}${r.rewards.magicStones ? `<span style="margin-left:8px">💎 ${r.rewards.magicStones}</span>` : ''}</div>` : '';
-      const reportId = 'report-' + idx;
+      const reportId = 'report-' + r.time;
       const isExpanded = expandedReports.has(reportId);
       return `<div class="report-entry" data-report-id="${reportId}">
         <div class="report-head ${isExpanded ? 'open' : ''}">
           <div class="report-result">${r.result === 'victory' ? '🏆' : '💨'}</div>
           <div class="report-info">
             <div class="report-title">${r.zoneName === 'wander' ? r.heroName : r.heroName + ' × ' + r.zoneName} — ${r.result === 'victory' ? '勝利' : '撤退'}</div>
-            <div class="report-time" title="${formatFullTime(r.time)}">${timeAgo}</div>
+            <div class="report-time">${formatFullTime(r.time)}</div>
           </div>
           <div class="report-expand ${isExpanded ? 'open' : ''}">▾</div>
         </div>
