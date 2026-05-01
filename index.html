@@ -1417,8 +1417,9 @@ function renderHeroCard(hero, type) {
   if (type === 'territory') {
     const trainCost = hero.level * 150;
     const canTrain = ResourceSystem_get('gold') >= trainCost;
+    const isExploring = hero.status === 'exploring';
     actions = `<div class="hero-actions">
-      <button class="btn btn-gold btn-sm" onclick="openDispatchModal('${hero.id}')">出征</button>
+      ${isExploring ? `<button class="btn btn-blue btn-sm" onclick="recallHero('${hero.id}')">召回</button>` : `<button class="btn btn-gold btn-sm" onclick="openDispatchModal('${hero.id}')">出征</button>`}
       <button class="btn btn-outline btn-sm" ${canTrain ? '' : 'disabled'} onclick="trainHero('${hero.id}')">訓練 ${fmt(trainCost)}g</button>
       <button class="btn btn-red btn-sm" onclick="banishHero('${hero.id}')">驅逐</button>
     </div>`;
@@ -1804,6 +1805,17 @@ function banishHero(heroId) {
   const idx = territoryHeroes.findIndex(h => h.id === heroId);
   territoryHeroes.splice(idx, 1);
   showToast(`${hero.name} 已被驅逐。`, 'info');
+  renderHeroesTab('hero-territory');
+}
+function recallHero(heroId) {
+  const hero = territoryHeroes.find(h => h.id === heroId);
+  if (!hero || hero.status !== 'exploring') return;
+  const combatKey = heroId + '_' + hero.currentZone;
+  delete territoryCombats[combatKey];
+  hero.status = 'idle';
+  hero.currentZone = null;
+  hero.explorationProgress = 0;
+  showToast(`${hero.name} 已召回待命。`, 'info');
   renderHeroesTab('hero-territory');
 }
 function upgradeBuilding(id) {
