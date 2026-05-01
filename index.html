@@ -140,11 +140,23 @@ body{
 .rate{font-size:7px;color:var(--green);margin-left:auto;}
 
 /* ── HERO CARDS ── */
+.hero-card{background:var(--card-bg);border:2px solid var(--card-border);padding:12px;display:flex;flex-direction:column;gap:8px;}
+.hero-top{display:flex;gap:12px;align-items:flex-start;}
+.hero-stats{display:flex;flex-direction:column;gap:4px;}
+.stat-hp-bar{display:flex;align-items:center;gap:6px;}
+.hp-bar{flex:1;height:8px;background:rgba(139,90,43,0.2);border:2px solid var(--warm-wood);overflow:hidden;}
+.hp-fill{height:100%;background:var(--red);transition:width 0.3s;}
+.hp-fill.high{background:var(--green);}
+.hp-fill.med{background:var(--burnt-orange);}
+.hp-text{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);min-width:60px;text-align:right;}
 /* Hero panel Chinese text */
 #panel-hero .hero-slot-info,
 #panel-hero .hero-name,
 #panel-hero .hero-class,
 #panel-hero .stat,
+#panel-hero .stat-hp-bar,
+#panel-hero .stat-hp-bar span,
+#panel-hero .hp-text,
 #panel-hero .hero-badge { font-size: 14px; }
 
 #panel-build .building-name,
@@ -1389,8 +1401,6 @@ function renderHeroCard(hero, type) {
   } else {
     const recCost = HeroSystem_getRecruitCost(hero.id);
     const canRec = ResourceSystem_get('gold') >= recCost;
-    const walletDisplay = hero.wallet !== undefined ? `<div class="stat">💰 <span>${hero.wallet}</span></div>` : '';
-    const diamDisplay = hero.diamonds !== undefined ? `<div class="stat">💎 <span>${hero.diamonds}</span></div>` : '';
     actions = `<div class="hero-actions">
       <button class="btn btn-gold btn-sm" ${canRec ? '' : 'disabled'} onclick="recruitHero('${hero.id}')">招募 🪙 ${fmtFull(recCost)}</button>
     </div>`;
@@ -1399,6 +1409,8 @@ function renderHeroCard(hero, type) {
   const walletHtml = type === 'wandering' && hero.wallet !== undefined
     ? `<div style="font-size:10px;color:var(--gold);margin-top:2px;">💰 ${hero.wallet} 💎 ${hero.diamonds || 0}</div>`
     : '';
+  const hpPct = Math.min(1, Math.max(0, hero.hp / (hero.maxHp || 100)));
+  const hpFillClass = hpPct > 0.5 ? 'high' : hpPct > 0.25 ? 'med' : '';
 
   return `<div class="hero-card ${hero.status}">
     <div class="hero-top">
@@ -1408,9 +1420,12 @@ function renderHeroCard(hero, type) {
         <div class="hero-class">Lv.${hero.level} ${cls.name}</div>
         ${walletHtml}
         <div class="hero-stats">
-          <div class="stat">HP <span>${fmtFull(hero.hp)}</span></div>
-          <div class="stat">ATK <span>${hero.atk}</span></div>
-          <div class="stat">DEF <span>${hero.def}</span></div>
+          <div class="stat-hp-bar">
+            <span>HP</span>
+            <div class="hp-bar"><div class="hp-fill ${hpFillClass}" style="width:${hpPct*100}%"></div></div>
+            <span class="hp-text">${fmtFull(Math.ceil(hero.hp))}/${fmtFull(hero.maxHp || 100)}</span>
+          </div>
+          <div class="stat">ATK ${hero.atk} | DEF ${hero.def}</div>
         </div>
         <div class="hero-equip">
           <div class="equip-slot" title="武器">🗡️ ${hero.equipment?.weapon ? hero.equipment.weapon.name : '—'}</div>
