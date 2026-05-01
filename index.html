@@ -1167,6 +1167,8 @@ let dispatchZoneId = null;
 let activePanel = null;
 let activeHeroTab = 'hero-territory';
 let activeReportTab = 'wander';
+let heroSubTab = 'territory'; // 'territory' | 'wander' | 'reports'
+let heroReportSubTab = 'wander'; // 'wander' | 'zone' | 'party'
 let expandedReports = new Set(); // Track expanded report IDs
 
 // ── COMBAT STATE TRACKING (per-second round resolution) ──
@@ -1448,30 +1450,45 @@ function renderHeroCard(hero, type) {
   </div>`;
 }
 function setHeroTab(tab) {
+  heroSubTab = tab;
   const bar = document.querySelector('.hero-tab-bar');
-  bar.querySelectorAll('.report-sub-btn').forEach(b => b.classList.remove('active'));
-  const btnMap = { territory: bar.querySelector('[onclick="setHeroTab(\'territory\')"]'), wander: bar.querySelector('[onclick="setHeroTab(\'wander\')"]'), reports: bar.querySelector('[onclick="setHeroTab(\'reports\')"]') };
-  btnMap[tab]?.classList.add('active');
-  const targetMap = { territory: 'hero-territory', wander: 'hero-wander', reports: 'hero-reports' };
+  bar.innerHTML = '';
+  if (tab === 'reports') {
+    bar.innerHTML = `
+      <button class="report-sub-btn ${heroReportSubTab === 'wander' ? 'active' : ''}" onclick="setHeroReportSub('wander')">流浪戰報</button>
+      <button class="report-sub-btn ${heroReportSubTab === 'zone' ? 'active' : ''}" onclick="setHeroReportSub('zone')">領地戰報</button>
+      <button class="report-sub-btn ${heroReportSubTab === 'party' ? 'active' : ''}" onclick="setHeroReportSub('party')">組隊戰報</button>
+      <button class="report-sub-btn" onclick="setHeroTab('territory')" style="margin-left:auto;">← 返回</button>`;
+  } else {
+    bar.innerHTML = `
+      <button class="report-sub-btn ${tab === 'territory' ? 'active' : ''}" onclick="setHeroTab('territory')">領地英雄</button>
+      <button class="report-sub-btn ${tab === 'wander' ? 'active' : ''}" onclick="setHeroTab('wander')">流浪英雄</button>
+      <button class="report-sub-btn" onclick="setHeroTab('reports')">戰報</button>`;
+  }
   document.querySelectorAll('#panel-hero .tab-content').forEach(c => c.classList.remove('active'));
+  const targetMap = { territory: 'hero-territory', wander: 'hero-wander', reports: 'hero-reports' };
   document.getElementById(targetMap[tab])?.classList.add('active');
   if (tab === 'territory' || tab === 'wander') renderHeroesTab('hero-' + tab);
-  if (tab === 'reports') renderReportsTab();
+  if (tab === 'reports') renderReportsTab(heroReportSubTab);
+}
+
+function setHeroReportSub(tab) {
+  heroReportSubTab = tab;
+  setHeroTab('reports');
 }
 
 function renderReportsTab(activeTab) {
   const tab = activeTab || activeReportTab;
   const div = document.getElementById('hero-reports');
-  div.innerHTML = `<div class="report-sub-tabs">
-      <button class="report-sub-btn ${tab === 'wander' ? 'active' : ''}" onclick="setReportTab('wander')">流浪戰報</button>
-      <button class="report-sub-btn ${tab === 'zone' ? 'active' : ''}" onclick="setReportTab('zone')">領地戰報</button>
-    </div>
+  div.innerHTML = `
     <div class="clear-btn-row"><button class="btn btn-red btn-sm" onclick="clearReports()">清除全部</button></div>
     <div id="report-list"></div>`;
   const list = document.getElementById('report-list');
   const filtered = tab === 'wander'
     ? battleReports.filter(r => r.zoneName === 'wander')
-    : battleReports.filter(r => r.zoneName !== 'wander');
+    : tab === 'zone'
+    ? battleReports.filter(r => r.zoneName !== 'wander')
+    : battleReports;
   if (filtered.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:15px;">暫無戰報</div>`;
   } else {
