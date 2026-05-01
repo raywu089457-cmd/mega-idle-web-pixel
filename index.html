@@ -122,8 +122,8 @@ body{
 .tab-btn{padding:12px 24px;font-family:'Press Start 2P',monospace;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;margin-bottom:-2px;}
 .tab-btn.active{color:var(--rich-soil);border-bottom-color:var(--rich-soil);}
 .tab-btn:hover{color:var(--rich-soil);}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
+.tab-content{display:none;flex:1;}
+.tab-content.active{display:flex;flex-direction:column;}
 
 /* ── RESOURCE CARDS ── */
 .res-grid{display:flex;flex-direction:column;gap:8px;}
