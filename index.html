@@ -1570,8 +1570,6 @@ function renderMapPanel() {
     let btn = '';
     if (!unlocked) {
       btn = `<button class="btn btn-outline btn-sm" disabled>🔒 鎖定</button>`;
-    } else if (cleared) {
-      btn = `<button class="btn btn-outline btn-sm" disabled>✓ 已通關</button>`;
     } else {
       btn = `<button class="btn btn-gold btn-sm" onclick="showToast('從英雄面板派遣英雄探索！','info')">探索</button>`;
     }
