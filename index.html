@@ -720,8 +720,14 @@ function HeroSystem_recruitWanderingHero(id) {
 }
 function HeroSystem_getRecruitCost(id) { const h = wanderingHeroes.find(x => x.id === id); return h ? h.level * 100 : 0; }
 function getRandomSpawnTime() { const i = BuildingSystem_getWanderingSpawnInterval(); return Math.floor(Math.random() * i) + i; }
+function getMaxWanderingLevel() {
+  if (territoryHeroes.length === 0) return 1;
+  return Math.max(...territoryHeroes.map(h => h.level || 1));
+}
 function spawnWanderingHero() {
-  const typeDef = WANDERING_HERO_TYPES[Math.floor(Math.random() * WANDERING_HERO_TYPES.length)];
+  const maxLvl = getMaxWanderingLevel();
+  const eligible = WANDERING_HERO_TYPES.filter(t => t.level <= maxLvl);
+  const typeDef = eligible.length > 0 ? eligible[Math.floor(Math.random() * eligible.length)] : WANDERING_HERO_TYPES[0];
   wanderingHeroes.push(createWanderingHero(typeDef));
   nextWanderingSpawnIn = getRandomSpawnTime();
 }
@@ -1575,8 +1581,14 @@ function recruitHero(heroId) {
   const hero = wanderingHeroes.find(h => h.id === heroId);
   if (!hero) return;
   const cost = HeroSystem_getRecruitCost(heroId);
-  if (!ResourceSystem_spend({ gold: cost })) { showToast('金幣不足！', 'error'); return; }
-  if (!HeroSystem_recruitWanderingHero(heroId)) { showToast('無法招募！', 'error'); return; }
+  if (!HeroSystem_recruitWanderingHero(heroId)) {
+    if (territoryHeroes.length >= BuildingSystem_getTerritoryHeroSlots(territoryHeroes.length).max) {
+      showToast('英雄欄位已滿！', 'error');
+    } else {
+      showToast('金幣不足！', 'error');
+    }
+    return;
+  }
   showToast(`${hero.name} 加入了您的王國！🎉`, 'success');
   renderHeroesTab('hero-wander');
   renderHeroesTab('hero-territory');
