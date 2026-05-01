@@ -1011,6 +1011,7 @@ let shopInventory = {};
 let shopLevel = 1;
 let shopListeners = [];
 let potionShopAutoProduce = true; // auto-production toggle for potion shop
+let potionShopTickCounter = 0; // ticks elapsed for potion auto-production
 const MAX_INV = 100;
 function ShopSystem_init(savedState) { shopInventory = savedState?.shopInventory || {}; shopLevel = savedState?.shopLevel || 1; potionShopAutoProduce = savedState?.potionShopAutoProduce ?? true; }
 function ShopSystem_getItems() { return Object.values(ITEMS); }
@@ -1024,9 +1025,11 @@ function ShopSystem_craftItem(id) {
 }
 function ShopSystem_getInventory() { return { ...shopInventory }; }
 function ShopSystem_processAutoProduction() {
-  if (!potionShopAutoProduce) return null;
-  if (BuildingSystem_getLevel('potionShop') < 1) return null;
-  if (Math.random() > 0.1) return null;
+  if (!potionShopAutoProduce) { potionShopTickCounter = 0; return null; }
+  if (BuildingSystem_getLevel('potionShop') < 1) { potionShopTickCounter = 0; return null; }
+  potionShopTickCounter++;
+  if (potionShopTickCounter < 10) return null;
+  potionShopTickCounter = 0;
   const hp = ITEMS['healthPotion'];
   if (!hp || !ResourceSystem_canAfford(hp.cost)) return null;
   if ((shopInventory['healthPotion'] || 0) >= MAX_INV) return null;
