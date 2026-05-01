@@ -679,7 +679,7 @@ function BuildingSystem_getAll() {
       const lvl = state.level;
       const ticks = Math.max(1, 10 - (lvl - 1) * 2);
       const amt = 1 + (lvl - 1) * 2;
-      effectText = '💊 每' + ticks + 'tick 生產 ' + amt + ' 瓶';
+      effectText = '💊 每' + ticks + '秒 生產 ' + amt + ' 瓶';
     }
     r[id] = { id, name: def.name, description: def.description, effect: def.effect, level: state.level, maxLevel: def.maxLevel, cost: getBuildingCost(id, state.level + 1), canUpgrade: state.level < def.maxLevel, icon: def.icon, effectText };
   }
