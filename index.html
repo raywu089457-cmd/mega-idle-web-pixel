@@ -1766,10 +1766,29 @@ function openEquipModal(heroId) {
   document.getElementById('inv-modal-hero').textContent = hero.name + ' 的裝備';
   const list = document.getElementById('inv-modal-list');
   const eq = hero.equipment || {};
+  const inv = hero.inventory || [];
+  const weapons = inv.filter(it => it.type === 'weapon');
+  const armors = inv.filter(it => it.type === 'armor');
+  const currentWeaponId = eq.weapon?.id || null;
+  const currentArmorId = eq.armor?.id || null;
+  const isEquipped = (item) => item.id === currentWeaponId || item.id === currentArmorId;
   list.innerHTML = `
-    <div style="padding:12px;background:var(--card-bg);border:2px solid var(--card-border);font-size:15px;display:flex;align-items:center;gap:12px;">🗡️ <span>武器：${eq.weapon ? eq.weapon.name : '—'}</span></div>
-    <div style="padding:12px;background:var(--card-bg);border:2px solid var(--card-border);font-size:15px;display:flex;align-items:center;gap:12px;">🛡️ <span>盔甲：${eq.armor ? eq.armor.name : '—'}</span></div>`;
+    <div style="padding:8px 4px;font-size:12px;color:var(--text-faint);">🗡️ 武器</div>
+    ${weapons.length === 0 ? '<div style="padding:8px;font-size:13px;color:var(--text-faint);">無武器</div>' : weapons.map(it => `<div class="equip-item-btn ${it.id === currentWeaponId ? 'equipped' : ''}" onclick="equipItemToHero('${heroId}','weapon','${it.id}')" style="padding:10px 12px;background:${it.id === currentWeaponId ? 'rgba(244,208,63,0.2)' : 'var(--card-bg)'};border:2px solid ${it.id === currentWeaponId ? 'var(--golden-wheat)' : 'var(--card-border)'};font-size:15px;display:flex;align-items:center;gap:10px;cursor:pointer;">${it.icon} <span>${it.name}</span>${it.id === currentWeaponId ? ' ✓' : ''}</div>`).join('')}
+    <div style="padding:8px 4px;font-size:12px;color:var(--text-faint);margin-top:6px;">🛡️ 盔甲</div>
+    ${armors.length === 0 ? '<div style="padding:8px;font-size:13px;color:var(--text-faint);">無盔甲</div>' : armors.map(it => `<div class="equip-item-btn ${it.id === currentArmorId ? 'equipped' : ''}" onclick="equipItemToHero('${heroId}','armor','${it.id}')" style="padding:10px 12px;background:${it.id === currentArmorId ? 'rgba(244,208,63,0.2)' : 'var(--card-bg)'};border:2px solid ${it.id === currentArmorId ? 'var(--golden-wheat)' : 'var(--card-border)'};font-size:15px;display:flex;align-items:center;gap:10px;cursor:pointer;">${it.icon} <span>${it.name}</span>${it.id === currentArmorId ? ' ✓' : ''}</div>`).join('')}`;
   document.getElementById('modal-inventory').classList.add('open');
+}
+function equipItemToHero(heroId, slot, itemId) {
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  const item = (hero.inventory || []).find(it => it.id === itemId);
+  if (!item) return;
+  hero.equipment = hero.equipment || { weapon: null, armor: null };
+  hero.equipment[slot] = { id: item.id, name: item.name, icon: item.icon };
+  hero.inventory = hero.inventory.filter(it => it.id !== itemId);
+  showToast(`${item.name} 已裝備`, 'success');
+  openEquipModal(heroId);
 }
 
 // ═══════════════════════════════════════════════════════════════════
