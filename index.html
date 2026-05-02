@@ -577,7 +577,7 @@ const ITEMS = {
   woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior' },
   ironDagger: { id: 'ironDagger', name: '鐵匕首', type: 'weapon', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪', forClass: 'rogue' },
   healthPotion: { id: 'healthPotion', name: '生命藥水', type: 'potion', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪' },
-  ironArmor: { id: 'ironArmor', name: '鐵甲', type: 'armor', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️' },
+  ironArmor: { id: 'ironArmor', name: '鐵甲', type: 'armor', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️', forClass: 'warrior' },
   mysticStaff: { id: 'mysticStaff', name: '神秘法杖', type: 'weapon', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮', forClass: 'mage' },
   huntersBow: { id: 'huntersBow', name: '獵人弓', type: 'weapon', price: 90, cost: { woodRotten: 50, ironRusty: 30 }, icon: '🏹', forClass: 'archer' },
   holyMace: { id: 'holyMace', name: '聖光權杖', type: 'weapon', price: 95, cost: { ironRusty: 35, herbLow: 40 }, icon: '✝️', forClass: 'priest' },
@@ -1796,23 +1796,67 @@ function openEquipModal(heroId) {
   const list = document.getElementById('inv-modal-list');
   const eq = hero.equipment || {};
   const inv = hero.inventory || [];
-  const weapons = inv.filter(it => it.type === 'weapon');
-  const armors = inv.filter(it => it.type === 'armor');
   const currentWeaponId = eq.weapon?.id || null;
   const currentArmorId = eq.armor?.id || null;
-  const isEquipped = (item) => item.id === currentWeaponId || item.id === currentArmorId;
+  const invWeapons = inv.filter(it => it.type === 'weapon');
+  const invArmors = inv.filter(it => it.type === 'armor');
+
+  function actionBtns(it, slot, isCurrent) {
+    if (isCurrent) {
+      return `<button onclick="unequipItemFromHero('${heroId}','${slot}')" style="padding:4px 8px;font-size:11px;background:#8b5a2b;border:2px solid #5d4037;color:#fff;cursor:pointer;border-radius:0;">卸下</button>`;
+    }
+    return `<button onclick="equipItemToHero('${heroId}','${slot}','${it.id}')" style="padding:4px 8px;font-size:11px;background:#27ae60;border:2px solid #1e8449;color:#fff;cursor:pointer;border-radius:0;">裝備</button>
+            <button onclick="sellItemFromEquip('${heroId}','${it.id}')" style="padding:4px 8px;font-size:11px;background:#c0392b;border:2px solid #922b21;color:#fff;cursor:pointer;border-radius:0;">販賣</button>`;
+  }
+
   list.innerHTML = `
-    <div style="padding:8px 4px;font-size:12px;color:var(--text-faint);">🗡️ 武器</div>
-    ${weapons.length === 0 ? '<div style="padding:8px;font-size:13px;color:var(--text-faint);">無武器</div>' : weapons.map(it => `<div class="equip-item-btn ${it.id === currentWeaponId ? 'equipped' : ''}" onclick="equipItemToHero('${heroId}','weapon','${it.id}')" style="padding:10px 12px;background:${it.id === currentWeaponId ? 'rgba(244,208,63,0.2)' : 'var(--card-bg)'};border:2px solid ${it.id === currentWeaponId ? 'var(--golden-wheat)' : 'var(--card-border)'};font-size:15px;display:flex;align-items:center;gap:10px;cursor:pointer;">${it.icon} <span>${it.name}</span>${it.id === currentWeaponId ? ' ✓' : ''}</div>`).join('')}
-    <div style="padding:8px 4px;font-size:12px;color:var(--text-faint);margin-top:6px;">🛡️ 盔甲</div>
-    ${armors.length === 0 ? '<div style="padding:8px;font-size:13px;color:var(--text-faint);">無盔甲</div>' : armors.map(it => `<div class="equip-item-btn ${it.id === currentArmorId ? 'equipped' : ''}" onclick="equipItemToHero('${heroId}','armor','${it.id}')" style="padding:10px 12px;background:${it.id === currentArmorId ? 'rgba(244,208,63,0.2)' : 'var(--card-bg)'};border:2px solid ${it.id === currentArmorId ? 'var(--golden-wheat)' : 'var(--card-border)'};font-size:15px;display:flex;align-items:center;gap:10px;cursor:pointer;">${it.icon} <span>${it.name}</span>${it.id === currentArmorId ? ' ✓' : ''}</div>`).join('')}`;
+    <div style="padding:6px 4px 4px;font-size:12px;color:var(--golden-wheat);font-weight:bold;">★ 已裝備</div>
+    <div style="padding:8px 12px;background:rgba(244,208,63,0.08);border:2px solid var(--golden-wheat);margin-bottom:8px;">
+      <div style="font-size:11px;color:var(--text-faint);margin-bottom:4px;">🗡️ 武器</div>
+      ${currentWeaponId ? `<div style="display:flex;align-items:center;gap:8px;font-size:15px;">${eq.weapon.icon} <span style="flex:1">${eq.weapon.name}</span>${actionBtns(eq.weapon, 'weapon', true)}</div>` : '<div style="font-size:13px;color:var(--text-faint);">無武器</div>'}
+      <div style="font-size:11px;color:var(--text-faint);margin-top:8px;margin-bottom:4px;">🛡️ 盔甲</div>
+      ${currentArmorId ? `<div style="display:flex;align-items:center;gap:8px;font-size:15px;">${eq.armor.icon} <span style="flex:1">${eq.armor.name}</span>${actionBtns(eq.armor, 'armor', true)}</div>` : '<div style="font-size:13px;color:var(--text-faint);">無盔甲</div>'}
+    </div>
+
+    <div style="padding:6px 4px 4px;font-size:12px;color:var(--text-faint);font-weight:bold;">📦 背包 — 武器</div>
+    ${invWeapons.length === 0 ? '<div style="padding:8px;font-size:13px;color:var(--text-faint);">無武器</div>' : invWeapons.map(it => `<div style="padding:8px 12px;background:var(--card-bg);border:2px solid var(--card-border);margin-bottom:4px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="equipItemToHero('${heroId}','weapon','${it.id}')">${it.icon} <span style="flex:1;font-size:14px;">${it.name}</span>${actionBtns(it, 'weapon', false)}</div>`).join('')}
+
+    <div style="padding:6px 4px 4px;font-size:12px;color:var(--text-faint);font-weight:bold;">📦 背包 — 盔甲</div>
+    ${invArmors.length === 0 ? '<div style="padding:8px;font-size:13px;color:var(--text-faint);">無盔甲</div>' : invArmors.map(it => `<div style="padding:8px 12px;background:var(--card-bg);border:2px solid var(--card-border);margin-bottom:4px;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="equipItemToHero('${heroId}','armor','${it.id}')">${it.icon} <span style="flex:1;font-size:14px;">${it.name}</span>${actionBtns(it, 'armor', false)}</div>`).join('')}`;
   document.getElementById('modal-inventory').classList.add('open');
+}
+function unequipItemFromHero(heroId, slot) {
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero || !hero.equipment) return;
+  const item = hero.equipment[slot];
+  if (!item) return;
+  hero.inventory = hero.inventory || [];
+  hero.inventory.push({ id: item.id, name: item.name, icon: item.icon, type: slot === 'weapon' ? 'weapon' : 'armor' });
+  hero.equipment[slot] = null;
+  showToast(`${item.name} 已卸下`, 'success');
+  openEquipModal(heroId);
+}
+function sellItemFromEquip(heroId, itemId) {
+  const hero = HeroSystem_getTerritoryHero(heroId);
+  if (!hero) return;
+  const idx = (hero.inventory || []).findIndex(it => it.id === itemId);
+  if (idx === -1) return;
+  const item = hero.inventory[idx];
+  const price = item.price || 10;
+  hero.inventory.splice(idx, 1);
+  ResourceSystem_add('gold', price);
+  showToast(`${item.name} 已販賣，+${price}金`, 'success');
+  openEquipModal(heroId);
 }
 function equipItemToHero(heroId, slot, itemId) {
   const hero = HeroSystem_getTerritoryHero(heroId);
   if (!hero) return;
   const item = (hero.inventory || []).find(it => it.id === itemId);
   if (!item) return;
+  if (item.forClass && item.forClass !== hero.class) {
+    showToast(`${item.name} 只能由${hero.class === 'warrior' ? '戰士' : hero.class === 'mage' ? '法師' : hero.class === 'rogue' ? '盜賊' : hero.class === 'archer' ? '弓箭手' : '牧師'}使用！`, 'error');
+    return;
+  }
   hero.equipment = hero.equipment || { weapon: null, armor: null };
   hero.equipment[slot] = { id: item.id, name: item.name, icon: item.icon };
   hero.inventory = hero.inventory.filter(it => it.id !== itemId);
