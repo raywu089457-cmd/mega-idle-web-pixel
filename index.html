@@ -1865,7 +1865,8 @@ function equipItemToHero(heroId, slot, instanceId) {
   const item = (hero.inventory || []).find(it => it.instanceId === instanceId);
   if (!item) return;
   if (item.forClass && item.forClass !== hero.class) {
-    showToast(`${item.name} 只能由${hero.class === 'warrior' ? '戰士' : hero.class === 'mage' ? '法師' : hero.class === 'rogue' ? '盜賊' : hero.class === 'archer' ? '弓箭手' : '牧師'}使用！`, 'error');
+    const classNames = { warrior: '戰士', mage: '法師', rogue: '盜賊', archer: '弓箭手', priest: '牧師' };
+    showToast(`${item.name} 只能由${classNames[item.forClass]}專屬裝備！`, 'error');
     return;
   }
   hero.equipment = hero.equipment || { weapon: null, armor: null };
