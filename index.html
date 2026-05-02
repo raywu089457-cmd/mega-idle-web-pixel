@@ -1854,6 +1854,7 @@ function sellItemFromEquip(heroId, instanceId) {
   if (idx === -1) return;
   const item = hero.inventory[idx];
   const price = item.price || 10;
+  if (!confirm(`確定要販賣 ${item.name} 嗎？`)) return;
   hero.inventory.splice(idx, 1);
   ResourceSystem_add('gold', price);
   showToast(`${item.name} 已販賣，+${price}金`, 'success');
@@ -1907,6 +1908,7 @@ function recruitHero(heroId) {
 function banishHero(heroId) {
   const hero = territoryHeroes.find(h => h.id === heroId);
   if (!hero) return;
+  if (!confirm(`確定要驅逐 ${hero.name} 嗎？`)) return;
   const idx = territoryHeroes.findIndex(h => h.id === heroId);
   territoryHeroes.splice(idx, 1);
   showToast(`${hero.name} 已被驅逐。`, 'info');
