@@ -776,7 +776,15 @@ function getMaxWanderingLevel() {
   return Math.max(...territoryHeroes.map(h => h.level || 1));
 }
 function spawnWanderingHero() {
-  const typeDef = WANDERING_HERO_TYPES[Math.floor(Math.random() * WANDERING_HERO_TYPES.length)];
+  const maxLvl = getMaxWanderingLevel();
+  const eligible = WANDERING_HERO_TYPES.filter(t => t.level <= maxLvl);
+  // group by class, pick one random type per class, then pick random class
+  const classGroups = {};
+  for (const t of eligible) { if (!classGroups[t.class]) classGroups[t.class] = []; classGroups[t.class].push(t); }
+  const classes = Object.keys(classGroups);
+  if (classes.length === 0) { nextWanderingSpawnIn = getRandomSpawnTime(); return; }
+  const cls = classes[Math.floor(Math.random() * classes.length)];
+  const typeDef = classGroups[cls][Math.floor(Math.random() * classGroups[cls].length)];
   wanderingHeroes.push(createWanderingHero(typeDef));
   nextWanderingSpawnIn = getRandomSpawnTime();
 }
