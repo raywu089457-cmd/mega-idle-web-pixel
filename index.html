@@ -489,6 +489,14 @@ body{
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-title" id="modal-detail-name">難度詳情</div>
+    <div id="modal-detail-body" style="max-height:400px;overflow-y:auto;"></div>
+    <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button></div>
+  </div>
+</div>
+
 <script src="js/data/saveManager.js"></script>
 <script>
 // GAME DATA
@@ -566,11 +574,51 @@ const WANDERING_HERO_TYPES = [
   { typeId: 'wandering_priest_2', class: 'priest', name: '聖殿騎士', level: 7, dropGold: 58, dropMagicStoneChance: 0.2 },
 ];
 const ZONES = [
-  { id: 1, name: '平靜郊野', nameAlt: 'Countryside', difficulty: 1, recommendedLevel: 1, rewards: { gold: { min: 50, max: 100 }, materials: ['fruitPoor', 'waterDirty'] }, magicStoneChance: 0.1, icon: '🌾' },
-  { id: 2, name: '黑暗森林', nameAlt: 'Dark Forest', difficulty: 2, recommendedLevel: 3, rewards: { gold: { min: 100, max: 200 }, materials: ['woodRotten', 'herbLow'] }, magicStoneChance: 0.15, icon: '🌲' },
-  { id: 3, name: '廢棄礦坑', nameAlt: 'Abandoned Mine', difficulty: 3, recommendedLevel: 5, rewards: { gold: { min: 150, max: 300 }, materials: ['ironRusty', 'woodRotten'] }, magicStoneChance: 0.2, icon: '⛏' },
-  { id: 4, name: '沼澤深淵', nameAlt: 'Swamp Depths', difficulty: 4, recommendedLevel: 7, rewards: { gold: { min: 200, max: 400 }, materials: ['herbLow', 'waterDirty'] }, magicStoneChance: 0.25, icon: '🏚' },
-  { id: 5, name: '龍族廢墟', nameAlt: 'Dragon Ruins', difficulty: 5, recommendedLevel: 10, rewards: { gold: { min: 300, max: 600 }, materials: ['ironRusty', 'magicStones'] }, magicStoneChance: 0.3, icon: '🐉' },
+  {
+    id: 1, name: '平靜郊野', icon: '🌾',
+    difficulties: {
+      easy:   { recommendedLevel: 1, enemies: [{ name: '哥布林幼崽', hp: 20, atk: 5, def: 2 }, { name: '野鼠', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10 },
+      normal: { recommendedLevel: 2, enemies: [{ name: '哥布林哨兵', hp: 35, atk: 8, def: 4 }, { name: '野狼', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20 },
+      hard:   { recommendedLevel: 3, enemies: [{ name: '森林盜賊', hp: 50, atk: 12, def: 6 }, { name: '狼群領袖', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35 },
+    },
+    boss: { name: '叢林巨魔', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: [], xp: 50 },
+  },
+  {
+    id: 2, name: '黑暗森林', icon: '🌲',
+    difficulties: {
+      easy:   { recommendedLevel: 3, enemies: [{ name: '洞穴蜘蛛', hp: 40, atk: 10, def: 5 }, { name: '黑暗德魯伊', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15 },
+      normal: { recommendedLevel: 5, enemies: [{ name: '森林獸人', hp: 60, atk: 14, def: 8 }, { name: '毒蜘蛛母', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30 },
+      hard:   { recommendedLevel: 6, enemies: [{ name: '黑暗妖精', hp: 85, atk: 18, def: 10 }, { name: '食人妖', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50 },
+    },
+    boss: { name: '森林守護者', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: [], xp: 80 },
+  },
+  {
+    id: 3, name: '廢棄礦坑', icon: '⛏',
+    difficulties: {
+      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑僵屍', hp: 55, atk: 14, def: 8 }, { name: '骷髅戰士', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20 },
+      normal: { recommendedLevel: 7, enemies: [{ name: '礦坑監工', hp: 80, atk: 18, def: 12 }, { name: '沼澤巫師', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40 },
+      hard:   { recommendedLevel: 9, enemies: [{ name: '傳奇怪獸', hp: 110, atk: 24, def: 14 }, { name: '黑暗機械', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65 },
+    },
+    boss: { name: '礦坑之王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: [], xp: 120 },
+  },
+  {
+    id: 4, name: '沼澤深淵', icon: '🏚',
+    difficulties: {
+      easy:   { recommendedLevel: 7, enemies: [{ name: '沼澤怪', hp: 70, atk: 18, def: 10 }, { name: '毒蛇', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25 },
+      normal: { recommendedLevel: 9, enemies: [{ name: '沼澤巨獸', hp: 100, atk: 22, def: 14 }, { name: '暗黑信徒', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50 },
+      hard:   { recommendedLevel: 11, enemies: [{ name: '深淵領主', hp: 140, atk: 30, def: 18 }, { name: '黑暗審判者', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80 },
+    },
+    boss: { name: '沼澤之主', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: [], xp: 160 },
+  },
+  {
+    id: 5, name: '龍族廢墟', icon: '🐉',
+    difficulties: {
+      easy:   { recommendedLevel: 10, enemies: [{ name: '遠古龍卒', hp: 100, atk: 24, def: 15 }, { name: '惡魔騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: [] },
+      normal: { recommendedLevel: 12, enemies: [{ name: '虛空泰坦', hp: 150, atk: 30, def: 20 }, { name: '龍族守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: [] },
+      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵巨獸', hp: 200, atk: 38, def: 26 }, { name: '黑暗破壞者', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: [] },
+    },
+    boss: { name: '龍王', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: [], xp: 200 },
+  },
 ];
 const ITEMS = {
   woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior' },
@@ -958,66 +1006,66 @@ function HeroSystem_processWanderingTick() {
     }
   }
 }
-function genZoneEnemyName(zone) {
-  const n = { 1: ['Goblin Scout', 'Wild Wolf', 'Forest Rat'], 2: ['Forest Orc', 'Cave Spider', 'Dark Druid'], 3: ['Mine Golem', 'Skeletal Warrior', 'Swamp Witch'], 4: ['Swamp Beast', 'Poison Serpent', 'Dark Cultist'], 5: ['Ancient Dragon', 'Demon Knight', 'Void Titan'] };
-  const p = n[zone.id] || n[1]; return p[Math.floor(Math.random() * p.length)];
-}
-function resolveZoneCombat(hero, zone) {
-  const eHp = 30 + zone.difficulty * 25 + hero.level * 5;
-  const eAtk = 3 + zone.difficulty * 4 + hero.level * 2;
-  const eDef = 2 + zone.difficulty * 3 + hero.level * 2;
-  const eName = genZoneEnemyName(zone);
+function resolveZoneCombat(hero, zone, difficulty) {
+  const diffData = difficulty === 'boss' ? zone.boss : (zone.difficulties ? zone.difficulties[difficulty] : null);
+  const enemy = diffData && diffData.enemies ? diffData.enemies[Math.floor(Math.random() * diffData.enemies.length)] : { name: zone.name + '怪物', hp: 50, atk: 10, def: 5 };
   const hMaxHp = hero.hp || hero.maxHp;
   const log = [];
-  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' 遭遇 ' + eName + '！' });
-  let hHp = hMaxHp, eHp2 = eHp;
+  log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' 遭遇 ' + enemy.name + '！' });
+  let hHp = hMaxHp, eHp2 = enemy.hp;
   for (let r = 0; r < 10 && hHp > 0 && eHp2 > 0; r++) {
-    const hDmg = Math.max(1, hero.atk - eDef + Math.floor(Math.random() * 5));
-    const eDmg = Math.max(1, eAtk - hero.def + Math.floor(Math.random() * 5));
+    const hDmg = Math.max(1, hero.atk - enemy.def + Math.floor(Math.random() * 5));
+    const eDmg = Math.max(1, enemy.atk - hero.def + Math.floor(Math.random() * 5));
     eHp2 -= hDmg; hHp -= eDmg;
-    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' 造成 ' + hDmg + ' 傷害，' + eName + ' 造成 ' + eDmg + ' 傷害' });
+    log.push({ type: 'round', text: '【第' + (r + 1) + '回合】' + hero.name + ' 造成 ' + hDmg + ' 傷害，' + enemy.name + ' 造成 ' + eDmg + ' 傷害' });
   }
   const vic = eHp2 <= 0;
-  const goldR = vic ? zone.difficulty * 15 + hero.level * 5 : 0;
-  const mS = vic && Math.random() < zone.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+  const goldR = vic && diffData ? diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])) : 0;
+  const mS = vic && diffData && Math.random() < diffData.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
   if (vic) log.push({ type: 'result', text: '🏆 勝利！' + hero.name + ' 獲得 ' + goldR + ' 金幣！' });
   else log.push({ type: 'result', text: '💨 撤退！' + hero.name + ' 僥倖逃脫' });
   return { victory: vic, goldReward: goldR, magicStones: mS, combatLog: log, heroRemainingHp: hHp };
 }
-function HeroSystem_processExplorationTick(zoneId) {
+function HeroSystem_gainXP(hero, amount) {
+  if (!hero.isTerritory) return;
+  hero.xp = (hero.xp || 0) + amount;
+  const next = hero.level * 100;
+  if (hero.xp >= next) {
+    hero.xp -= next;
+    hero.level++;
+    hero.maxHp += 10; hero.hp = Math.min(hero.hp + 10, hero.maxHp);
+    hero.atk += 3; hero.def += 2;
+    showToast(`${hero.name} 升級了！ Lv.${hero.level}`, 'success');
+  }
+}
+function HeroSystem_processExplorationTick(zoneId, difficulty) {
   const zone = ZONES.find(z => z.id === zoneId); if (!zone) return null;
-  const explorers = territoryHeroes.filter(h => h.status === 'exploring' && h.currentZone === zoneId);
+  const explorers = territoryHeroes.filter(h => h.status === 'exploring' && h.currentZone === zoneId && h.exploreDifficulty === difficulty);
   if (explorers.length === 0) return null;
+  const diffData = difficulty === 'boss' ? zone.boss : zone.difficulties[difficulty];
+  if (!diffData) return null;
   let expData = explorers[0].explorationProgress || 0;
   expData += 0.5 + (explorers.reduce((s, h) => s + (h.atk + h.def) / 2, 0) / 100);
   for (const hero of explorers) {
-    // Start new combat if not already in one
-    const combatKey = hero.id + '_' + zoneId;
+    const combatKey = hero.id + '_' + zoneId + '_' + difficulty;
     if (Math.random() < 0.90 && !territoryCombats[combatKey]) {
-      const eHp = 30 + zone.difficulty * 25 + hero.level * 5;
-      const eAtk = 3 + zone.difficulty * 4 + hero.level * 2;
-      const eDef = 2 + zone.difficulty * 3 + hero.level * 2;
-      const eName = genZoneEnemyName(zone);
+      const enemy = diffData.enemies[Math.floor(Math.random() * diffData.enemies.length)];
       const hMaxHp = hero.hp || hero.maxHp;
       territoryCombats[combatKey] = {
-        hero,
-        zone,
-        enemyHp: eHp,
-        enemyAtk: eAtk,
-        enemyDef: eDef,
-        enemyName: eName,
+        hero, zone, difficulty,
+        enemyHp: enemy.hp, enemyAtk: enemy.atk, enemyDef: enemy.def,
+        enemyName: enemy.name,
         heroHp: hMaxHp,
-        round: 0,
-        log: [],
-        goldReward: zone.difficulty * 15 + hero.level * 5,
-        magicStoneChance: zone.magicStoneChance
+        round: 0, log: [],
+        goldReward: diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])),
+        magicStoneChance: diffData.magicStoneChance,
+        xpValue: diffData.xp || 10,
       };
-      territoryCombats[combatKey].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' 遭遇 ' + eName + '！' });
+      territoryCombats[combatKey].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' [' + difficulty + '] 遭遇 ' + enemy.name + '！' });
     }
   }
-  // Process one round for each ongoing territory combat in this zone
   for (const hero of explorers) {
-    const combatKey = hero.id + '_' + zoneId;
+    const combatKey = hero.id + '_' + zoneId + '_' + difficulty;
     const c = territoryCombats[combatKey];
     if (!c) continue;
     c.round++;
@@ -1026,45 +1074,36 @@ function HeroSystem_processExplorationTick(zoneId) {
     c.enemyHp -= hDmg;
     c.heroHp -= eDmg;
     c.log.push({ type: 'round', text: '【第' + c.round + '回合】' + c.hero.name + ' 造成 ' + hDmg + ' 傷害，' + c.enemyName + ' 造成 ' + eDmg + ' 傷害' });
-    // Check if combat ended
     if (c.enemyHp <= 0 || c.heroHp <= 0 || c.round >= 10) {
       const victory = c.enemyHp <= 0;
       const goldR = victory ? c.goldReward : 0;
       const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
       if (victory) {
         c.hero.hp = Math.max(1, c.heroHp);
-        const dropArr = (c.zone && ZONE_ENEMY_DROPS[c.zone.id]) ? ZONE_ENEMY_DROPS[c.zone.id][Math.floor(Math.random() * ZONE_ENEMY_DROPS[c.zone.id].length)] : null;
-        let dropText = '';
-        if (dropArr && c.hero.inventory) {
-          if (dropArr.isItem) {
-            const itemDef = ITEMS[dropArr.id];
-            if (itemDef) { c.hero.inventory.push({ instanceId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), ...itemDef }); dropText = ' + ' + itemDef.icon + ' ' + itemDef.name; }
-          } else {
-            c.hero.inventory.push({ instanceId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), ...dropArr }); dropText = ' + ' + dropArr.icon + ' ' + dropArr.name;
-          }
-        }
-        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + dropText + '！' });
-        addBattleReport(c.hero.name, zone.name, 'victory', { gold: goldR, magicStones: mS }, c.log);
+        if (c.xpValue) HeroSystem_gainXP(c.hero, c.xpValue);
+        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + (c.xpValue ? ' 和 ' + c.xpValue + ' 經驗' : '') + '！' });
+        addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'victory', { gold: goldR, magicStones: mS }, c.log);
         ResourceSystem_add('gold', goldR);
         if (mS > 0) ResourceSystem_add('magicStones', mS);
+        MapSystem_markDifficultyCleared(zoneId, difficulty);
+        if (difficulty === 'boss') {
+          MapSystem_markBossDefeated(zoneId);
+          const nextZ = ZONES.find(z => z.id === zoneId + 1);
+          if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) { mapProgress.unlockedZones.push(nextZ.id); mapProgress.currentZone = nextZ.id; }
+          showToast('Boss 擊敗！' + (nextZ ? nextZ.name + ' 已解鎖！' : '恭喜通关全部地圖！'), 'success');
+        }
       } else {
         c.hero.hp = Math.max(1, c.heroHp);
-        if (c.hero.hp <= 1) { c.hero.status = 'resting'; c.hero.currentZone = null; c.hero.explorationProgress = 0; }
+        if (c.hero.hp <= 1) { c.hero.status = 'resting'; c.hero.currentZone = null; c.hero.explorationProgress = 0; c.hero.exploreDifficulty = null; }
         c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 僥倖逃脫' });
-        addBattleReport(c.hero.name, zone.name, 'retreat', { gold: 0, magicStones: 0 }, c.log);
+        addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'retreat', { gold: 0, magicStones: 0 }, c.log);
       }
       delete territoryCombats[combatKey];
     }
   }
   if (expData >= 100) {
-    explorers.forEach(h => { h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0; });
-    const gR = zone.rewards.gold.min + Math.floor(Math.random() * (zone.rewards.gold.max - zone.rewards.gold.min));
-    ResourceSystem_add('gold', gR);
-    const matD = {};
-    for (const mat of zone.rewards.materials) { const a = Math.floor(Math.random() * 5) + 1; ResourceSystem_add(mat, a); matD[mat] = a; }
-    let mSD = 0;
-    if (Math.random() < zone.magicStoneChance) { mSD = Math.floor(Math.random() * 3) + 1; ResourceSystem_add('magicStones', mSD); }
-    return { zoneId, goldReward: gR, materials: matD, magicStones: mSD };
+    explorers.forEach(h => { h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0; h.exploreDifficulty = null; });
+    return { zoneId, difficulty, goldReward: diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])), xp: diffData.xp || 10 };
   }
   explorers.forEach(h => { h.explorationProgress = expData; });
   return null;
@@ -1124,22 +1163,62 @@ function togglePotionShopAutoProduce() { potionShopAutoProduce = !potionShopAuto
 // ═══════════════════════════════════════════════════════════════════
 // MAP SYSTEM
 // ═══════════════════════════════════════════════════════════════════
-let mapProgress = { currentZone: 1, unlockedZones: [1], clearedZones: [] };
+let mapProgress = {
+  currentZone: 1, unlockedZones: [1], clearedZones: [],
+  zoneProgress: {
+    1: { easy: false, normal: false, hard: false, bossDefeated: false },
+    2: { easy: false, normal: false, hard: false, bossDefeated: false },
+    3: { easy: false, normal: false, hard: false, bossDefeated: false },
+    4: { easy: false, normal: false, hard: false, bossDefeated: false },
+    5: { easy: false, normal: false, hard: false, bossDefeated: false },
+  }
+};
 let activeExplorations = [];
 let mapListeners = [];
-function MapSystem_init(savedState) { mapProgress = savedState?.mapProgress || { currentZone: 1, unlockedZones: [1], clearedZones: [] }; activeExplorations = []; }
+function MapSystem_init(savedState) {
+  const defaultProg = {
+    currentZone: 1, unlockedZones: [1], clearedZones: [],
+    zoneProgress: {
+      1: { easy: false, normal: false, hard: false, bossDefeated: false },
+      2: { easy: false, normal: false, hard: false, bossDefeated: false },
+      3: { easy: false, normal: false, hard: false, bossDefeated: false },
+      4: { easy: false, normal: false, hard: false, bossDefeated: false },
+      5: { easy: false, normal: false, hard: false, bossDefeated: false },
+    }
+  };
+  const saved = savedState?.mapProgress;
+  if (saved && saved.zoneProgress) {
+    // ensure all zones have zoneProgress entries
+    for (let i = 1; i <= 5; i++) {
+      if (!saved.zoneProgress[i]) {
+        saved.zoneProgress[i] = { easy: false, normal: false, hard: false, bossDefeated: false };
+      }
+    }
+    mapProgress = { currentZone: saved.currentZone || 1, unlockedZones: saved.unlockedZones || [1], clearedZones: saved.clearedZones || [], zoneProgress: saved.zoneProgress };
+  } else {
+    mapProgress = defaultProg;
+  }
+  activeExplorations = [];
+}
 function MapSystem_getZones() { return [...ZONES]; }
-function MapSystem_getProgress() { return { currentZone: mapProgress.currentZone, unlockedZones: [...mapProgress.unlockedZones], clearedZones: [...mapProgress.clearedZones] }; }
+function MapSystem_getProgress() { return { currentZone: mapProgress.currentZone, unlockedZones: [...mapProgress.unlockedZones], clearedZones: [...mapProgress.clearedZones], zoneProgress: JSON.parse(JSON.stringify(mapProgress.zoneProgress)) }; }
 function MapSystem_getUnlockedZones() { return mapProgress.unlockedZones.map(id => ZONES.find(z => z.id === id)).filter(Boolean); }
 function MapSystem_isZoneUnlocked(id) { return mapProgress.unlockedZones.includes(id); }
 function MapSystem_isZoneCleared(id) { return mapProgress.clearedZones.includes(id); }
-function MapSystem_startExploration(heroId, zoneId) {
+function MapSystem_getDifficultyState(zoneId) { return mapProgress.zoneProgress[zoneId] || { easy: false, normal: false, hard: false, bossDefeated: false }; }
+function MapSystem_markDifficultyCleared(zoneId, diff) { if (mapProgress.zoneProgress[zoneId]) mapProgress.zoneProgress[zoneId][diff] = true; }
+function MapSystem_markBossDefeated(zoneId) { if (mapProgress.zoneProgress[zoneId]) mapProgress.zoneProgress[zoneId].bossDefeated = true; }
+function MapSystem_isBossAvailable(zoneId) {
+  const s = mapProgress.zoneProgress[zoneId];
+  return s && s.easy && s.normal && s.hard && !s.bossDefeated;
+}
+function MapSystem_startExploration(heroId, zoneId, difficulty) {
   const hero = HeroSystem_getTerritoryHero(heroId); if (!hero) return false;
   if (!MapSystem_isZoneUnlocked(zoneId)) return false;
   if (hero.status !== 'idle') return false;
   const zone = ZONES.find(z => z.id === zoneId); if (!zone) return false;
-  hero.status = 'exploring'; hero.currentZone = zoneId;
-  activeExplorations.push({ heroId, zoneId, progress: 0, startTime: Date.now(), zoneName: zone.name });
+  hero.status = 'exploring'; hero.currentZone = zoneId; hero.exploreDifficulty = difficulty;
+  activeExplorations.push({ heroId, zoneId, difficulty, progress: 0, startTime: Date.now(), zoneName: zone.name });
   return true;
 }
 function MapSystem_processExplorations() {
@@ -1150,13 +1229,10 @@ function MapSystem_processExplorations() {
     if (!hero || hero.status !== 'exploring') { activeExplorations.splice(i, 1); continue; }
     const zone = ZONES.find(z => z.id === exp.zoneId);
     if (!zone) { activeExplorations.splice(i, 1); continue; }
-    const res = HeroSystem_processExplorationTick(zone.id);
+    const res = HeroSystem_processExplorationTick(zone.id, exp.difficulty);
     if (res) {
       activeExplorations.splice(i, 1);
-      if (!MapSystem_isZoneCleared(zone.id)) mapProgress.clearedZones.push(zone.id);
-      const nextZ = ZONES.find(z => z.id === zone.id + 1);
-      if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) { mapProgress.unlockedZones.push(nextZ.id); mapProgress.currentZone = nextZ.id; }
-      completed.push({ heroId: exp.heroId, zoneId: zone.id, zoneName: zone.name, rewards: res });
+      completed.push({ heroId: exp.heroId, zoneId: zone.id, difficulty: exp.difficulty, zoneName: zone.name, rewards: res });
     } else {
       exp.progress = hero.explorationProgress || 0;
     }
@@ -1663,10 +1739,11 @@ function renderMapPanel() {
     activeDiv.innerHTML = `<div class="section-label">進行中的探索</div>` + explorers.map(h => {
       const zone = zones.find(z => z.id === h.currentZone);
       const pct = Math.min(100, Math.floor((h.explorationProgress || 0)));
+      const diffLabel = h.exploreDifficulty === 'boss' ? 'BOSS' : (h.exploreDifficulty || '普通');
       return `<div class="explore-item">
         <div class="explore-top">
           <div class="explore-name">${zone?.icon || '📍'} ${zone?.name || '未知區域'}</div>
-          <div class="explore-hero">英雄：${h.name}</div>
+          <div class="explore-hero">英雄：${h.name} [${diffLabel}]</div>
           <div class="explore-pct">${pct}%</div>
         </div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,#1a5276,var(--blue))"></div></div>
@@ -1677,33 +1754,92 @@ function renderMapPanel() {
   }
 
   // Zone list
+  const diffLabels = { easy: '簡單', normal: '普通', hard: '困難', boss: 'BOSS' };
+  const diffColors = { easy: '#27ae60', normal: '#f39c12', hard: '#c0392b', boss: '#8e44ad' };
   zoneList.innerHTML = zones.map(zone => {
     const unlocked = prog.unlockedZones.includes(zone.id);
-    const cleared = prog.clearedZones.includes(zone.id);
-    const stars = '★'.repeat(zone.difficulty) + '☆'.repeat(5 - zone.difficulty);
-    let cls = 'zone-card';
-    if (!unlocked) cls += ' locked';
-    else if (cleared) cls += ' cleared';
-    else cls += ' unlocked';
+    const state = MapSystem_getDifficultyState(zone.id);
+    const bossAvail = MapSystem_isBossAvailable(zone.id);
+    const bossDefeated = state.bossDefeated;
 
-    let btn = '';
-    if (!unlocked) {
-      btn = `<button class="btn btn-outline btn-sm" disabled>🔒 鎖定</button>`;
-    } else {
-      btn = `<button class="btn btn-gold btn-sm" onclick="showToast('從英雄面板派遣英雄探索！','info')">探索</button>`;
+    function diffBtn(diff) {
+      const cleared = state[diff];
+      const locked = !unlocked;
+      const label = diffLabels[diff];
+      const color = diffColors[diff];
+      if (locked) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 ${label}</button>`;
+      if (cleared) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.6;background:#555;border-color:#333;color:#aaa;">✓ ${label}</button>`;
+      return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;" onclick="openDifficultyModal(${zone.id},'${diff}')">${label}</button>`;
     }
 
-    return `<div class="${cls}">
-      <div class="zone-ico">${zone.icon}</div>
-      <div class="zone-info">
-        <div class="zone-name">${zone.name}</div>
-        <div class="zone-stars">${stars}</div>
-        <div class="zone-rec">推薦等級 Lv.${zone.recommendedLevel}+</div>
+    let bossBtn = '';
+    if (!unlocked) {
+      bossBtn = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 BOSS</button>`;
+    } else if (bossDefeated) {
+      bossBtn = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.6;background:#555;border-color:#333;color:#aaa;">✓ 已擊敗</button>`;
+    } else if (bossAvail) {
+      bossBtn = `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal(${zone.id},'boss')">👑 BOSS</button>`;
+    } else {
+      bossBtn = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;background:#333;border-color:#444;color:#666;">🔒 BOSS</button>`;
+    }
+
+    return `<div class="zone-card${unlocked ? '' : ' locked'}" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:24px;">${zone.icon}</span>
+        <span style="font-size:13px;font-weight:bold;">${zone.name}</span>
       </div>
-      ${btn}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${diffBtn('easy')}
+        ${diffBtn('normal')}
+        ${diffBtn('hard')}
+        ${bossBtn}
+      </div>
     </div>`;
   }).join('');
 }
+function openDifficultyModal(zoneId, difficulty) {
+  const zone = ZONES.find(z => z.id === zoneId);
+  if (!zone) return;
+  const diffData = difficulty === 'boss' ? zone.boss : zone.difficulties[difficulty];
+  if (!diffData) return;
+  const diffLabel = { easy: '簡單', normal: '普通', hard: '困難', boss: 'BOSS' }[difficulty];
+  const enemies = diffData.enemies || [diffData];
+  const zoneName = zone.name;
+  let html = `<div style="padding:8px 0;">
+    <div style="font-size:14px;font-weight:bold;margin-bottom:10px;">📍 ${zoneName} — ${diffLabel}</div>
+    <div style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">推薦等級：Lv.${diffData.recommendedLevel}+</div>
+    <div style="font-size:12px;font-weight:bold;margin-bottom:4px;">👾 怪物：</div>
+    <div style="margin-bottom:10px;">`;
+  for (const e of enemies) {
+    html += `<div style="padding:4px 8px;background:var(--card-bg);border:1px solid var(--card-border);margin-bottom:4px;font-size:13px;">
+      <span style="font-weight:bold;">${e.name}</span>
+      <span style="color:#aaa;font-size:11px;margin-left:8px;">HP:${e.hp} ATK:${e.atk} DEF:${e.def}</span>
+    </div>`;
+  }
+  html += `</div>
+    <div style="font-size:12px;margin-bottom:4px;">💰 金幣：${diffData.goldRange[0]}~${diffData.goldRange[1]}</div>
+    <div style="font-size:12px;margin-bottom:4px;">✨ 魔法石機率：${Math.round(diffData.magicStoneChance * 100)}%</div>
+    ${diffData.xp ? `<div style="font-size:12px;margin-bottom:12px;">⭐ 經驗：${diffData.xp}</div>` : '<div style="font-size:12px;margin-bottom:12px;">⭐ 經驗：boss 勝利後獲得</div>'}
+    <div style="margin-top:10px;text-align:center;">
+      <button class="btn btn-gold btn-sm" onclick="closeModal();dispatchHeroToDifficulty(${zoneId},'${difficulty}')">🚀 派遣英雄</button>
+    </div>
+  </div>`;
+  document.getElementById('modal-detail-name').textContent = '難度詳情';
+  document.getElementById('modal-detail-body').innerHTML = html;
+  document.getElementById('modal-detail').classList.add('open');
+}
+function dispatchHeroToDifficulty(zoneId, difficulty) {
+  const idle = territoryHeroes.filter(h => h.status === 'idle');
+  if (idle.length === 0) { showToast('沒有待機中的英雄！', 'error'); return; }
+  const hero = idle[0];
+  if (MapSystem_startExploration(hero.id, zoneId, difficulty)) {
+    showToast(`${hero.name} 前往 ${ZONES.find(z => z.id === zoneId).name} [${difficulty}] 探索！`, 'success');
+    renderMapPanel();
+  } else {
+    showToast('派遣失敗！', 'error');
+  }
+}
+function closeModal() { document.getElementById('modal-detail').classList.remove('open'); }
 
 // ═══════════════════════════════════════════════════════════════════
 // RENDER: SHOP
@@ -1917,11 +2053,12 @@ function banishHero(heroId) {
 function recallHero(heroId) {
   const hero = territoryHeroes.find(h => h.id === heroId);
   if (!hero || hero.status !== 'exploring') return;
-  const combatKey = heroId + '_' + hero.currentZone;
+  const combatKey = heroId + '_' + hero.currentZone + '_' + (hero.exploreDifficulty || 'easy');
   delete territoryCombats[combatKey];
   hero.status = 'idle';
   hero.currentZone = null;
   hero.explorationProgress = 0;
+  hero.exploreDifficulty = null;
   showToast(`${hero.name} 已召回待命。`, 'info');
   renderHeroesTab('hero-territory');
 }
