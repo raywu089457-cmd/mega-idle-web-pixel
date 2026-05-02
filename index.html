@@ -999,6 +999,7 @@ function HeroSystem_processExplorationTick(zoneId) {
       const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
       if (victory) {
         c.hero.hp = Math.max(1, c.heroHp);
+        const dropArr = (c.zone && ZONE_ENEMY_DROPS[c.zone.id]) ? ZONE_ENEMY_DROPS[c.zone.id][Math.floor(Math.random() * ZONE_ENEMY_DROPS[c.zone.id].length)] : null;
         let dropText = '';
         if (dropArr && c.hero.inventory) {
           if (dropArr.isItem) {
