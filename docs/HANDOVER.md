@@ -8,7 +8,7 @@
 ## 專案架構
 
 ### 單一 entry point
-所有遊戲邏輯在 `index.html`（~1700 行），雙擊即可運行，無需建構。
+所有遊戲邏輯在 `index.html`（~2200 行），雙擊即可運行，無需建構。
 
 ```
 mega-idle-web-pixel/
@@ -23,7 +23,7 @@ mega-idle-web-pixel/
 
 ### 存檔機制
 - **Storage**: `localStorage`（key: `kingdomBuilderSave`）
-- **Auto-save**: 每 10 秒
+- **Auto-save**: 每 30 秒
 - **儲存格式**: JSON，包含 version、lastOnline、resources、heroes、wanderingHeroes、buildings、mapProgress、shopInventory、tickCount
 
 ---
@@ -32,95 +32,156 @@ mega-idle-web-pixel/
 
 | 系統 | 行號 | 職責 |
 |------|------|------|
-| HERO TYPES / DEFAULT STATE | 400–567 | 英雄資料結構、WANDERING_HERO_TYPES、getDefaultGameState() |
-| RESOURCE SYSTEM | 569–616 | 資源 CRUD、產出監聽 |
-| BUILDING SYSTEM | 618–648 | 建築升級、城堡，等級影響英雄欄位數量 |
-| **HERO SYSTEM** | 649–900 | 領地/流浪英雄管理、訓練、招募、戰鬥、休息 |
-| SHOP SYSTEM | 906–928 | 合成系統 |
-| MAP SYSTEM | 934–970 | 地圖區域、解鎖進度 |
-| OFFLINE SYSTEM | 979–998 | 離線收益計算 |
-| SAVE MANAGER | 1052–1093 | localStorage 存讀 |
-| FLOAT CANVAS | 1096–1130 | Canvas 飄字動畫（攻擊數字等） |
-| UI / RENDER | 1132–1640 | DOM 面板渲染（資源/英雄/建築/地圖/商店/戰報/設定） |
-| GAME LOOP | 1625–1640 | gameTick() 每秒結算 + init() 初始化 |
-| EVENT DELEGATION | ~1319 | 所有動態 DOM 點擊透過單一 listener |
+| RESOURCES | 495–530 | 資源定義（gold, magicStones, 5種材料） |
+| BUILDINGS | 505–540 | 建築定義：monument, tavern, weaponShop, potionShop, armorShop |
+| HERO CLASSES | 512–519 | 6職業：warrior/mage/rogue/archer/priest/cleric（注意 cleric/priest 重複，應只用 priest） |
+| ENGLISH_NAMES | 520+ | 流浪英雄英文名列表 |
+| WANDERING_HERO_TYPES | 557–568 | 10種流浪英雄類型（每職業2種等 level 1/2/3/5/6/7/8） |
+| ZONES | 568–614 | 5張地圖，每張含 3 難度（easy/normal/hard）+ boss，內含敵人/金幣範圍/xp 設定 |
+| ITEMS | 615–624 | 6種裝備：woodenSword(w)/ironDagger(r)/mysticStaff(m)/huntersBow(a)/holyMace(p)/ironArmor(w)，另有 healthPotion 無職業限制 |
+| HERO SYSTEM | 625–1200 | 英雄創建、訓練、招募、戰鬥、休息、經驗升級 |
+| XP SYSTEM | 1035–1046 | `HeroSystem_gainXP()`：100 XP 升級（maxHp+10, atk+3, def+2），流浪英雄不適用 |
+| SHOP SYSTEM | 1126–1180 | 合成系統（武器/藥水/盔甲） |
+| MAP SYSTEM | 1167–1280 | 地圖進度、難度解鎖、探索派遣、Boss 擊敗解鎖下一關 |
+| SAVE MANAGER | ~1400 | localStorage 存讀 |
+| CANVAS | ~200 | 飄字動畫（攻擊數字等） |
+| UI / RENDER | 1290–1950 | DOM 面板渲染（資源/英雄/建築/地圖/商店/戰報/設定） |
+| GAME LOOP | ~2140 | gameTick() 每秒結算 + init() 初始化 |
 
 ---
 
-## 當前遊戲狀態（最新 commit: 737e235）
+## 當前遊戲狀態（最新 commit: 3a6ce20）
 
-### 英雄欄位計算
+### 地圖系統（難度 + Boss）
+
+每張地圖有 4 個階段按鈕，水平排列：
 ```
-領地英雄上限 = 7 + (城堡等級 - 1) * 2
-流浪英雄上限 = 10 + (城堡等級 - 1) * 3
-
-函式：
-BuildingSystem_getTerritoryHeroSlots(currentCount = 0)
-BuildingSystem_getWanderingHeroSlots(currentCount = 0)
-BuildingSystem_getMaxWanderingHeroes() → 回傳流浪英雄上限（透過 getWanderingHeroSlots）
+[🌾 平靜郊野]
+[簡單] [普通] [困難] [🔒 BOSS]
 ```
 
-### 戰報系統
-- 戰報展開：點擊 `.report-head`（event delegation），同一時間只展開一個
-- 戰報內容：中文，顯示每回合傷害、戰鬥結果、金幣/魔石獎勵
-- `.report-entry` margin-bottom: 6px（行 244）
+**按鈕狀態邏輯：**
+- 未解鎖地圖：全部灰化 🔒
+- 已解鎖未通關：彩色可點，點擊開啟 `openDifficultyModal()` 顯示難度詳情
+- 已通關：顯示 ✓ 已擊敗（灰化）
+- BOSS：需 easy+normal+hard 全部通關才亮起（紫色👑），擊敗後解鎖下一張地圖
 
-### 休息機制（領地 + 流浪通用）
-- 觸發：HP <= 最大 HP 的 10%（`h.hp <= (h.maxHp || 100) * 0.1`）
-- 恢復：每 tick +0.1% 最大 HP
-- 離開休息：HP 回到 80% 以上 (`h.hp >= (h.maxHp || 100) * 0.8`)
-- `HeroSystem_processRestingTick()` 統一路由（行 888）
+**openDifficultyModal(zoneId, difficulty)** 顯示：
+- 難度名稱、推薦等級
+- 怪物列表（名稱、HP、ATK、DEF）
+- 金幣範圍
+- 魔法石機率
+- 經驗值
+- 「派遣英雄」按鈕
 
-### 每秒戰鬥結算（territoryCombats / wanderingCombats）
-- 每 tick 處理一回合（最多 10 回合），战報在戰鬥結束後一次生成
-- 兩邊都結束戰鬥 → 產生戰報（`addBattleReport(heroName, zoneName, result, rewards, combatLog)`）
+**戰鬥系統：**
+- `territoryCombats[combatKey]` — key 格式：`heroId_zoneId_difficulty`
+- `HeroSystem_processExplorationTick(zoneId, difficulty)` — 每秒執行，90% 機率觸發戰鬥
+- 敵人屬性直接讀 `zone.difficulties[difficulty].enemies[]`，不再用公式計算
+- Boss 勝利：自動解鎖下一張地圖 + `MapSystem_markBossDefeated()`
+
+### 英雄系統
+
+**職業（共 6 種，HERO_CLASSES）：**
+| key | 名稱 | baseHp | baseAtk | baseDef |
+|-----|------|--------|--------|--------|
+| warrior | 戰士 | 100 | 15 | 10 |
+| mage | 法師 | 70 | 25 | 5 |
+| rogue | 盜賊 | 85 | 18 | 8 |
+| archer | 弓箭手 | 80 | 20 | 7 |
+| priest | 牧師 | 90 | 10 | 15 |
+| cleric | 牧師（重複） | 90 | 10 | 15 |
+
+**注意：** `cleric` 與 `priest` 重複，兩者功能相同，統一用 `priest` 即可。
+
+**流浪英雄生成（WANDERING_HERO_TYPES）：**
+- 每職業 2 種：wandering_warrior_1/2, wandering_mage_1/2, wandering_rogue_1/2, wandering_archer_1/2, wandering_priest_1/2
+- 等級：1/2/3/5/6/7/8
+- 生成時隨機選職業，再從該職業內隨機選類型（確保各職業都會出現）
+
+**領地英雄屬性計算（每次升級）：**
+```
+maxHp += 10
+atk += 3
+def += 2
+```
+
+**XP 系統：**
+```
+hero.xp += diffData.xp（各難度設定）
+升級門檻：level * 100 XP
+```
+
+### 裝備系統
+
+**ITEMS 定義：**
+| id | 名稱 | 職業限制 |
+|----|------|----------|
+| woodenSword | 木製劍 | warrior |
+| ironDagger | 鐵匕首 | rogue |
+| mysticStaff | 神秘法杖 | mage |
+| huntersBow | 獵人弓 | archer |
+| holyMace | 聖光權杖 | priest |
+| ironArmor | 鐵甲 | warrior |
+
+**實心裝備流程（openEquipModal）：**
+- 顯示「已裝備區」（金色框） + 「背包—武器/盔甲」分區
+- 每物品有「裝備」「販賣」「卸下」按鈕
+- `equipItemToHero()` 檢查 `item.forClass !== hero.class`，錯誤顯示 toast
+- `sellItemFromEquip()`、`unequipItemFromHero()` — 皆有 `confirm()` 確認
+- 每物品有 `instanceId`（唯一識別），用於同名物品個別追蹤
+
+**掉落物品流程（ZONE_ENEMY_DROPS 已廢除）：**
+- 現改用 `zone.difficulties[difficulty].drops[]`，item 內含 `instanceId`
+- `HeroSystem_processExplorationTick()` 勝利時直接 push 到 `hero.inventory`
+
+### 召回系統
+
+**recallHero(heroId)：**
+- 刪除 `territoryCombats[heroId + '_' + hero.currentZone + '_' + hero.exploreDifficulty]`
+- 重置 hero 狀態：`idle`, `currentZone=null`, `explorationProgress=0`, `exploreDifficulty=null`
 
 ---
 
-## 近期修改紀錄（可用於回溯 bug）
+## 近期修改紀錄
 
 | Commit | 說明 |
 |--------|------|
-| `737e235` | feat: 7 領地 + 10 流浪英雄欄位，城堡等級加成 |
-| `4c9f3f7` | fix: 統一流浪/領地英雄休息機制 |
-| `5f7b56a` | feat: 每秒一回合戰鬥，延後戰報生成 |
-| `66ef57e` | fix: 翻譯戰報戰鬥日誌為中文 |
-| `0480a2a` | fix: 移除 report-head 的 inline onclick，改用 event delegation |
-| `dd2ae00` | fix: 戰報按鈕字體大小、單一展開行為 |
-| `54d2912` | fix: 分開英雄分頁顯示、保留戰報展開狀態 |
-| `2900dd2` | fix: 戰報正確傳遞 combatLog 並展開顯示 |
-| `6f323e4` | ci: redeploy workflow 加入 permissions（id-token: write） |
+| `3a6ce20` | feat: 地圖難度階梯、XP系統、boss解鎖、新地圖UI |
+| `8fdff02` | feat: 驅逐/販賣加入 confirm() 確認 |
+| `6f33364` | fix: toast字體 7px→11px |
+| `f14e7ec` | fix: 錯誤toast顯示正確職業限制訊息 |
+| `96bbfb1` | fix: 流浪英雄生成從level限制改為全職業隨機 |
+| `34fad23` | feat: 裝備modal含已裝備/背包分區、unequip/sell按鈕 |
+| `1c38e7c` | feat: 每張地圖 6 種武器掉落設定 |
+| `e09b907` | feat: 弓箭手/牧師武器、地圖掉落、職業限制 |
 
 ---
 
 ## 開發約定與陷阱
 
 ### 1. 不要用 inline onclick
-動態生成的 DOM（如英雄卡片、戰報）使用 event delegation：
-```javascript
-// ✅ 正確：document 層級統一監聽
-document.addEventListener('click', e => {
-  const head = e.target.closest('.report-head');
-  if (head) { toggleReportExpand(...); return; }
-  // ...
-});
+動態生成的 DOM（如英雄卡片、戰報）使用 event delegation，在 `document` 層級統一監聽。
 
-// ❌ 錯誤：inline onclick 會與 delegation 衝突
-<div class="report-head" onclick="toggleReportExpand(...)">
-```
+### 2. 地圖難度按鈕使用 `diff` 字串
+- `openDifficultyModal(zoneId, 'easy')` — difficulty 參數可選 `easy`/`normal`/`hard`/`boss`
+- `MapSystem_startExploration(heroId, zoneId, difficulty)` — 第三參數不可省略
+- `hero.exploreDifficulty` — 掛在英雄物件上，用於召回時刪除正確的 combatKey
 
-### 2. 英雄欄位要傳 currentCount
-`BuildingSystem_getTerritoryHeroSlots()` 和 `BuildingSystem_getWanderingHeroSlots()` 的參數是「當前英雄數量」，用於顯示 `current/max`。
+### 3. 存檔版本遷移
+`MapSystem_init()` 需處理舊存檔（無 `zoneProgress` 欄位），自動初始化為 5 個 zone 的預設狀態。
 
-### 3. 存檔 key 不一致會導致無法存檔
-- 曾經出錯：遊戲實際存 IndexedDB 但 reset 按鈕清 localStorage
-- 當前正確：`localStorage` key = `kingdomBuilderSave`
+### 4. 不要刪除 `genZoneEnemyName` 前的程式碼
+`resolveZoneCombat()` 仍被部分舊流程調用，保留作為兼容。
 
-### 4. 不要在陌生區域做重構
-對不熟悉的程式碼：只做最小修復，不做縮排/格式/命名等「看起來沒關係」的改動。
+### 5. clerics/priest 重複
+`HERO_CLASSES` 內 `cleric` 和 `priest` 重複定義，兩者皆為牧師，統一留 `priest` 即可。
 
-### 5. 修改後立即驗證
-不要一口氣改完多處再去測，每次只改一個明確的目的。
+### 6. ZONE_ENEMY_DROPS 已廢除
+舊地圖掉落系統（`ZONE_ENEMY_DROPS`）已不再被 `HeroSystem_processExplorationTick()` 使用。新系統直接讀 `zone.difficulties[difficulty]` 內的 `drops`。
+
+### 7. `instanceId` 不可缺
+所有背包物品（新生成、掉落、卸下）都需产生 `instanceId`，格式：`'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)`。
 
 ---
 
@@ -145,9 +206,6 @@ document.addEventListener('click', e => {
 - `push`：推送到 master 時自動部署
 - 部署目標：https://raywu089457-cmd.github.io/mega-idle-web-pixel/
 
-### 權限問題曾導致部署失敗
-解決方法：加入 `permissions: id-token: write, contents: read, pages: write`
-
 ### 常用指令
 ```bash
 rtk git add . && rtk git commit -m "訊息"
@@ -160,10 +218,11 @@ rtk gh run list --limit 3
 ## 等待完成的工作
 
 目前沒有進行中的功能需求。如果要繼續開發，建議方向：
-1. **裝備系統**：英雄穿戴裝備增加屬性
+1. **裝備附加屬性**：目前裝備只改變外觀，未實際增加英雄 ATK/DEF
 2. **成就系統**：達成特定里程碑獎勵
-3. **每日登入獎勵**
-4. **更多英雄技能**：被動技能、必殺技
+3. **更多英雄技能**：被動技能、必殺技
+4. **組隊戰鬥**：多人協力挑戰 Boss
+5. **每日登入獎勵**
 
 ---
 
