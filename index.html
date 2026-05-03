@@ -1049,7 +1049,8 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
   for (const hero of explorers) {
     const combatKey = hero.id + '_' + zoneId + '_' + difficulty;
     if (Math.random() < 0.90 && !territoryCombats[combatKey]) {
-      const enemy = diffData.enemies[Math.floor(Math.random() * diffData.enemies.length)];
+      const enemyList = difficulty === 'boss' ? [diffData] : (diffData.enemies || []);
+      const enemy = enemyList[Math.floor(Math.random() * enemyList.length)] || diffData;
       const hMaxHp = hero.hp || hero.maxHp;
       territoryCombats[combatKey] = {
         hero, zone, difficulty,
