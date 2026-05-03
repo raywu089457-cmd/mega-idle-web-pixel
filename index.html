@@ -575,47 +575,47 @@ const ZONES = [
   {
     id: 1, name: '平靜郊野', icon: '🌾',
     difficulties: {
-      easy:   { recommendedLevel: 1, enemies: [{ name: '哥布林幼崽', hp: 20, atk: 5, def: 2 }, { name: '野鼠', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10 },
-      normal: { recommendedLevel: 2, enemies: [{ name: '哥布林哨兵', hp: 35, atk: 8, def: 4 }, { name: '野狼', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20 },
-      hard:   { recommendedLevel: 3, enemies: [{ name: '森林盜賊', hp: 50, atk: 12, def: 6 }, { name: '狼群領袖', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35 },
+      easy:   { recommendedLevel: 1, enemies: [{ name: '哥布林幼崽', hp: 20, atk: 5, def: 2 }, { name: '野鼠', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10, drops: ['healthPotion'] },
+      normal: { recommendedLevel: 2, enemies: [{ name: '哥布林哨兵', hp: 35, atk: 8, def: 4 }, { name: '野狼', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20, drops: ['healthPotion', 'woodenSword'] },
+      hard:   { recommendedLevel: 3, enemies: [{ name: '森林盜賊', hp: 50, atk: 12, def: 6 }, { name: '狼群領袖', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35, drops: ['woodenSword', 'healthPotion'] },
     },
-    boss: { name: '叢林巨魔', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: [], xp: 50 },
+    boss: { name: '叢林巨魔', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: ['woodenSword', 'ironArmor'], xp: 50 },
   },
   {
     id: 2, name: '黑暗森林', icon: '🌲',
     difficulties: {
-      easy:   { recommendedLevel: 3, enemies: [{ name: '洞穴蜘蛛', hp: 40, atk: 10, def: 5 }, { name: '黑暗德魯伊', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15 },
-      normal: { recommendedLevel: 5, enemies: [{ name: '森林獸人', hp: 60, atk: 14, def: 8 }, { name: '毒蜘蛛母', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30 },
-      hard:   { recommendedLevel: 6, enemies: [{ name: '黑暗妖精', hp: 85, atk: 18, def: 10 }, { name: '食人妖', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50 },
+      easy:   { recommendedLevel: 3, enemies: [{ name: '洞穴蜘蛛', hp: 40, atk: 10, def: 5 }, { name: '黑暗德魯伊', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15, drops: ['healthPotion', 'huntersBow'] },
+      normal: { recommendedLevel: 5, enemies: [{ name: '森林獸人', hp: 60, atk: 14, def: 8 }, { name: '毒蜘蛛母', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30, drops: ['huntersBow', 'ironDagger'] },
+      hard:   { recommendedLevel: 6, enemies: [{ name: '黑暗妖精', hp: 85, atk: 18, def: 10 }, { name: '食人妖', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50, drops: ['ironDagger', 'huntersBow'] },
     },
-    boss: { name: '森林守護者', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: [], xp: 80 },
+    boss: { name: '森林守護者', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80 },
   },
   {
     id: 3, name: '廢棄礦坑', icon: '⛏',
     difficulties: {
-      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑僵屍', hp: 55, atk: 14, def: 8 }, { name: '骷髅戰士', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20 },
-      normal: { recommendedLevel: 7, enemies: [{ name: '礦坑監工', hp: 80, atk: 18, def: 12 }, { name: '沼澤巫師', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40 },
-      hard:   { recommendedLevel: 9, enemies: [{ name: '傳奇怪獸', hp: 110, atk: 24, def: 14 }, { name: '黑暗機械', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65 },
+      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑僵屍', hp: 55, atk: 14, def: 8 }, { name: '骷髅戰士', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20, drops: ['ironDagger', 'healthPotion'] },
+      normal: { recommendedLevel: 7, enemies: [{ name: '礦坑監工', hp: 80, atk: 18, def: 12 }, { name: '沼澤巫師', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
+      hard:   { recommendedLevel: 9, enemies: [{ name: '傳奇怪獸', hp: 110, atk: 24, def: 14 }, { name: '黑暗機械', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65, drops: ['mysticStaff', 'ironArmor'] },
     },
-    boss: { name: '礦坑之王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: [], xp: 120 },
+    boss: { name: '礦坑之王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120 },
   },
   {
     id: 4, name: '沼澤深淵', icon: '🏚',
     difficulties: {
-      easy:   { recommendedLevel: 7, enemies: [{ name: '沼澤怪', hp: 70, atk: 18, def: 10 }, { name: '毒蛇', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25 },
-      normal: { recommendedLevel: 9, enemies: [{ name: '沼澤巨獸', hp: 100, atk: 22, def: 14 }, { name: '暗黑信徒', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50 },
-      hard:   { recommendedLevel: 11, enemies: [{ name: '深淵領主', hp: 140, atk: 30, def: 18 }, { name: '黑暗審判者', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80 },
+      easy:   { recommendedLevel: 7, enemies: [{ name: '沼澤怪', hp: 70, atk: 18, def: 10 }, { name: '毒蛇', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25, drops: ['ironArmor', 'healthPotion'] },
+      normal: { recommendedLevel: 9, enemies: [{ name: '沼澤巨獸', hp: 100, atk: 22, def: 14 }, { name: '暗黑信徒', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50, drops: ['holyMace', 'ironArmor'] },
+      hard:   { recommendedLevel: 11, enemies: [{ name: '深淵領主', hp: 140, atk: 30, def: 18 }, { name: '黑暗審判者', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80, drops: ['holyMace', 'mysticStaff'] },
     },
-    boss: { name: '沼澤之主', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: [], xp: 160 },
+    boss: { name: '沼澤之主', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: ['holyMace', 'ironArmor', 'mysticStaff'], xp: 160 },
   },
   {
     id: 5, name: '龍族廢墟', icon: '🐉',
     difficulties: {
-      easy:   { recommendedLevel: 10, enemies: [{ name: '遠古龍卒', hp: 100, atk: 24, def: 15 }, { name: '惡魔騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: [] },
-      normal: { recommendedLevel: 12, enemies: [{ name: '虛空泰坦', hp: 150, atk: 30, def: 20 }, { name: '龍族守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: [] },
-      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵巨獸', hp: 200, atk: 38, def: 26 }, { name: '黑暗破壞者', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: [] },
+      easy:   { recommendedLevel: 10, enemies: [{ name: '遠古龍卒', hp: 100, atk: 24, def: 15 }, { name: '惡魔騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
+      normal: { recommendedLevel: 12, enemies: [{ name: '虛空泰坦', hp: 150, atk: 30, def: 20 }, { name: '龍族守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: ['holyMace', 'huntersBow'] },
+      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵巨獸', hp: 200, atk: 38, def: 26 }, { name: '黑暗破壞者', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: ['holyMace', 'ironArmor', 'mysticStaff'] },
     },
-    boss: { name: '龍王', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: [], xp: 200 },
+    boss: { name: '龍王', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: ['holyMace', 'mysticStaff', 'ironArmor', 'huntersBow', 'ironDagger', 'woodenSword'], xp: 200 },
   },
 ];
 const ITEMS = {
@@ -1080,7 +1080,21 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
         c.hero.hp = Math.max(1, c.heroHp);
         if (c.xpValue) HeroSystem_gainXP(c.hero, c.xpValue);
         c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + (c.xpValue ? ' 和 ' + c.xpValue + ' 經驗' : '') + '！' });
-        addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'victory', { gold: goldR, magicStones: mS }, c.log);
+        // Item drops
+        const dropPool = diffData.drops || [];
+        const wonItems = [];
+        if (dropPool.length > 0 && Math.random() < 0.5) {
+          const itemId = dropPool[Math.floor(Math.random() * dropPool.length)];
+          const itemDef = ITEMS[itemId];
+          if (itemDef) {
+            const instanceId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            c.hero.inventory = c.hero.inventory || [];
+            c.hero.inventory.push({ instanceId, id: itemId, name: itemDef.name, icon: itemDef.icon });
+            wonItems.push(itemDef.icon + ' ' + itemDef.name);
+            c.log.push({ type: 'drop', text: '🎁 獲得 ' + itemDef.name + '！' });
+          }
+        }
+        addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'victory', { gold: goldR, magicStones: mS, items: wonItems }, c.log);
         ResourceSystem_add('gold', goldR);
         if (mS > 0) ResourceSystem_add('magicStones', mS);
         MapSystem_markDifficultyCleared(zoneId, difficulty);
