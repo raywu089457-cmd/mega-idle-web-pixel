@@ -1048,21 +1048,23 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
   expData += 0.5 + (explorers.reduce((s, h) => s + (h.atk + h.def) / 2, 0) / 100);
   for (const hero of explorers) {
     const combatKey = hero.id + '_' + zoneId + '_' + difficulty;
-    if (Math.random() < 0.90 && !territoryCombats[combatKey]) {
-      const enemyList = difficulty === 'boss' ? [diffData] : (diffData.enemies || []);
-      const enemy = enemyList[Math.floor(Math.random() * enemyList.length)] || diffData;
-      const hMaxHp = hero.hp || hero.maxHp;
-      territoryCombats[combatKey] = {
-        hero, zone, difficulty,
-        enemyHp: enemy.hp, enemyAtk: enemy.atk, enemyDef: enemy.def,
-        enemyName: enemy.name,
-        heroHp: hMaxHp,
-        round: 0, log: [],
-        goldReward: diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])),
-        magicStoneChance: diffData.magicStoneChance,
-        xpValue: diffData.xp || 10,
-      };
-      territoryCombats[combatKey].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' [' + difficulty + '] 遭遇 ' + enemy.name + '！' });
+    if (!territoryCombats[combatKey]) {
+      if (Math.random() < 0.90) {
+        const enemyList = difficulty === 'boss' ? [diffData] : (diffData.enemies || []);
+        const enemy = enemyList[Math.floor(Math.random() * enemyList.length)] || diffData;
+        const hMaxHp = hero.hp || hero.maxHp;
+        territoryCombats[combatKey] = {
+          hero, zone, difficulty,
+          enemyHp: enemy.hp, enemyAtk: enemy.atk, enemyDef: enemy.def,
+          enemyName: enemy.name,
+          heroHp: hMaxHp,
+          round: 0, log: [],
+          goldReward: diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])),
+          magicStoneChance: diffData.magicStoneChance,
+          xpValue: diffData.xp || 10,
+        };
+        territoryCombats[combatKey].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' [' + difficulty + '] 遭遇 ' + enemy.name + '！' });
+      }
     }
   }
   // Combat round resolves every 5 ticks
