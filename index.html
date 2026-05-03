@@ -474,7 +474,6 @@ body{
     <div class="dispatch-zone-grid" id="dispatch-zone-grid"></div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeDispatch()">取消</button>
-      <button class="btn btn-gold btn-sm" onclick="doDispatch()">確認出征</button>
     </div>
   </div>
 </div>
@@ -521,7 +520,6 @@ const HERO_CLASSES = {
   warrior: { name: '戰士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
   mage: { name: '法師', baseHp: 70, baseAtk: 25, baseDef: 5, icon: '🧙' },
   rogue: { name: '盜賊', baseHp: 85, baseAtk: 18, baseDef: 8, icon: '🗡️' },
-  cleric: { name: '牧師', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '⛪' },
   archer: { name: '弓箭手', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
   priest: { name: '牧師', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '✝️' },
 };
@@ -1763,24 +1761,15 @@ function renderMapPanel() {
     const bossDefeated = state.bossDefeated;
 
     function diffBtn(diff) {
-      const cleared = state[diff];
       const locked = !unlocked;
       const label = diffLabels[diff];
       const color = diffColors[diff];
       if (locked) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 ${label}</button>`;
-      if (cleared) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.6;background:#555;border-color:#333;color:#aaa;">✓ ${label}</button>`;
+      if (diff === 'boss') {
+        if (!bossAvail) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 BOSS</button>`;
+        return `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal(${zone.id},'${diff}')">👑 ${bossDefeated ? '已擊敗' : 'BOSS'}</button>`;
+      }
       return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;" onclick="openDifficultyModal(${zone.id},'${diff}')">${label}</button>`;
-    }
-
-    let bossBtn = '';
-    if (!unlocked) {
-      bossBtn = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 BOSS</button>`;
-    } else if (bossDefeated) {
-      bossBtn = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.6;background:#555;border-color:#333;color:#aaa;">✓ 已擊敗</button>`;
-    } else if (bossAvail) {
-      bossBtn = `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal(${zone.id},'boss')">👑 BOSS</button>`;
-    } else {
-      bossBtn = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;background:#333;border-color:#444;color:#666;">🔒 BOSS</button>`;
     }
 
     return `<div class="zone-card${unlocked ? '' : ' locked'}" style="margin-bottom:16px;">
@@ -1792,7 +1781,7 @@ function renderMapPanel() {
         ${diffBtn('easy')}
         ${diffBtn('normal')}
         ${diffBtn('hard')}
-        ${bossBtn}
+        ${diffBtn('boss')}
       </div>
     </div>`;
   }).join('');
@@ -1821,7 +1810,7 @@ function openDifficultyModal(zoneId, difficulty) {
     <div style="font-size:12px;margin-bottom:4px;">✨ 魔法石機率：${Math.round(diffData.magicStoneChance * 100)}%</div>
     ${diffData.xp ? `<div style="font-size:12px;margin-bottom:12px;">⭐ 經驗：${diffData.xp}</div>` : '<div style="font-size:12px;margin-bottom:12px;">⭐ 經驗：boss 勝利後獲得</div>'}
     <div style="margin-top:10px;text-align:center;">
-      <button class="btn btn-gold btn-sm" onclick="closeModal();dispatchHeroToDifficulty(${zoneId},'${difficulty}')">🚀 派遣英雄</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button>
     </div>
   </div>`;
   document.getElementById('modal-detail-name').textContent = '難度詳情';
@@ -1883,38 +1872,49 @@ function openDispatchModal(heroId) {
   document.getElementById('dispatch-hero-name').textContent = '英雄：' + hero.name;
   const prog = MapSystem_getProgress();
   const zones = MapSystem_getZones();
+  const diffLabels = { easy: '簡單', normal: '普通', hard: '困難', boss: 'BOSS' };
+  const diffColors = { easy: '#27ae60', normal: '#f39c12', hard: '#c0392b', boss: '#8e44ad' };
   document.getElementById('dispatch-zone-grid').innerHTML = zones.map(z => {
     const unlocked = prog.unlockedZones.includes(z.id);
-    const stars = '★'.repeat(z.difficulty) + '☆'.repeat(5 - z.difficulty);
-    return `<div class="dispatch-zone ${unlocked ? '' : 'locked'}" data-zone="${z.id}" onclick="selectDispatchZone(${z.id},${unlocked})">
+    if (!unlocked) return `<div class="dispatch-zone locked" data-zone="${z.id}"><div class="dz-name">${z.icon} ${z.name}</div><div class="dz-stars">🔒 未解鎖</div></div>`;
+    const state = MapSystem_getDifficultyState(z.id);
+    const bossAvail = MapSystem_isBossAvailable(z.id);
+    const bossDefeated = state.bossDefeated;
+    function diffBtn(diff) {
+      const color = diffColors[diff];
+      if (diff === 'boss') {
+        if (!bossAvail) return `<button class="btn btn-sm" style="opacity:0.4;padding:3px 6px;font-size:9px;">🔒 BOSS</button>`;
+        return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;padding:3px 6px;font-size:9px;" onclick="doDispatchWithDifficulty('${z.id}','${diff}')">👑 ${bossDefeated ? '已擊敗' : 'BOSS'}</button>`;
+      }
+      return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;padding:3px 6px;font-size:9px;" onclick="doDispatchWithDifficulty('${z.id}','${diff}')">${diffLabels[diff]}</button>`;
+    }
+    return `<div class="dispatch-zone" data-zone="${z.id}">
       <div class="dz-name">${z.icon} ${z.name}</div>
-      <div class="dz-stars">${stars}${unlocked ? '' : ' 🔒'}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
+        ${diffBtn('easy')}
+        ${diffBtn('normal')}
+        ${diffBtn('hard')}
+        ${diffBtn('boss')}
+      </div>
     </div>`;
   }).join('');
   dispatchZoneId = null;
   document.getElementById('modal-dispatch').classList.add('open');
 }
-function selectDispatchZone(zoneId, unlocked) {
-  if (!unlocked) { dispatchZoneId = null; showToast('該區域未解鎖', 'error'); return; }
-  dispatchZoneId = zoneId;
-  document.querySelectorAll('.dispatch-zone').forEach(z => z.classList.remove('selected'));
-  document.querySelector(`.dispatch-zone[data-zone="${zoneId}"]`)?.classList.add('selected');
-}
-function closeDispatch() { document.getElementById('modal-dispatch').classList.remove('open'); dispatchHeroId = null; dispatchZoneId = null; }
-function doDispatch() {
-  if (!dispatchHeroId || !dispatchZoneId) { showToast('請選擇探索地點', 'error'); return; }
-  const zone = ZONES.find(z => z.id === dispatchZoneId);
-  if (!zone) return;
-  const ok = MapSystem_startExploration(dispatchHeroId, dispatchZoneId);
+function doDispatchWithDifficulty(zoneId, difficulty) {
+  const hero = HeroSystem_getTerritoryHero(dispatchHeroId);
+  if (!hero) { showToast('英雄無效', 'error'); closeDispatch(); return; }
+  const ok = MapSystem_startExploration(dispatchHeroId, zoneId, difficulty);
   if (ok) {
-    showToast(`${territoryHeroes.find(h=>h.id===dispatchHeroId)?.name || '英雄'} 出征！前往 ${zone.name}`, 'success');
+    showToast(`${hero.name} 前往 ${ZONES.find(z => z.id === zoneId).name} [${difficulty}] 探索！`, 'success');
     closeDispatch();
     renderMapPanel();
     if (activePanel === 'hero') renderHeroesTab('hero-territory');
   } else {
-    showToast('無法派遣，請確認英雄狀態', 'error');
+    showToast('派遣失敗！', 'error');
   }
 }
+function closeDispatch() { document.getElementById('modal-dispatch').classList.remove('open'); dispatchHeroId = null; dispatchZoneId = null; }
 function openInventoryModal(heroId) {
   const hero = HeroSystem_getTerritoryHero(heroId);
   if (!hero) return;
