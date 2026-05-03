@@ -1038,6 +1038,7 @@ function HeroSystem_gainXP(hero, amount) {
   }
 }
 function HeroSystem_processExplorationTick(zoneId, difficulty) {
+  territoryCombatTickCounter++;
   const zone = ZONES.find(z => z.id === zoneId); if (!zone) return null;
   const explorers = territoryHeroes.filter(h => h.status === 'exploring' && h.currentZone === zoneId && h.exploreDifficulty === difficulty);
   if (explorers.length === 0) return null;
@@ -1063,55 +1064,57 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
       territoryCombats[combatKey].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 探索 ' + zone.name + ' [' + difficulty + '] 遭遇 ' + enemy.name + '！' });
     }
   }
-  for (const hero of explorers) {
-    const combatKey = hero.id + '_' + zoneId + '_' + difficulty;
-    const c = territoryCombats[combatKey];
-    if (!c) continue;
-    c.round++;
-    const hDmg = Math.max(1, c.hero.atk - c.enemyDef + Math.floor(Math.random() * 5));
-    const eDmg = Math.max(1, c.enemyAtk - c.hero.def + Math.floor(Math.random() * 5));
-    c.enemyHp -= hDmg;
-    c.heroHp -= eDmg;
-    c.log.push({ type: 'round', text: '【第' + c.round + '回合】' + c.hero.name + ' 造成 ' + hDmg + ' 傷害，' + c.enemyName + ' 造成 ' + eDmg + ' 傷害' });
-    if (c.enemyHp <= 0 || c.heroHp <= 0 || c.round >= 10) {
-      const victory = c.enemyHp <= 0;
-      const goldR = victory ? c.goldReward : 0;
-      const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
-      if (victory) {
-        c.hero.hp = Math.max(1, c.heroHp);
-        if (c.xpValue) HeroSystem_gainXP(c.hero, c.xpValue);
-        c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + (c.xpValue ? ' 和 ' + c.xpValue + ' 經驗' : '') + '！' });
-        // Item drops
-        const dropPool = diffData.drops || [];
-        const wonItems = [];
-        if (dropPool.length > 0 && Math.random() < 0.5) {
-          const itemId = dropPool[Math.floor(Math.random() * dropPool.length)];
-          const itemDef = ITEMS[itemId];
-          if (itemDef) {
-            const instanceId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-            c.hero.inventory = c.hero.inventory || [];
-            c.hero.inventory.push({ instanceId, id: itemId, name: itemDef.name, icon: itemDef.icon });
-            wonItems.push(itemDef.icon + ' ' + itemDef.name);
-            c.log.push({ type: 'drop', text: '🎁 獲得 ' + itemDef.name + '！' });
+  // Combat round resolves every 5 ticks
+  if (territoryCombatTickCounter % 5 === 0) {
+    for (const hero of explorers) {
+      const combatKey = hero.id + '_' + zoneId + '_' + difficulty;
+      const c = territoryCombats[combatKey];
+      if (!c) continue;
+      c.round++;
+      const hDmg = Math.max(1, c.hero.atk - c.enemyDef + Math.floor(Math.random() * 5));
+      const eDmg = Math.max(1, c.enemyAtk - c.hero.def + Math.floor(Math.random() * 5));
+      c.enemyHp -= hDmg;
+      c.heroHp -= eDmg;
+      c.log.push({ type: 'round', text: '【第' + c.round + '回合】' + c.hero.name + ' 造成 ' + hDmg + ' 傷害，' + c.enemyName + ' 造成 ' + eDmg + ' 傷害' });
+      if (c.enemyHp <= 0 || c.heroHp <= 0 || c.round >= 10) {
+        const victory = c.enemyHp <= 0;
+        const goldR = victory ? c.goldReward : 0;
+        const mS = victory && Math.random() < c.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+        if (victory) {
+          c.hero.hp = Math.max(1, c.heroHp);
+          if (c.xpValue) HeroSystem_gainXP(c.hero, c.xpValue);
+          c.log.push({ type: 'result', text: '🏆 勝利！' + c.hero.name + ' 獲得 ' + goldR + ' 金幣' + (mS > 0 ? ' 和 ' + mS + ' 魔法石' : '') + (c.xpValue ? ' 和 ' + c.xpValue + ' 經驗' : '') + '！' });
+          const dropPool = diffData.drops || [];
+          const wonItems = [];
+          if (dropPool.length > 0 && Math.random() < 0.5) {
+            const itemId = dropPool[Math.floor(Math.random() * dropPool.length)];
+            const itemDef = ITEMS[itemId];
+            if (itemDef) {
+              const instanceId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+              c.hero.inventory = c.hero.inventory || [];
+              c.hero.inventory.push({ instanceId, id: itemId, name: itemDef.name, icon: itemDef.icon });
+              wonItems.push(itemDef.icon + ' ' + itemDef.name);
+              c.log.push({ type: 'drop', text: '🎁 獲得 ' + itemDef.name + '！' });
+            }
           }
+          addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'victory', { gold: goldR, magicStones: mS, items: wonItems }, c.log);
+          ResourceSystem_add('gold', goldR);
+          if (mS > 0) ResourceSystem_add('magicStones', mS);
+          MapSystem_markDifficultyCleared(zoneId, difficulty);
+          if (difficulty === 'boss') {
+            MapSystem_markBossDefeated(zoneId);
+            const nextZ = ZONES.find(z => z.id === zoneId + 1);
+            if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) { mapProgress.unlockedZones.push(nextZ.id); mapProgress.currentZone = nextZ.id; }
+            showToast('Boss 擊敗！' + (nextZ ? nextZ.name + ' 已解鎖！' : '恭喜通关全部地圖！'), 'success');
+          }
+        } else {
+          c.hero.hp = Math.max(1, c.heroHp);
+          if (c.hero.hp <= 1) { c.hero.status = 'resting'; c.hero.currentZone = null; c.hero.explorationProgress = 0; c.hero.exploreDifficulty = null; }
+          c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 僥倖逃脫' });
+          addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'retreat', { gold: 0, magicStones: 0 }, c.log);
         }
-        addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'victory', { gold: goldR, magicStones: mS, items: wonItems }, c.log);
-        ResourceSystem_add('gold', goldR);
-        if (mS > 0) ResourceSystem_add('magicStones', mS);
-        MapSystem_markDifficultyCleared(zoneId, difficulty);
-        if (difficulty === 'boss') {
-          MapSystem_markBossDefeated(zoneId);
-          const nextZ = ZONES.find(z => z.id === zoneId + 1);
-          if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) { mapProgress.unlockedZones.push(nextZ.id); mapProgress.currentZone = nextZ.id; }
-          showToast('Boss 擊敗！' + (nextZ ? nextZ.name + ' 已解鎖！' : '恭喜通关全部地圖！'), 'success');
-        }
-      } else {
-        c.hero.hp = Math.max(1, c.heroHp);
-        if (c.hero.hp <= 1) { c.hero.status = 'resting'; c.hero.currentZone = null; c.hero.explorationProgress = 0; c.hero.exploreDifficulty = null; }
-        c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 僥倖逃脫' });
-        addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'retreat', { gold: 0, magicStones: 0 }, c.log);
+        delete territoryCombats[combatKey];
       }
-      delete territoryCombats[combatKey];
     }
   }
   if (expData >= 100) {
@@ -1312,6 +1315,7 @@ let expandedReports = new Set(); // Track expanded report IDs
 // ── COMBAT STATE TRACKING (per-second round resolution) ──
 const wanderingCombats = {};  // { [heroId]: { hero, enemyHp, enemyAtk, enemyDef, enemyName, heroHp, round, log, goldReward, magicStoneChance } }
 const territoryCombats = {};  // { [heroId_zoneId]: { hero, zone, enemyHp, enemyAtk, enemyDef, enemyName, heroHp, round, log, goldReward, magicStoneChance } }
+let territoryCombatTickCounter = 0;  // counts up each tick; combat resolves every COMBAT_TICK_INTERVAL ticks
 
 async function doReset() {
   if (!confirm('確定要重新開始嗎？所有進度將會消失！')) return;
