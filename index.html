@@ -1925,14 +1925,13 @@ function openDispatchModal(heroId) {
 function doDispatchWithDifficulty(zoneId, difficulty) {
   const hero = HeroSystem_getTerritoryHero(dispatchHeroId);
   if (!hero) { showToast('英雄無效', 'error'); closeDispatch(); return; }
+  const zone = ZONES.find(z => z.id === zoneId);
   const ok = MapSystem_startExploration(dispatchHeroId, zoneId, difficulty);
   if (ok) {
-    showToast(`${hero.name} 前往 ${ZONES.find(z => z.id === zoneId).name} [${difficulty}] 探索！`, 'success');
-    closeDispatch();
-    renderMapPanel();
-    if (activePanel === 'hero') renderHeroesTab('hero-territory');
+    showToast(`${hero.name} 前往 ${zone?.name || zoneId} [${difficulty}] 探索！`, 'success');
+    setTimeout(() => { closeDispatch(); renderMapPanel(); if (activePanel === 'hero') renderHeroesTab('hero-territory'); }, 300);
   } else {
-    showToast('派遣失敗！', 'error');
+    showToast('派遣失敗（' + (hero.status !== 'idle' ? '英雄已在探索中' : '區域未解鎖') + '）', 'error');
   }
 }
 function closeDispatch() { document.getElementById('modal-dispatch').classList.remove('open'); dispatchHeroId = null; dispatchZoneId = null; }
