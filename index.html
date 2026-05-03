@@ -1952,8 +1952,8 @@ function openEquipModal(heroId) {
   const list = document.getElementById('inv-modal-list');
   const eq = hero.equipment || {};
   const inv = hero.inventory || [];
-  const invWeapons = inv.filter(it => it.type === 'weapon');
-  const invArmors = inv.filter(it => it.type === 'armor');
+  const invWeapons = inv.filter(it => it.id && ITEMS[it.id]?.type === 'weapon');
+  const invArmors = inv.filter(it => it.id && ITEMS[it.id]?.type === 'armor');
   const currentWeapon = eq.weapon;
   const currentArmor = eq.armor;
 
@@ -1993,7 +1993,7 @@ function unequipItemFromHero(heroId, slot) {
   const item = hero.equipment[slot];
   if (!item) return;
   hero.inventory = hero.inventory || [];
-  hero.inventory.push({ instanceId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), id: item.id, name: item.name, icon: item.icon, type: slot === 'weapon' ? 'weapon' : 'armor' });
+  hero.inventory.push({ instanceId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), id: item.id, name: item.name, icon: item.icon, type: slot === 'weapon' ? ITEMS[item.id]?.type : ITEMS[item.id]?.type });
   hero.equipment[slot] = null;
   showToast(`${item.name} 已卸下`, 'success');
   openEquipModal(heroId);
@@ -2016,7 +2016,8 @@ function equipItemToHero(heroId, slot, instanceId) {
   if (!hero) return;
   const item = (hero.inventory || []).find(it => it.instanceId === instanceId);
   if (!item) return;
-  if (item.forClass && item.forClass !== hero.class) {
+  const itemDef = ITEMS[item.id];
+  if (itemDef?.forClass && itemDef.forClass !== hero.class) {
     const classNames = { warrior: '戰士', mage: '法師', rogue: '盜賊', archer: '弓箭手', priest: '牧師' };
     showToast(`${item.name} 只能由${classNames[item.forClass]}專屬裝備！`, 'error');
     return;
