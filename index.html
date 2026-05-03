@@ -1812,7 +1812,7 @@ function renderMapPanel() {
   }).join('');
 }
 function openDifficultyModal(zoneId, difficulty) {
-  const zone = ZONES.find(z => z.id === zoneId);
+  const zone = ZONES.find(z => z.id === (typeof zoneId === 'string' ? parseInt(zoneId, 10) : zoneId));
   if (!zone) return;
   const diffData = difficulty === 'boss' ? zone.boss : zone.difficulties[difficulty];
   if (!diffData) return;
