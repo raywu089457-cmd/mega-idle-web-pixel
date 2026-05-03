@@ -2028,9 +2028,11 @@ function equipItemToHero(heroId, slot, instanceId) {
     return;
   }
   hero.equipment = hero.equipment || { weapon: null, armor: null };
+  const oldItem = hero.equipment[slot];
   hero.equipment[slot] = { id: item.id, name: item.name, icon: item.icon };
   hero.inventory = hero.inventory.filter(it => it.instanceId !== instanceId);
-  showToast(`${item.name} 已裝備`, 'success');
+  if (oldItem) hero.inventory.push({ instanceId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), id: oldItem.id, name: oldItem.name, icon: oldItem.icon });
+  showToast(`${item.name} 已裝備${oldItem ? '（替換' + oldItem.name + '）' : ''}`, 'success');
   openEquipModal(heroId);
 }
 
