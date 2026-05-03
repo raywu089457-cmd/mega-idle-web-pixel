@@ -1119,8 +1119,16 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
     }
   }
   if (expData >= 100) {
-    explorers.forEach(h => { h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0; h.exploreDifficulty = null; });
-    return { zoneId, difficulty, goldReward: diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])), xp: diffData.xp || 10 };
+    const fullyCleared = MapSystem_isZoneFullyCleared(zoneId);
+    if (fullyCleared) {
+      // Keep fighting — reset progress but stay in exploration
+      expData = 0;
+      explorers.forEach(h => { h.explorationProgress = 0; });
+      return null;
+    } else {
+      explorers.forEach(h => { h.status = 'idle'; h.currentZone = null; h.explorationProgress = 0; h.exploreDifficulty = null; });
+      return { zoneId, difficulty, goldReward: diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0])), xp: diffData.xp || 10 };
+    }
   }
   explorers.forEach(h => { h.explorationProgress = expData; });
   return null;
@@ -1227,7 +1235,11 @@ function MapSystem_markDifficultyCleared(zoneId, diff) { if (mapProgress.zonePro
 function MapSystem_markBossDefeated(zoneId) { if (mapProgress.zoneProgress[zoneId]) mapProgress.zoneProgress[zoneId].bossDefeated = true; }
 function MapSystem_isBossAvailable(zoneId) {
   const s = mapProgress.zoneProgress[zoneId];
-  return s && s.easy && s.normal && s.hard && !s.bossDefeated;
+  return s && s.easy && s.normal && s.hard; // boss always available after easy+normal+hard cleared
+}
+function MapSystem_isZoneFullyCleared(zoneId) {
+  const s = mapProgress.zoneProgress[zoneId];
+  return s && s.easy && s.normal && s.hard && s.bossDefeated;
 }
 function MapSystem_startExploration(heroId, zoneId, difficulty) {
   const hero = HeroSystem_getTerritoryHero(heroId); if (!hero) return false;
@@ -1595,6 +1607,7 @@ function renderHeroCard(hero, type) {
       </div>
       <div class="hero-badge ${sc}">${st}</div>
     </div>
+    ${hero.status === 'exploring' && MapSystem_isZoneFullyCleared(hero.currentZone) ? '<div style="font-size:10px;color:var(--green);text-align:center;padding:2px 0;">持續戰鬥中</div>' : ''}
     ${actions}
   </div>`;
 }
@@ -1762,8 +1775,19 @@ function renderMapPanel() {
   if (explorers.length > 0) {
     activeDiv.innerHTML = `<div class="section-label">進行中的探索</div>` + explorers.map(h => {
       const zone = zones.find(z => z.id === h.currentZone);
-      const pct = Math.min(100, Math.floor((h.explorationProgress || 0)));
+      const fullyCleared = MapSystem_isZoneFullyCleared(h.currentZone);
       const diffLabel = h.exploreDifficulty === 'boss' ? 'BOSS' : (h.exploreDifficulty || '普通');
+      if (fullyCleared) {
+        return `<div class="explore-item">
+          <div class="explore-top">
+            <div class="explore-name">${zone?.icon || '📍'} ${zone?.name || '未知區域'}</div>
+            <div class="explore-hero">英雄：${h.name} [${diffLabel}]</div>
+            <div class="explore-pct" style="color:var(--green);">持續戰鬥中</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green);"></div></div>
+        </div>`;
+      }
+      const pct = Math.min(100, Math.floor((h.explorationProgress || 0)));
       return `<div class="explore-item">
         <div class="explore-top">
           <div class="explore-name">${zone?.icon || '📍'} ${zone?.name || '未知區域'}</div>
@@ -1793,7 +1817,7 @@ function renderMapPanel() {
       if (locked) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 ${label}</button>`;
       if (diff === 'boss') {
         if (!bossAvail) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 BOSS</button>`;
-        return `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal('${zone.id}','${diff}')">👑 ${bossDefeated ? '已擊敗' : 'BOSS'}</button>`;
+        return `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal('${zone.id}','${diff}')">👑 ${bossDefeated ? '再戰 BOSS' : 'BOSS'}</button>`;
       }
       return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;" onclick="openDifficultyModal('${zone.id}','${diff}')">${label}</button>`;
     }
@@ -1910,7 +1934,7 @@ function openDispatchModal(heroId) {
       const color = diffColors[diff];
       if (diff === 'boss') {
         if (!bossAvail) return `<button class="btn btn-sm" style="opacity:0.4;padding:3px 6px;font-size:9px;">🔒 BOSS</button>`;
-        return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;padding:3px 6px;font-size:9px;" onclick="doDispatchWithDifficulty('${z.id}','${diff}')">👑 ${bossDefeated ? '已擊敗' : 'BOSS'}</button>`;
+        return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;padding:3px 6px;font-size:9px;" onclick="doDispatchWithDifficulty('${z.id}','${diff}')">👑 ${bossDefeated ? '再戰 BOSS' : 'BOSS'}</button>`;
       }
       return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;padding:3px 6px;font-size:9px;" onclick="doDispatchWithDifficulty('${z.id}','${diff}')">${diffLabels[diff]}</button>`;
     }
