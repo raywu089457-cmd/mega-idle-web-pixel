@@ -1212,11 +1212,12 @@ function MapSystem_isBossAvailable(zoneId) {
 }
 function MapSystem_startExploration(heroId, zoneId, difficulty) {
   const hero = HeroSystem_getTerritoryHero(heroId); if (!hero) return false;
-  if (!MapSystem_isZoneUnlocked(zoneId)) return false;
+  const zoneIdNum = typeof zoneId === 'string' ? parseInt(zoneId, 10) : zoneId;
+  if (!MapSystem_isZoneUnlocked(zoneIdNum)) return false;
   if (hero.status !== 'idle') return false;
-  const zone = ZONES.find(z => z.id === zoneId); if (!zone) return false;
-  hero.status = 'exploring'; hero.currentZone = zoneId; hero.exploreDifficulty = difficulty;
-  activeExplorations.push({ heroId, zoneId, difficulty, progress: 0, startTime: Date.now(), zoneName: zone.name });
+  const zone = ZONES.find(z => z.id === zoneIdNum); if (!zone) return false;
+  hero.status = 'exploring'; hero.currentZone = zoneIdNum; hero.exploreDifficulty = difficulty;
+  activeExplorations.push({ heroId, zoneId: zoneIdNum, difficulty, progress: 0, startTime: Date.now(), zoneName: zone.name });
   return true;
 }
 function MapSystem_processExplorations() {
@@ -1767,9 +1768,9 @@ function renderMapPanel() {
       if (locked) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 ${label}</button>`;
       if (diff === 'boss') {
         if (!bossAvail) return `<button class="btn btn-outline btn-sm" disabled style="opacity:0.5;">🔒 BOSS</button>`;
-        return `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal(${zone.id},'${diff}')">👑 ${bossDefeated ? '已擊敗' : 'BOSS'}</button>`;
+        return `<button class="btn btn-sm" style="background:#8e44ad;border-color:#8e44ad;color:#fff;" onclick="openDifficultyModal('${zone.id}','${diff}')">👑 ${bossDefeated ? '已擊敗' : 'BOSS'}</button>`;
       }
-      return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;" onclick="openDifficultyModal(${zone.id},'${diff}')">${label}</button>`;
+      return `<button class="btn btn-sm" style="background:${color};border-color:${color};color:#fff;" onclick="openDifficultyModal('${zone.id}','${diff}')">${label}</button>`;
     }
 
     return `<div class="zone-card${unlocked ? '' : ' locked'}" style="margin-bottom:16px;">
@@ -2146,7 +2147,6 @@ function gameTick() {
   if (activePanel === 'build') renderBuildingPanel();
   if (activePanel === 'map') renderMapPanel();
   if (activePanel === 'shop') renderShopPanel();
-  saveGame();
 }
 
 // ═══════════════════════════════════════════════════════════════════
