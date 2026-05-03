@@ -660,9 +660,57 @@ button {
 
 .hero-stats {
   display: flex;
-  gap: var(--spacing-md);
+  flex-direction: column;
+  gap: 4px;
   margin-top: var(--spacing-xs);
   font-size: 11px;
+}
+
+.stat-hp-bar,
+.stat-xp-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-hp-bar span,
+.stat-xp-bar span {
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.hp-bar,
+.xp-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hp-fill {
+  height: 100%;
+  background: #27AE60;
+  transition: width 0.3s;
+}
+
+.hp-fill.high { background: #27AE60; }
+.hp-fill.med { background: #f39c12; }
+.hp-fill.low { background: #c0392b; }
+
+.xp-fill {
+  height: 100%;
+  background: #9B59B6;
+  transition: width 0.3s;
+}
+
+.hp-text,
+.xp-text {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .hero-stat {

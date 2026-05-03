@@ -1574,6 +1574,11 @@ function renderHeroCard(hero, type) {
             <div class="hp-bar"><div class="hp-fill ${hpFillClass}" style="width:${hpPct*100}%"></div></div>
             <span class="hp-text">${fmtFull(Math.ceil(hero.hp))}/${fmtFull(hero.maxHp || 100)}</span>
           </div>
+          <div class="stat-xp-bar">
+            <span>XP</span>
+            <div class="xp-bar"><div class="xp-fill" style="width:${Math.min(100, (hero.xp || 0) / (hero.level * 100) * 100)}%"></div></div>
+            <span class="xp-text">${hero.xp || 0}/${hero.level * 100}</span>
+          </div>
           <div class="stat">ATK ${hero.atk} | DEF ${hero.def}</div>
         </div>
         <div class="hero-equip">
