@@ -1142,6 +1142,15 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
   return null;
 }
 function HeroSystem_processRestingTick() {
+  // Territory heroes auto-drink health potions when HP is low
+  for (const h of territoryHeroes.filter(x => x.status === 'resting')) {
+    const hpPct = h.hp / h.maxHp;
+    if (hpPct < 0.5 && (shopInventory['healthPotion'] || 0) > 0) {
+      shopInventory['healthPotion']--;
+      const healAmt = Math.floor(h.maxHp * 0.3);
+      h.hp = Math.min(h.maxHp, h.hp + healAmt);
+    }
+  }
   for (const h of [...territoryHeroes, ...wanderingHeroes].filter(x => x.status === 'resting')) {
     h.hp = Math.min(h.maxHp, h.hp + Math.ceil(h.maxHp * 0.001));
     if (h.hp >= h.maxHp * 0.8) {
