@@ -938,8 +938,8 @@ function HeroSystem_processWanderingTick() {
         wanderingCombats[hero.id] = {
           hero, enemyHp: eHp, enemyAtk: eAtk, enemyDef: eDef, enemyName: eName,
           heroHp: hMaxHp, round: 0, log: [],
-          goldReward: zone.difficulty * 15 + hero.level * 5,
-          magicStoneChance: zone.magicStoneChance
+          goldReward: 20 + hero.level * 10,
+          magicStoneChance: 0.1
         };
         wanderingCombats[hero.id].log.push({ type: 'narrate', text: '⚔️ ' + hero.name + ' 在 ' + zone.name + ' 遭遇 ' + eName + '！' });
       }
