@@ -149,6 +149,10 @@ body{
 .hp-fill.high{background:var(--green);}
 .hp-fill.med{background:var(--burnt-orange);}
 .hp-text{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);min-width:60px;text-align:right;}
+.stat-xp-bar{display:flex;align-items:center;gap:6px;}
+.xp-bar{flex:1;height:8px;background:rgba(139,90,43,0.2);border:2px solid var(--warm-wood);overflow:hidden;}
+.xp-fill{height:100%;background:var(--blue);transition:width 0.3s;}
+.xp-text{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);min-width:60px;text-align:right;}
 /* Hero panel Chinese text */
 #panel-hero .hero-slot-info,
 #panel-hero .hero-name,
@@ -157,6 +161,9 @@ body{
 #panel-hero .stat-hp-bar,
 #panel-hero .stat-hp-bar span,
 #panel-hero .hp-text,
+#panel-hero .stat-xp-bar,
+#panel-hero .stat-xp-bar span,
+#panel-hero .xp-text,
 #panel-hero .hero-badge { font-size: 14px; }
 
 #panel-build .building-name,
@@ -496,7 +503,6 @@ body{
   </div>
 </div>
 
-<script src="js/data/saveManager.js"></script>
 <script>
 // GAME DATA
 const RESOURCES = {
@@ -1356,10 +1362,6 @@ async function doReset() {
   gameState = null;
   Object.keys(wanderingCombats).forEach(k => delete wanderingCombats[k]);
   Object.keys(territoryCombats).forEach(k => delete territoryCombats[k]);
-  // Also clear IndexedDB for consistency
-  try {
-    await SaveManager.delete();
-  } catch(e) {}
   // Wait 500ms to ensure localStorage write completes before reload
   setTimeout(() => { location.reload(); }, 500);
 }
