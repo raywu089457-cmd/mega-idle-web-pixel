@@ -1003,7 +1003,18 @@ function HeroSystem_processWanderingTick() {
         if (mStones > 0) c.hero.diamonds += mStones;
       } else {
         c.hero.hp = Math.max(1, c.heroHp);
-        if (c.heroHp <= 1) { c.hero.status = 'resting'; }
+        if (c.heroHp <= 1) {
+          // Try to drink potion from own inventory first, then from shop
+          c.hero.inventory = c.hero.inventory || [];
+          const potionIdx = c.hero.inventory.findIndex(it => it.id === 'healthPotion');
+          if (potionIdx !== -1) {
+            c.hero.inventory.splice(potionIdx, 1);
+            c.hero.hp = Math.floor((c.hero.maxHp || 100) * 0.3);
+            c.log.push({ type: 'result', text: '💊 ' + c.hero.name + ' 使用背包藥水康復至 30%！' });
+          } else {
+            c.hero.status = 'resting';
+          }
+        }
         c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 從 ' + c.enemyName + ' 撤退' });
         addBattleReport(c.hero.name, 'wander', 'retreat', { gold: 0, magicStones: 0 }, c.log);
       }
@@ -1118,8 +1129,20 @@ function HeroSystem_processExplorationTick(zoneId, difficulty) {
           }
         } else {
           c.hero.hp = Math.max(1, c.heroHp);
-          if (c.hero.hp <= 1) { c.hero.status = 'resting'; c.hero.currentZone = null; c.hero.explorationProgress = 0; c.hero.exploreDifficulty = null; }
-          c.log.push({ type: 'result', text: '💨 撤退！' + c.hero.name + ' 僥倖逃脫' });
+          if (c.hero.hp <= 1) {
+            c.hero.inventory = c.hero.inventory || [];
+            const potionIdx = c.hero.inventory.findIndex(it => it.id === 'healthPotion');
+            if (potionIdx !== -1) {
+              c.hero.inventory.splice(potionIdx, 1);
+              c.hero.hp = Math.floor((c.hero.maxHp || 100) * 0.3);
+              c.log.push({ type: 'result', text: '💊 ' + c.hero.name + ' 使用背包藥水康復至 30%！' });
+            } else {
+              c.hero.status = 'resting';
+              c.hero.currentZone = null;
+              c.hero.explorationProgress = 0;
+              c.hero.exploreDifficulty = null;
+            }
+          }
           addBattleReport(c.hero.name, zone.name + ' [' + c.difficulty + ']', 'retreat', { gold: 0, magicStones: 0 }, c.log);
         }
         delete territoryCombats[combatKey];
