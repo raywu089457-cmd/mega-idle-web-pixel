@@ -2,6 +2,7 @@ name: Redeploy Pages
 on:
   workflow_dispatch:
   push:
+    branches: [master]
 permissions:
   id-token: write
   contents: read
