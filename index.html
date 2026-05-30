@@ -1324,6 +1324,8 @@ const MAX_OFFLINE = 8 * 3600;
 const OFFLINE_EFF = 0.5;
 function OfflineSystem_init(savedState) { lastOnlineTimestamp = savedState?.lastOnline || Date.now(); }
 function OfflineSystem_markOffline() { lastOnlineTimestamp = Date.now(); isOffline = true; }
+
+/** Called from visibilitychange when user returns – requires isOffline=true (set by markOffline) */
 function OfflineSystem_markOnline() {
   if (!isOffline) return null;
   const away = Math.floor((Date.now() - lastOnlineTimestamp) / 1000);
@@ -1331,14 +1333,216 @@ function OfflineSystem_markOnline() {
   const summary = OfflineSystem_calculateOfflineProgress(lastOnlineTimestamp, Date.now());
   isOffline = false; return summary;
 }
+
+/** Called on initial page load – does NOT require isOffline flag */
+function OfflineSystem_processInitialOffline() {
+  const now = Date.now();
+  const away = Math.floor((now - lastOnlineTimestamp) / 1000);
+  if (away < 60) return null;
+  const summary = OfflineSystem_calculateOfflineProgress(lastOnlineTimestamp, now);
+  isOffline = false;
+  return summary;
+}
+
+/**
+ * Hero offline simulation – territory exploration + wandering combat + resting recovery
+ */
+function simulateOfflineHeroes(cappedSeconds) {
+  const result = {
+    gold: 0, explorationGold: 0, explorationMaterials: {},
+    wanderingGold: 0, wanderingMagicStones: 0,
+    zonesCleared: 0, heroesHealed: 0, heroesSpawned: 0, heroesDeparted: 0,
+  };
+
+  // ── Territory heroes ──
+  const tHeroes = HeroSystem_getTerritoryHeroes();
+  for (const hero of tHeroes) {
+    if (hero.status === 'exploring' && hero.currentZone != null && hero.exploreDifficulty) {
+      const zone = ZONES.find(z => z.id === hero.currentZone);
+      if (!zone) continue;
+      const diffData = zone.difficulties?.[hero.exploreDifficulty];
+      if (!diffData) continue;
+
+      // Advance exploration progress
+      const progressPerTick = 0.5 + (hero.atk + hero.def) / 2 / 100;
+      const accumulated = (hero.explorationProgress || 0) + progressPerTick * cappedSeconds;
+      const completions = Math.floor(accumulated / 100);
+      hero.explorationProgress = accumulated % 100;
+
+      // Zone completion rewards
+      for (let c = 0; c < completions; c++) {
+        const gR = diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0]));
+        ResourceSystem_add('gold', gR);
+        result.gold += gR; result.explorationGold += gR;
+        result.zonesCleared++;
+        // Mark difficulty cleared & boss unlock
+        MapSystem_markDifficultyCleared(zone.id, hero.exploreDifficulty);
+        if (hero.exploreDifficulty === 'boss') {
+          MapSystem_markBossDefeated(zone.id);
+          const nextZ = ZONES.find(z => z.id === zone.id + 1);
+          if (nextZ && !MapSystem_isZoneUnlocked(nextZ.id)) {
+            mapProgress.unlockedZones.push(nextZ.id);
+            mapProgress.currentZone = nextZ.id;
+          }
+        } else {
+          // Check if all non-boss difficulties cleared → boss unlocked
+          const ds = MapSystem_getDifficultyState(zone.id);
+          if (ds.easy && ds.normal && ds.hard) {
+            // Boss becomes available – no further action needed
+          }
+        }
+      }
+
+      // Per-tick combat simulation during exploration
+      const combatTicks = cappedSeconds * 0.9;
+      const eDef = diffData.enemies ? diffData.enemies[0].def : 5;
+      const eAtk = diffData.enemies ? diffData.enemies[0].atk : 5;
+      const eHp = diffData.enemies ? diffData.enemies[0].hp : 50;
+      const heroDmgPerRound = Math.max(1, hero.atk - eDef + 2);
+      const enemyDmgPerRound = Math.max(1, eAtk - hero.def + 2);
+      const roundsToKill = Math.max(1, Math.ceil(eHp / heroDmgPerRound));
+      const roundsToDie = hero.hp > 0 ? Math.max(1, Math.ceil(hero.hp / enemyDmgPerRound)) : 999;
+      const winRate = Math.min(1, Math.max(0.1, roundsToDie / (roundsToDie + roundsToKill)));
+      const victories = Math.floor(combatTicks * winRate);
+
+      if (victories > 0) {
+        const goldPerWin = diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0]));
+        const combatGold = Math.floor(victories * goldPerWin * 0.5);
+        ResourceSystem_add('gold', combatGold);
+        result.gold += combatGold; result.explorationGold += combatGold;
+        // Magic stones from combat
+        const msChance = diffData.magicStoneChance || 0.1;
+        if (Math.random() < 1 - Math.pow(1 - msChance, Math.min(victories, 20))) {
+          const stones = Math.floor(Math.random() * 3) + 1;
+          ResourceSystem_add('magicStones', stones);
+          result.wanderingMagicStones += stones;
+        }
+      }
+
+      // Combat damage (HP attrition)
+      const avgDmg = Math.max(1, eAtk - hero.def + 2);
+      const totalCombatDmg = Math.floor(combatTicks * avgDmg);
+      hero.hp = Math.max(1, hero.hp - totalCombatDmg);
+
+      if (hero.hp <= 1) {
+        hero.status = 'resting';
+        hero.currentZone = null;
+        hero.explorationProgress = 0;
+        hero.exploreDifficulty = null;
+      } else if (completions > 0) {
+        // Zone completed – return hero to idle
+        hero.status = 'idle';
+        hero.currentZone = null;
+        hero.explorationProgress = 0;
+        hero.exploreDifficulty = null;
+      }
+    }
+
+    // Resting heroes: recover HP
+    if (hero.status === 'resting') {
+      const hpRecovery = Math.ceil(hero.maxHp * 0.001) * cappedSeconds;
+      hero.hp = Math.min(hero.maxHp, hero.hp + hpRecovery);
+      if (hero.hp >= hero.maxHp * 0.8) {
+        hero.status = 'idle';
+        result.heroesHealed++;
+      }
+    }
+  }
+
+  // ── Wandering heroes ──
+  const spawnInterval = BuildingSystem_getWanderingSpawnInterval();
+  const maxW = BuildingSystem_getMaxWanderingHeroes();
+  const spawned = Math.floor(cappedSeconds / spawnInterval);
+  for (let s = 0; s < spawned && wanderingHeroes.length < maxW; s++) {
+    const typeDef = WANDERING_HERO_TYPES[Math.floor(Math.random() * WANDERING_HERO_TYPES.length)];
+    wanderingHeroes.push(createWanderingHero(typeDef));
+    result.heroesSpawned++;
+  }
+
+  for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
+    const hero = wanderingHeroes[i];
+    if (hero.status === 'resting') {
+      // Resting wanderer: recover HP
+      const hpRecovery = Math.ceil(hero.maxHp * 0.001) * cappedSeconds;
+      hero.hp = Math.min(hero.maxHp, hero.hp + hpRecovery);
+      if (hero.hp >= hero.maxHp * 0.8) hero.status = 'wandering';
+      continue;
+    }
+    // Combat: ~1/3 of ticks are fight actions
+    const fightTicks = cappedSeconds * 0.3333;
+    const winRate = 0.65; // wanderers generally win vs same-level
+    const victories = Math.floor(fightTicks * winRate);
+    if (victories > 0) {
+      const goldPerWin = 20 + hero.level * 10;
+      const walletGold = Math.floor(victories * goldPerWin);
+      hero.wallet = (hero.wallet || 0) + Math.floor(walletGold * 0.8); // 80% to wallet
+      const kingdomGold = Math.floor(walletGold * 0.2); // 20% to kingdom
+      ResourceSystem_add('gold', kingdomGold);
+      result.wanderingGold += kingdomGold;
+      result.gold += kingdomGold;
+
+      const msChance = hero.dropMagicStoneChance ?? 0.1;
+      if (Math.random() < 1 - Math.pow(1 - msChance, Math.min(victories, 20))) {
+        const stones = Math.floor(Math.random() * 3) + 1;
+        hero.diamonds = (hero.diamonds || 0) + stones;
+        result.wanderingMagicStones += stones;
+      }
+    }
+    // Combat damage: take damage from fights
+    const eAtkW = 5 + hero.level * 3;
+    const dmgPerFight = Math.max(1, eAtkW - hero.def + 2);
+    const totalDmgW = Math.floor(fightTicks * dmgPerFight);
+    hero.hp = Math.max(1, (hero.hp || hero.maxHp) - totalDmgW);
+
+    if (hero.hp <= 1) {
+      // Try potion from inventory
+      hero.inventory = hero.inventory || [];
+      const pIdx = hero.inventory.findIndex(it => it.id === 'healthPotion');
+      if (pIdx !== -1) {
+        hero.inventory.splice(pIdx, 1);
+        hero.hp = Math.floor((hero.maxHp || 100) * 0.3);
+      } else {
+        hero.status = 'resting';
+      }
+    }
+
+    // Departure check
+    if (cappedSeconds > 120) {
+      const survivalChance = Math.pow(1 - 1 / 750, cappedSeconds);
+      if (Math.random() > survivalChance) {
+        wanderingHeroes.splice(i, 1);
+        result.heroesDeparted++;
+      }
+    }
+  }
+
+  return result;
+}
+
 function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
   const total = Math.floor((returnTime - lastOnline) / 1000);
   const capped = Math.min(total, MAX_OFFLINE);
   const matP = {};
   for (const mat of MATERIAL_TYPES) { const v = 0.8 + Math.random() * 0.4; const p = Math.floor(2 * capped * v * OFFLINE_EFF); matP[mat] = p; ResourceSystem_add(mat, p); }
-  const gP = Math.floor(50 * (capped / 60) * OFFLINE_EFF); ResourceSystem_add('gold', gP);
-  const mS = Math.floor(Math.random() * 3); if (mS > 0) ResourceSystem_add('magicStones', mS);
-  return { totalSeconds: total, cappedSeconds: capped, isCapped: total > MAX_OFFLINE, materialsProduced: matP, goldProduced: gP, magicStonesProduced: mS };
+  const flatGold = Math.floor(50 * (capped / 60) * OFFLINE_EFF); ResourceSystem_add('gold', flatGold);
+  const flatMagic = Math.floor(Math.random() * 3); if (flatMagic > 0) ResourceSystem_add('magicStones', flatMagic);
+
+  // ── Hero simulation during offline time ──
+  const heroResult = simulateOfflineHeroes(capped);
+
+  return {
+    totalSeconds: total, cappedSeconds: capped, isCapped: total > MAX_OFFLINE,
+    materialsProduced: matP,
+    goldProduced: flatGold + heroResult.gold,
+    magicStonesProduced: flatMagic + heroResult.wanderingMagicStones,
+    heroExplorationGold: heroResult.explorationGold,
+    heroExplorationMaterials: heroResult.explorationMaterials,
+    heroWanderingGold: heroResult.wanderingGold,
+    zonesCleared: heroResult.zonesCleared,
+    heroesHealed: heroResult.heroesHealed,
+    heroesSpawned: heroResult.heroesSpawned,
+    heroesDeparted: heroResult.heroesDeparted,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2260,25 +2464,33 @@ function init() {
 
   updateHUD();
 
-  // Check offline
-  const offline = OfflineSystem_markOnline();
+  // Check offline (initial page load)
+  const offline = OfflineSystem_processInitialOffline();
   if (offline && offline.cappedSeconds > 60) {
     pendingOfflineSummary = offline;
     const body = document.getElementById('modal-welcome-body');
     const hours = Math.floor(offline.cappedSeconds / 3600);
     const mins = Math.floor((offline.cappedSeconds % 3600) / 60);
+    let heroLines = '';
+    if (offline.zonesCleared > 0) heroLines += `<div class="offline-item"><div class="offline-label">🗺️ 區域完成</div><div class="offline-val">${offline.zonesCleared}</div></div>`;
+    if (offline.heroesHealed > 0) heroLines += `<div class="offline-item"><div class="offline-label">💊 英雄康復</div><div class="offline-val">${offline.heroesHealed}</div></div>`;
+    if (offline.heroesSpawned > 0) heroLines += `<div class="offline-item"><div class="offline-label">👋 新流浪英雄</div><div class="offline-val">${offline.heroesSpawned}</div></div>`;
+    if (offline.heroesDeparted > 0) heroLines += `<div class="offline-item"><div class="offline-label">🚶 流浪英雄離開</div><div class="offline-val">${offline.heroesDeparted}</div></div>`;
     body.innerHTML = `
       <div style="text-align:center;font-size:15px;color:var(--text-faint);margin-bottom:4px;">您離開了 <span style="color:var(--gold)">${hours} 小時 ${mins} 分</span></div>
       <div class="offline-item"><div class="offline-label">🪙 金幣</div><div class="offline-val">+${fmtFull(offline.goldProduced)}</div></div>
       ${Object.entries(offline.materialsProduced).map(([mat, amt]) => `<div class="offline-item"><div class="offline-label">${RESOURCES[mat]?.icon || ''} ${RESOURCES[mat]?.name || mat}</div><div class="offline-val">+${fmtFull(amt)}</div></div>`).join('')}
       ${offline.magicStonesProduced > 0 ? `<div class="offline-item"><div class="offline-label">💎 魔法石</div><div class="offline-val">+${offline.magicStonesProduced}</div></div>` : ''}
+      ${offline.heroExplorationGold > 0 ? `<div class="offline-item"><div class="offline-label">⚔️ 探索戰鬥獎勵</div><div class="offline-val">+${fmtFull(offline.heroExplorationGold)}</div></div>` : ''}
+      ${offline.heroWanderingGold > 0 ? `<div class="offline-item"><div class="offline-label">🏃 流浪英雄貢獻</div><div class="offline-val">+${fmtFull(offline.heroWanderingGold)}</div></div>` : ''}
+      ${heroLines}
     `;
     document.getElementById('modal-welcome').classList.add('open');
   }
 
   setInterval(gameTick, 1000);
 
-  // Auto-save every 30s
+  // Auto-save every 10s
   setInterval(saveGame, 10000);
 
   // Visibility handling
@@ -2286,6 +2498,12 @@ function init() {
     if (document.hidden) {
       OfflineSystem_markOffline();
       saveGame();
+    } else {
+      const off = OfflineSystem_markOnline();
+      if (off && off.cappedSeconds > 60) {
+        showToast('離線收益：+' + fmtFull(off.goldProduced) + ' 金幣', 'success');
+        pendingOfflineSummary = off;
+      }
     }
   });
 }
