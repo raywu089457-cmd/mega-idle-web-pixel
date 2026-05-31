@@ -1535,6 +1535,10 @@ function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
   // This now handles ALL active explorations (progress accumulation) and COMPLETED ones (rewards)
   const offlineExplorationResult = OfflineSystem_calcExplorationProgress(capped);
 
+  // ── Material production (same as gameTick) ──
+  const mLv = BuildingSystem_getLevel('monument');
+  const matP = ResourceSystem_produceMaterials(mLv);
+
   // Check if gold exceeded capacity (cap warning) — only check kingdom gold, not wandering hero wallets
   const goldAfter = ResourceSystem_get('gold');
   const goldCap = ResourceSystem_getCapacity('gold');
