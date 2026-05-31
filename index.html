@@ -1522,27 +1522,128 @@ function simulateOfflineHeroes(cappedSeconds) {
 function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
   const total = Math.floor((returnTime - lastOnline) / 1000);
   const capped = Math.min(total, MAX_OFFLINE);
-  const matP = {};
-  for (const mat of MATERIAL_TYPES) { const v = 0.8 + Math.random() * 0.4; const p = Math.floor(2 * capped * v * OFFLINE_EFF); matP[mat] = p; ResourceSystem_add(mat, p); }
-  const flatGold = Math.floor(50 * (capped / 60) * OFFLINE_EFF); ResourceSystem_add('gold', flatGold);
-  const flatMagic = Math.floor(Math.random() * 3); if (flatMagic > 0) ResourceSystem_add('magicStones', flatMagic);
+  const gP = Math.floor(50 * (capped / 60) * OFFLINE_EFF); ResourceSystem_add('gold', gP);
+  const mS = Math.floor(Math.random() * 3); if (mS > 0) ResourceSystem_add('magicStones', mS);
 
-  // ── Hero simulation during offline time ──
-  const heroResult = simulateOfflineHeroes(capped);
+  // ── Simulate wandering hero combat (offline) ──
+  // Returns { gold, magicStones } — gold goes to hero's wallet, not kingdom
+  const wanderResult = OfflineSystem_calcWanderGold(capped);
+  // wanderResult.gold is the TOTAL gold earned by all wandering heroes (stays in their wallets)
+  // Kingdom does NOT add wanderResult.gold to ResourceSystem_add('gold', ...) — it's personal
+
+  // ── Simulate territory exploration progress (offline) ──
+  // This now handles ALL active explorations (progress accumulation) and COMPLETED ones (rewards)
+  const offlineExplorationResult = OfflineSystem_calcExplorationProgress(capped);
+
+  // Check if gold exceeded capacity (cap warning) — only check kingdom gold, not wandering hero wallets
+  const goldAfter = ResourceSystem_get('gold');
+  const goldCap = ResourceSystem_getCapacity('gold');
+  const goldOverCap = goldAfter > goldCap;
 
   return {
-    totalSeconds: total, cappedSeconds: capped, isCapped: total > MAX_OFFLINE,
+    totalSeconds: total,
+    cappedSeconds: capped,
+    isCapped: total > MAX_OFFLINE,
     materialsProduced: matP,
-    goldProduced: flatGold + heroResult.gold,
-    magicStonesProduced: flatMagic + heroResult.wanderingMagicStones,
-    heroExplorationGold: heroResult.explorationGold,
-    heroExplorationMaterials: heroResult.explorationMaterials,
-    heroWanderingGold: heroResult.wanderingGold,
-    zonesCleared: heroResult.zonesCleared,
-    heroesHealed: heroResult.heroesHealed,
-    heroesSpawned: heroResult.heroesSpawned,
-    heroesDeparted: heroResult.heroesDeparted,
+    goldProduced: gP, // Kingdom gold from monuments (wander gold stays in hero wallets)
+    magicStonesProduced: mS + wanderResult.magicStones, // Include wandering hero magic stones
+    goldOverCap,
+    goldOverAmount: goldOverCap ? goldAfter - goldCap : 0,
+    wanderGoldEarned: wanderResult.gold, // For display (hero wallets, not kingdom)
+    explorationRewards: offlineExplorationResult.rewards // For display
   };
+}
+
+// ── Offline: wandering hero combat simulation ──
+function OfflineSystem_calcWanderGold(offlineSeconds) {
+  let totalGold = 0;
+  let totalMagicStones = 0;
+  const wanderChance = 0.7; // 70% chance wandering hero is in combat
+  const goldPerMinute = 25; // average gold per minute per wandering hero
+  const offlineMinutes = offlineSeconds / 60;
+
+  for (const hero of wanderingHeroes) {
+    if (Math.random() < wanderChance) {
+      const heroGold = Math.floor(goldPerMinute * offlineMinutes * OFFLINE_EFF);
+      const heroMagicStones = Math.random() < 0.1 ? Math.floor(Math.random() * 3) + 1 : 0;
+
+      // Gold goes to hero's personal wallet
+      hero.wallet = (hero.wallet || 0) + heroGold;
+      // Magic stones go to hero's personal diamonds
+      if (heroMagicStones > 0) {
+        hero.diamonds = (hero.diamonds || 0) + heroMagicStones;
+        totalMagicStones += heroMagicStones;
+      }
+      totalGold += heroGold;
+
+      // Add battle report for offline wandering combat
+      if (heroGold > 0 || heroMagicStones > 0) {
+        addBattleReport(hero.name, 'wander', 'victory',
+          { gold: heroGold, magicStones: heroMagicStones },
+          [{ type: 'result', text: '🏆 離線戰鬥勝利！' + hero.name + ' 獲得 ' + heroGold + ' 金幣' + (heroMagicStones > 0 ? ' 和 ' + heroMagicStones + ' 魔法石' : '') + '！' }]
+        );
+      }
+    }
+  }
+  return { gold: totalGold, magicStones: totalMagicStones };
+}
+
+// ── Offline: territory exploration progress ──
+function OfflineSystem_calcExplorationProgress(offlineSeconds) {
+  const ticks = Math.floor(offlineSeconds); // 1 tick = 1 second
+  const completedExplorations = [];
+  const explorationRewards = [];
+
+  for (const exp of activeExplorations) {
+    const hero = HeroSystem_getTerritoryHero(exp.heroId);
+    if (!hero) continue;
+    const zone = ZONES.find(z => z.id === exp.zoneId);
+    if (!zone) continue;
+
+    // Calculate progress per tick: 0.5 + (atk+def)/200 per tick
+    const progressPerTick = 0.5 + ((hero.atk + hero.def) / 2) / 100;
+    const progress = progressPerTick * ticks * OFFLINE_EFF;
+
+    // Accumulate progress to hero's explorationProgress
+    hero.explorationProgress = (hero.explorationProgress || 0) + progress;
+    hero.status = 'exploring';
+    hero.currentZone = exp.zoneId;
+    hero.exploreDifficulty = exp.difficulty;
+
+    // Check if exploration completed (reached 100%)
+    const fullyCleared = MapSystem_isZoneFullyCleared(exp.zoneId);
+    if (hero.explorationProgress >= 100 || fullyCleared) {
+      // Simulate completion
+      const diffData = exp.difficulty === 'boss' ? zone.boss : (zone.difficulties ? zone.difficulties[exp.difficulty] : null);
+      if (diffData) {
+        const goldReward = diffData.goldRange[0] + Math.floor(Math.random() * (diffData.goldRange[1] - diffData.goldRange[0]));
+        const magicStoneReward = Math.random() < diffData.magicStoneChance ? Math.floor(Math.random() * 3) + 1 : 0;
+
+        // Rewards go to kingdom
+        ResourceSystem_add('gold', goldReward);
+        if (magicStoneReward > 0) ResourceSystem_add('magicStones', magicStoneReward);
+
+        explorationRewards.push({
+          heroName: hero.name,
+          zoneName: zone.name,
+          difficulty: exp.difficulty,
+          gold: goldReward,
+          magicStones: magicStoneReward
+        });
+
+        addBattleReport(hero.name, zone.name + ' [' + exp.difficulty + ']', 'victory',
+          { gold: goldReward, magicStones: magicStoneReward }, [
+            { type: 'result', text: '🏆 離線探索勝利！' + hero.name + ' 獲得 ' + goldReward + ' 金幣' + (magicStoneReward > 0 ? ' 和 ' + magicStoneReward + ' 魔法石' : '') + '！' }
+          ]);
+        MapSystem_markDifficultyCleared(exp.zoneId, exp.difficulty);
+      }
+      // Reset progress after completion
+      hero.explorationProgress = 0;
+      completedExplorations.push({ heroId: exp.heroId, zoneId: exp.zoneId });
+    }
+  }
+  return { completed: completedExplorations, rewards: explorationRewards };
+
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2471,14 +2572,33 @@ function init() {
     const body = document.getElementById('modal-welcome-body');
     const hours = Math.floor(offline.cappedSeconds / 3600);
     const mins = Math.floor((offline.cappedSeconds % 3600) / 60);
-    let heroLines = '';
-    if (offline.zonesCleared > 0) heroLines += `<div class="offline-item"><div class="offline-label">🗺️ 區域完成</div><div class="offline-val">${offline.zonesCleared}</div></div>`;
-    if (offline.heroesHealed > 0) heroLines += `<div class="offline-item"><div class="offline-label">💊 英雄康復</div><div class="offline-val">${offline.heroesHealed}</div></div>`;
-    if (offline.heroesSpawned > 0) heroLines += `<div class="offline-item"><div class="offline-label">👋 新流浪英雄</div><div class="offline-val">${offline.heroesSpawned}</div></div>`;
-    if (offline.heroesDeparted > 0) heroLines += `<div class="offline-item"><div class="offline-label">🚶 流浪英雄離開</div><div class="offline-val">${offline.heroesDeparted}</div></div>`;
+const goldCapWarning = offline.goldOverCap
+      ? `<div class="offline-item" style="background:rgba(255,0,0,0.1);border:1px solid var(--red);border-radius:4px;padding:8px;margin-top:4px;">
+           <div class="offline-label" style="color:var(--red);font-size:13px;">⚠️ 金幣已達上限！</div>
+           <div class="offline-val" style="color:var(--red);">+${fmtFull(offline.goldOverAmount)} 🪙 溢出</div>
+         </div>` : '';
+
+    // Build extra rewards section for wandering hero gold and exploration rewards
+    let extraRewards = '';
+    if (offline.wanderGoldEarned && offline.wanderGoldEarned > 0) {
+      extraRewards += `<div class="offline-item" style="background:rgba(100,100,255,0.1);border:1px solid rgba(100,100,255,0.3);border-radius:4px;padding:6px;margin-top:4px;">
+        <div class="offline-label" style="color:var(--blue);font-size:12px;">🗡️ 流浪英雄戰鬥</div>
+        <div class="offline-val" style="color:var(--blue);">+${fmtFull(offline.wanderGoldEarned)} 🪙</div>
+      </div>`;
+    }
+    if (offline.explorationRewards && offline.explorationRewards.length > 0) {
+      for (const r of offline.explorationRewards) {
+        extraRewards += `<div class="offline-item" style="background:rgba(0,150,0,0.1);border:1px solid rgba(0,150,0,0.3);border-radius:4px;padding:6px;margin-top:4px;">
+          <div class="offline-label" style="color:var(--green);font-size:12px;">🗺️ ${r.heroName} 探索 ${r.zoneName}</div>
+          <div class="offline-val" style="color:var(--green);">+${fmtFull(r.gold)} 🪙${r.magicStones > 0 ? ' +' + r.magicStones + ' 💎' : ''}</div>
+        </div>`;
+      }
+    }
     body.innerHTML = `
       <div style="text-align:center;font-size:15px;color:var(--text-faint);margin-bottom:4px;">您離開了 <span style="color:var(--gold)">${hours} 小時 ${mins} 分</span></div>
       <div class="offline-item"><div class="offline-label">🪙 金幣</div><div class="offline-val">+${fmtFull(offline.goldProduced)}</div></div>
+      ${goldCapWarning}
+      ${extraRewards}
       ${Object.entries(offline.materialsProduced).map(([mat, amt]) => `<div class="offline-item"><div class="offline-label">${RESOURCES[mat]?.icon || ''} ${RESOURCES[mat]?.name || mat}</div><div class="offline-val">+${fmtFull(amt)}</div></div>`).join('')}
       ${offline.magicStonesProduced > 0 ? `<div class="offline-item"><div class="offline-label">💎 魔法石</div><div class="offline-val">+${offline.magicStonesProduced}</div></div>` : ''}
       ${offline.heroExplorationGold > 0 ? `<div class="offline-item"><div class="offline-label">⚔️ 探索戰鬥獎勵</div><div class="offline-val">+${fmtFull(offline.heroExplorationGold)}</div></div>` : ''}
