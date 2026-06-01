@@ -1267,7 +1267,12 @@ function MapSystem_init(savedState) {
   } else {
     mapProgress = defaultProg;
   }
-  activeExplorations = [];
+  // Restore activeExplorations from save (reconstruct from exploring heroes if not present)
+  if (savedState?.activeExplorations?.length) {
+    activeExplorations = savedState.activeExplorations;
+  } else {
+    activeExplorations = [];
+  }
 }
 function MapSystem_getZones() { return [...ZONES]; }
 function MapSystem_getProgress() { return { currentZone: mapProgress.currentZone, unlockedZones: [...mapProgress.unlockedZones], clearedZones: [...mapProgress.clearedZones], zoneProgress: JSON.parse(JSON.stringify(mapProgress.zoneProgress)) }; }
@@ -1724,6 +1729,7 @@ function saveGame() {
   gameState.shopLevel = shopLevel;
   gameState.nextWanderingSpawnIn = nextWanderingSpawnIn;
   gameState.battleReports = battleReports;
+  gameState.activeExplorations = activeExplorations;
   localStorage.setItem('kingdomBuilderSave', JSON.stringify(gameState));
 }
 
