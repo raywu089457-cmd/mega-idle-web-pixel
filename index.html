@@ -1540,6 +1540,10 @@ function OfflineSystem_calculateOfflineProgress(lastOnline, returnTime) {
   // This now handles ALL active explorations (progress accumulation) and COMPLETED ones (rewards)
   const offlineExplorationResult = OfflineSystem_calcExplorationProgress(capped);
 
+  // ── Reset tick counters after offline so gameTick resumes cleanly ──
+  nextWanderingSpawnIn = Math.max(0, nextWanderingSpawnIn - capped);
+  territoryCombatTickCounter = 0;
+
   // ── Material production (same as gameTick) ──
   const mLv = BuildingSystem_getLevel('monument');
   const matP = ResourceSystem_produceMaterials(mLv);
