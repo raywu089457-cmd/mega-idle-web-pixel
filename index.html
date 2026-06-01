@@ -1620,8 +1620,7 @@ function OfflineSystem_calcExplorationProgress(offlineSeconds) {
     hero.exploreDifficulty = exp.difficulty;
 
     // Check if exploration completed (reached 100%)
-    const fullyCleared = MapSystem_isZoneFullyCleared(exp.zoneId);
-    if (hero.explorationProgress >= 100 || fullyCleared) {
+    if (hero.explorationProgress >= 100) {
       // Simulate completion
       const diffData = exp.difficulty === 'boss' ? zone.boss : (zone.difficulties ? zone.difficulties[exp.difficulty] : null);
       if (diffData) {
@@ -1648,8 +1647,16 @@ function OfflineSystem_calcExplorationProgress(offlineSeconds) {
       }
       // Reset progress after completion
       hero.explorationProgress = 0;
+      hero.status = 'idle';
+      hero.currentZone = null;
+      hero.exploreDifficulty = null;
       completedExplorations.push({ heroId: exp.heroId, zoneId: exp.zoneId });
     }
+  }
+  // Remove completed explorations from activeExplorations
+  for (const completed of completedExplorations) {
+    const idx = activeExplorations.findIndex(e => e.heroId === completed.heroId && e.zoneId === completed.zoneId);
+    if (idx !== -1) activeExplorations.splice(idx, 1);
   }
   return { completed: completedExplorations, rewards: explorationRewards };
 
