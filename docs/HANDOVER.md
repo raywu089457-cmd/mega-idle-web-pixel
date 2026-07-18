@@ -8,7 +8,7 @@
 ## 專案架構
 
 ### 單一 entry point
-所有遊戲邏輯在 `index.html`（~2200 行），雙擊即可運行，無需建構。
+所有遊戲邏輯在 `index.html`（2026-07-18 版約 1822 行），雙擊即可運行，無需建構。目前包含資源/建築/英雄/地圖/商店/裝備強化/成就/每日/轉生/離線收益/Canvas 場景與 WebAudio。
 
 ```
 mega-idle-web-pixel/
@@ -23,12 +23,14 @@ mega-idle-web-pixel/
 
 ### 存檔機制
 - **Storage**: `localStorage`（key: `kingdomBuilderSave`）
-- **Auto-save**: 每 30 秒
-- **儲存格式**: JSON，包含 version、lastOnline、resources、heroes、wanderingHeroes、buildings、mapProgress、shopInventory、tickCount
+- **Auto-save**: 每 10 秒，另於 `pagehide` / `visibilitychange` 觸發
+- **儲存格式**: JSON v2，包含 version、lastOnline、resources、heroes、wanderingHeroes、buildings、mapProgress、shopInventory、activeExplorations、battleReports、stats、achievements、prestige、daily、settings
 
 ---
 
 ## 系統清單（index.html 行號區間）
+
+> 注意：下列行號來自舊版，現行 `index.html` 已重寫；請以檔案內 `// ═══` 區段註解為準。
 
 | 系統 | 行號 | 職責 |
 |------|------|------|

@@ -12,13 +12,13 @@ type: project
 
 ## 技術棧
 
-- **渲染**: Canvas 2D API
+- **渲染**: Canvas 2D API（主場景 + 飄字/粒子）
 - **UI**: DOM + CSS（響應式、手機觸控優先）
 - **狀態**: Plain JS objects
-- **存檔**: IndexedDB
-- **PWA**: manifest.json + Service Worker
+- **存檔**: localStorage（key=`kingdomBuilderSave`，v2 遷移）
+- **PWA**: manifest.json + Service Worker（idle-kingdom-v4）
 - **部署**: GitHub Pages
-- **無建構步驟**: 純 HTML + JS（約 2274 行），雙擊直接運行
+- **無建構步驟**: 單一 `index.html`（約 1822 行），雙擊直接運行
 
 ## 架構特徵
 
@@ -40,7 +40,7 @@ type: project
 - Shop System — 材料製造、購買、藥水鋪自動生產
 - Map System — 地圖探索、難度選擇、Boss 戰
 - Offline System — 8小時離線計算
-- Save System — IndexedDB + background save（visibilitychange 觸發）
+- Save System — localStorage + background save（`pagehide` / `visibilitychange` 觸發）
 
 ## GitHub Pages
 

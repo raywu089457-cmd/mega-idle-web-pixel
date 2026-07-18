@@ -2,10 +2,11 @@
   "name": "Idle Kingdom Builder",
   "short_name": "IdleKingdom",
   "description": "瀏覽器閒置王國建設遊戲 — 免費、離線可玩",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#FFD700",
+  "background_color": "#5d4037",
+  "theme_color": "#f4d03f",
   "orientation": "any",
   "icons": [
     {

@@ -3,24 +3,11 @@
  * PWA Tier 0
  */
 
-const CACHE_NAME = 'idle-kingdom-v3';
+const CACHE_NAME = 'idle-kingdom-v4';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/main.js',
-  '/js/data/gameData.js',
-  '/js/data/saveManager.js',
-  '/js/systems/resourceSystem.js',
-  '/js/systems/buildingSystem.js',
-  '/js/systems/heroSystem.js',
-  '/js/systems/shopSystem.js',
-  '/js/systems/mapSystem.js',
-  '/js/systems/offlineSystem.js',
-  '/js/ui/canvasRenderer.js',
-  '/js/ui/mobileCanvas.js',
-  '/js/ui/touchHandler.js',
-  '/manifest.json',
+  './',
+  './index.html',
+  './manifest.json',
 ];
 
 // ─── Install ──────────────────────────────────────────────────────────────────
