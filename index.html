@@ -96,12 +96,12 @@ body{
 .scene-overlay{position:absolute;left:0;right:0;bottom:10px;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;}
 .castle-label{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--parchment);letter-spacing:2px;text-shadow:2px 2px 0 var(--charcoal);}
 .castle-sub{font-size:13px;color:var(--parchment);text-shadow:1px 1px 0 var(--charcoal);}
-.click-hint{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,248,220,0.85);letter-spacing:1px;margin-top:2px;text-shadow:1px 1px 0 var(--charcoal);animation:pulse 2s ease-in-out infinite;}
+.click-hint{font-family:'Press Start 2P',monospace;font-size:9px;color:rgba(255,248,220,0.85);letter-spacing:1px;margin-top:2px;text-shadow:1px 1px 0 var(--charcoal);animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:0.45;}50%{opacity:1;}}
 
 /* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;height:var(--nav-h);padding-bottom:max(env(safe-area-inset-bottom),0px);margin:0 auto;z-index:100;background:var(--rich-soil);border-top:2px solid var(--charcoal);display:flex;box-shadow:-2px -2px 0 var(--charcoal);}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--dark-tan);font-family:'Lora',serif;font-size:11px;padding:4px 0;position:relative;min-height:44px;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--dark-tan);font-family:'Lora',serif;font-size:12px;padding:4px 0;position:relative;min-height:44px;}
 .nav-btn .nav-ico{font-size:28px;transition:transform 0.15s;}
 .nav-btn:hover,.nav-btn.active{color:var(--golden-wheat);}
 .nav-btn:active .nav-ico{transform:scale(0.9);}
@@ -134,14 +134,14 @@ body{
 .res-top{display:flex;align-items:center;justify-content:space-between;}
 .res-info{display:flex;align-items:center;gap:8px;}
 .res-ico{font-size:30px;}
-.res-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);}
+.res-name{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--text-dim);}
 .res-val{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--rich-soil);}
 .res-max{font-size:16px;color:var(--text-faint);}
 .progress-bar{height:8px;background:rgba(139,90,43,0.2);overflow:hidden;}
 .progress-fill{height:100%;background:var(--rich-soil);transition:width 0.5s;}
 .progress-fill.warn{background:var(--burnt-orange);}
 .progress-fill.crit{background:var(--red);}
-.rate{font-size:9px;color:var(--green);margin-left:auto;font-family:'Press Start 2P',monospace;}
+.rate{font-size:10px;color:var(--green);margin-left:auto;font-family:'Press Start 2P',monospace;}
 .rate.neg{color:var(--text-faint);}
 .bonus-line{font-size:12px;color:var(--purple);margin-top:2px;}
 
@@ -154,11 +154,11 @@ body{
 .hp-fill{height:100%;background:var(--red);transition:width 0.3s;}
 .hp-fill.high{background:var(--green);}
 .hp-fill.med{background:var(--burnt-orange);}
-.hp-text{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);min-width:60px;text-align:right;}
+.hp-text{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--text-dim);min-width:60px;text-align:right;}
 .stat-xp-bar{display:flex;align-items:center;gap:6px;}
 .xp-bar{flex:1;height:8px;background:rgba(139,90,43,0.2);border:2px solid var(--warm-wood);overflow:hidden;}
 .xp-fill{height:100%;background:var(--blue);transition:width 0.3s;}
-.xp-text{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);min-width:60px;text-align:right;}
+.xp-text{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--text-dim);min-width:60px;text-align:right;}
 .stat{font-size:13px;color:var(--text-dim);}
 .stat .eq-bonus{color:var(--green);font-size:12px;}
 .wallet-display{font-size:14px;color:#b8860b;margin-top:2px;font-family:'Press Start 2P',monospace;}
@@ -167,16 +167,16 @@ body{
 .hero-info{flex:1;min-width:0;}
 .hero-name{font-size:15px;font-weight:bold;color:var(--text);}
 .hero-class{font-size:13px;color:var(--text-dim);}
-.hero-badge{font-size:11px;padding:2px 8px;flex-shrink:0;}
+.hero-badge{font-size:12px;padding:2px 8px;flex-shrink:0;}
 .badge-idle{background:rgba(244,208,63,0.2);color:var(--rich-soil);border:2px solid var(--rich-soil);}
 .badge-exploring{background:rgba(52,152,219,0.2);color:var(--blue);border:2px solid var(--blue);}
 .badge-resting{background:rgba(155,89,182,0.2);color:var(--purple);border:2px solid var(--purple);}
 .badge-wandering{background:rgba(155,89,182,0.1);color:var(--purple);border:2px solid var(--purple);}
 .hero-actions{display:flex;gap:6px;flex-wrap:wrap;}
 .hero-equip{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
-.equip-slot{font-size:11px;padding:2px 6px;background:rgba(139,90,43,0.1);border:1px solid var(--warm-wood);color:var(--text-dim);cursor:pointer;}
+.equip-slot{font-size:12px;padding:2px 6px;background:rgba(139,90,43,0.1);border:1px solid var(--warm-wood);color:var(--text-dim);cursor:pointer;}
 .equip-slot:hover{background:rgba(244,208,63,0.2);}
-.inv-btn-slot{font-size:11px;padding:2px 6px;background:rgba(139,90,43,0.1);border:1px solid var(--warm-wood);color:var(--text-dim);cursor:pointer;display:inline-block;margin-top:4px;}
+.inv-btn-slot{font-size:12px;padding:2px 6px;background:rgba(139,90,43,0.1);border:1px solid var(--warm-wood);color:var(--text-dim);cursor:pointer;display:inline-block;margin-top:4px;}
 .empty-state{text-align:center;padding:20px;color:var(--text-faint);font-size:15px;font-style:italic;}
 
 /* rarity */
@@ -192,7 +192,7 @@ body{
 .portrait-rar-rare{border-color:#5db3ff !important;}
 .portrait-rar-hero{border-color:#b678ff !important;}
 .portrait-rar-legend{border-color:#ffb84d !important;}
-.rarity-tag{font-size:10px;padding:1px 5px;border:1px solid currentColor;border-radius:0;}
+.rarity-tag{font-size:11px;padding:1px 5px;border:1px solid currentColor;border-radius:0;}
 .rar-legendary{border-color:var(--rar-legend) !important;}
 .rar-txt-common{color:var(--rar-common);}
 .rar-txt-rare{color:var(--rar-rare);}
@@ -218,19 +218,19 @@ body{
 .building-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;display:flex;flex-direction:column;gap:6px;}
 .building-card.unbuilt{opacity:0.8;border-style:dashed;}
 .building-header{display:flex;align-items:center;justify-content:space-between;}
-.building-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--rich-soil);}
-.building-level{font-family:'Press Start 2P',monospace;font-size:7px;padding:4px 12px;background:rgba(244,208,63,0.1);color:var(--rich-soil);border:2px solid var(--rich-soil);}
+.building-name{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--rich-soil);}
+.building-level{font-family:'Press Start 2P',monospace;font-size:9px;padding:4px 12px;background:rgba(244,208,63,0.1);color:var(--rich-soil);border:2px solid var(--rich-soil);}
 .building-ico{font-size:42px;text-align:center;margin:4px 0;}
 .building-desc{font-family:'Lora',serif;font-size:13px;color:var(--text-faint);line-height:1.4;}
-.building-effect{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--green);}
+.building-effect{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--green);}
 .building-cost{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
 .cost-item{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text-dim);}
-.max-badge{text-align:center;padding:10px;background:rgba(244,208,63,0.06);color:var(--dark-tan);font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1px;}
+.max-badge{text-align:center;padding:10px;background:rgba(244,208,63,0.06);color:var(--dark-tan);font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:1px;}
 .building-stock{font-size:12px;color:var(--text-dim);text-align:center;}
 
 /* ── MAP / ZONES ── */
 .active-explore{margin-bottom:12px;}
-.section-label{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-faint);letter-spacing:1px;margin-bottom:12px;}
+.section-label{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--text-faint);letter-spacing:1px;margin-bottom:12px;}
 .explore-item{background:var(--card-bg);border:2px solid rgba(52,152,219,0.3);padding:16px 20px;margin-bottom:12px;}
 .explore-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:6px;flex-wrap:wrap;}
 .explore-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--blue);}
@@ -242,7 +242,7 @@ body{
 .zone-card.cleared{border-color:rgba(244,208,63,0.5);}
 .zone-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .zone-ico{font-size:24px;}
-.zone-name{font-size:13px;font-weight:bold;color:var(--text);}
+.zone-name{font-size:14px;font-weight:bold;color:var(--text);}
 .zone-rec{font-size:12px;color:var(--text-faint);margin-left:auto;}
 .diff-row{display:flex;gap:6px;flex-wrap:wrap;}
 .diff-btn{position:relative;}
@@ -255,7 +255,7 @@ body{
 .shop-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
 .shop-card.locked-item{opacity:0.55;}
 .shop-ico{font-size:44px;}
-.shop-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--rich-soil);}
+.shop-name{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--rich-soil);}
 .shop-stats{font-size:11px;color:var(--green);}
 .shop-stock{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-faint);}
 .shop-req{font-size:11px;color:var(--red);}
@@ -1157,8 +1157,9 @@ function migrateSave(parsed) {
   return parsed;
 }
 
+let resetting = false;   // doReset 旗標：阻止 pagehide/interval 在 reload 前回寫舊進度
 function saveGame() {
-  if (!gameState) return;
+  if (!gameState || resetting) return;
   try {
     gameState.lastOnline = Date.now();
     gameState.resources = ResourceSystem_getAll();
@@ -1267,6 +1268,12 @@ function BuildingSystem_init(savedState) {
 }
 function BuildingSystem_getLevel(id) { return buildingStates[id]?.level ?? 0; }
 function BuildingSystem_getTotalLevels() { return Object.values(buildingStates).reduce((s, b) => s + b.level, 0); }
+// 建築等級上限跟隨主堡（獵魔公會）：其他建築上限 = min(自身上限, 公會等級 × 2)
+function buildingMaxLevel(id) {
+  const def = BUILDINGS[id]; if (!def) return 0;
+  if (id === 'monument') return def.maxLevel;
+  return Math.min(def.maxLevel, Math.max(1, BuildingSystem_getLevel('monument')) * 2);
+}
 function getBuildingCost(buildingId, targetLevel) {
   const building = BUILDINGS[buildingId];
   if (!building) return null;
@@ -1279,7 +1286,7 @@ function getBuildingCost(buildingId, targetLevel) {
 }
 function BuildingSystem_upgrade(id) {
   const def = BUILDINGS[id]; if (!def) return false;
-  const cur = BuildingSystem_getLevel(id); if (cur >= def.maxLevel) return false;
+  const cur = BuildingSystem_getLevel(id); if (cur >= buildingMaxLevel(id)) return false;
   const cost = getBuildingCost(id, cur + 1); if (!ResourceSystem_spend(cost)) return false;
   buildingStates[id].level += 1; return true;
 }
@@ -2648,7 +2655,7 @@ function startMusic() {
 // ═══════════════════════════════════════════════════════════════════
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let sceneCtx = null, sceneCanvas = null;
-const SCENE_SCALE = 2;  // 內部畫布放大倍率 (1=原 240x360, 2=480x720)。保留像素風,讓畫面更清晰。
+const SCENE_SCALE = 1;  // 內部畫布 240x360，CSS 放大 + image-rendering:pixelated → 星露谷式清晰大像素（2 會把內容擠到左上 1/4，勿調）
 let sceneW = 240 * SCENE_SCALE, sceneH = 360 * SCENE_SCALE, sceneStart = performance.now();
 const floatState = { canvas: null, ctx: null, floats: [], particles: [] };
 const SCENE_HOTSPOTS = [
@@ -3318,7 +3325,7 @@ function drawScene(t, dt) {
   // roads
   c.fillStyle = '#7a5a3c'; c.fillRect(0, 206, w, 14); c.fillRect(112, 120, 16, 236); c.fillRect(0, 292, w, 12);
   c.fillStyle = 'rgba(244,208,63,0.12)'; for (let x = 6; x < w; x += 24) { c.fillRect(x, 211, 8, 3); c.fillRect(x, 297, 8, 3); }
-  const label = (txt, x, y, color = '#fff8dc') => { c.font = '7px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
+  const label = (txt, x, y, color = '#fff8dc') => { c.font = '8px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
   const house = (x, y, ww, hh, roof, wall) => { c.fillStyle = wall; c.fillRect(x, y, ww, hh); c.fillStyle = roof; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + ww / 2, y - 18); c.lineTo(x + ww + 4, y); c.closePath(); c.fill(); c.fillStyle = '#2c2c2c'; c.fillRect(x + ww / 2 - 5, y + hh - 18, 10, 18); };
   // 建築等級外觀：Lv3+ 石造牆、屋簷下金磚等級 pip
   const blv = (id) => BuildingSystem_getLevel(id);
@@ -3548,15 +3555,19 @@ function renderSkillsTab() {
   `;
 }
 function renderBuildingsPanel() {
-  $('building-grid').innerHTML = BUILDING_ORDER.map(id => {
-    const b = BUILDINGS[id], lvl = BuildingSystem_getLevel(id), maxed = lvl >= b.maxLevel;
+  const castleLv = BuildingSystem_getLevel('monument');
+  $('building-grid').innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;">🏰 建築等級上限＝獵魔公會等級 ×2（公會目前 Lv.${castleLv}，上限 Lv.${castleLv * 2}）</div>` + BUILDING_ORDER.map(id => {
+    const b = BUILDINGS[id], lvl = BuildingSystem_getLevel(id);
+    const effMax = buildingMaxLevel(id), hardMax = lvl >= b.maxLevel, castleCapped = !hardMax && lvl >= effMax;
+    const maxed = hardMax || castleCapped;
     const cost = maxed ? null : getBuildingCost(id, lvl + 1);
     const afford = cost && ResourceSystem_canAfford(cost);
-    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''}"><div class="building-header"><div class="building-name">${b.name}</div><div class="building-level">Lv.${lvl}${maxed ? ' MAX' : ''}</div></div><div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${maxed ? '<div class="max-badge">已達最高等級</div>' : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}</div>`;
+    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''}"><div class="building-header"><div class="building-name">${b.name}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div><div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}</div>`;
   }).join('');
 }
 function upgradeBuilding(id) {
   if (BuildingSystem_upgrade(id)) { sfx('craft'); showToast(`${BUILDINGS[id].name} 升到 Lv.${BuildingSystem_getLevel(id)}`, 'success'); checkAchievements(); }
+  else if (BuildingSystem_getLevel(id) >= buildingMaxLevel(id) && BuildingSystem_getLevel(id) < BUILDINGS[id].maxLevel) showToast('🔒 已達公會上限，請先升級獵魔公會。', 'error');
   else showToast('資源不足或已達上限。', 'error');
   renderAll();
 }
@@ -3728,6 +3739,7 @@ function bindSettings() {
 }
 function doReset() {
   if (!confirm('確定要清除所有進度重新開始嗎？此操作無法復原。')) return;
+  resetting = true;   // 先鎖存檔，避免 pagehide/visibilitychange 在 reload 前把舊進度寫回去
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
   location.reload();
 }
