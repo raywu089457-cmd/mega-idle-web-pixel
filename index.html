@@ -240,6 +240,7 @@ body{
 
 /* ── SHOP ── */
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.shop-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
 .shop-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
 .shop-card.locked-item{opacity:0.55;}
 .shop-ico{font-size:44px;}
@@ -444,6 +445,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
       <div class="panel-title">🛒 工坊商店</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
+    <div class="shop-filter" id="shop-filter"></div>
     <div class="shop-grid" id="shop-grid"></div>
     <div class="inventory">
       <div class="inv-title">📦 獵魔村倉庫</div>
@@ -467,12 +469,12 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── BOTTOM NAV ── -->
 <nav class="bottom-nav">
-  <button class="nav-btn" id="nav-res" onclick="openPanel('res')"><div class="nav-ico">📦</div>資源</button>
-  <button class="nav-btn" id="nav-hero" onclick="openPanel('hero')"><div class="nav-ico">⚔️</div>獵人<span class="nav-badge" id="nav-badge-hero" style="display:none;"></span></button>
-  <button class="nav-btn" id="nav-build" onclick="openPanel('build')"><div class="nav-ico">🏗️</div>建築</button>
-  <button class="nav-btn" id="nav-map" onclick="openPanel('map')"><div class="nav-ico">🗺️</div>地圖</button>
-  <button class="nav-btn" id="nav-shop" onclick="openPanel('shop')"><div class="nav-ico">🛒</div>商店</button>
-  <button class="nav-btn" id="nav-ach" onclick="openPanel('ach')"><div class="nav-ico">🏆</div>成就<span class="nav-badge" id="nav-badge-ach" style="display:none;">!</span></button>
+  <button class="nav-btn" id="nav-res" onclick="togglePanel('res')"><div class="nav-ico">📦</div>資源</button>
+  <button class="nav-btn" id="nav-hero" onclick="togglePanel('hero')"><div class="nav-ico">⚔️</div>獵人<span class="nav-badge" id="nav-badge-hero" style="display:none;"></span></button>
+  <button class="nav-btn" id="nav-build" onclick="togglePanel('build')"><div class="nav-ico">🏗️</div>建築</button>
+  <button class="nav-btn" id="nav-map" onclick="togglePanel('map')"><div class="nav-ico">🗺️</div>地圖</button>
+  <button class="nav-btn" id="nav-shop" onclick="togglePanel('shop')"><div class="nav-ico">🛒</div>商店</button>
+  <button class="nav-btn" id="nav-ach" onclick="togglePanel('ach')"><div class="nav-ico">🏆</div>成就<span class="nav-badge" id="nav-badge-ach" style="display:none;">!</span></button>
 </nav>
 
 <!-- ── TOAST ── -->
@@ -732,6 +734,7 @@ let pendingDailyReward = null;
 let dispatchHeroId = null;
 let activePanel = null;
 let heroSubTab = 'territory';        // 'territory' | 'wander' | 'reports'
+let shopFilter = 'all';              // 'all' | 'weapon' | 'armor' | 'potion'
 let heroReportSubTab = 'all';        // 'all' | 'zone' | 'wander'
 const expandedReports = new Set();
 
@@ -1072,6 +1075,8 @@ function normalizeHero(h) {
   h.actionTicks = h.actionTicks || 0.6;
   h.gearAtk = h.gearAtk || 0;
   h.opponentId = h.opponentId || null;
+  h.effects = Array.isArray(h.effects) ? h.effects : [];
+  h.huntZoneId = h.huntZoneId || null;
   return h;
 }
 function generateHero(classKey, level = 1, customName) {
@@ -1564,29 +1569,56 @@ const SCENE_HOTSPOTS = [
   { id: 'gate', name: '獵場門', hint: '前往狩獵地圖', x: 92, y: 306, w: 56, h: 44 },
 ];
 let hoverHotspot = null;
-// ── 城內可視 AI：怪區、建築錨點、流浪獵人走位 ──
-const HUNT_ZONE = { x: 178, y: 300, w: 56, h: 52 };
+// ── 城內可視 AI：多怪區（各自等級範圍）、建築錨點、流浪獵人走位 ──
+const HUNT_ZONES = [
+  {
+    id: 'field', name: '村郊原野', minLv: 1, maxLv: 5, x: 6, y: 310, w: 94, h: 46, spawn: 4, ground: 'rgba(58,84,44,0.72)',
+    monsters: [
+      { kind: 'slime', name: '史萊姆', color: '#5fbf5f', hp: 30, atk: 4, def: 1, gold: [8, 18], xp: 7 },
+      { kind: 'rat', name: '啃齒鼠', color: '#a08a6a', hp: 22, atk: 6, def: 0, gold: [6, 15], xp: 5 },
+    ],
+  },
+  {
+    id: 'woods', name: '霧林小徑', minLv: 4, maxLv: 9, x: 152, y: 310, w: 82, h: 46, spawn: 3, ground: 'rgba(38,58,48,0.78)',
+    monsters: [
+      { kind: 'wolf', name: '腐狼', color: '#8a8f7a', hp: 55, atk: 9, def: 2, gold: [18, 34], xp: 14, debuff: 'bleed' },
+      { kind: 'bat', name: '灰燼蝠', color: '#9b59b6', hp: 36, atk: 12, def: 1, gold: [14, 30], xp: 12, debuff: 'poison' },
+    ],
+  },
+  {
+    id: 'ridge', name: '荒嶺隘口', minLv: 8, maxLv: 14, x: 160, y: 60, w: 74, h: 44, spawn: 3, ground: 'rgba(52,44,52,0.82)',
+    monsters: [
+      { kind: 'golem', name: '碎石魔像', color: '#7d6b5d', hp: 110, atk: 14, def: 6, gold: [36, 62], xp: 26, debuff: 'bleed' },
+      { kind: 'wisp', name: '荒嶺怨靈', color: '#6ad3e0', hp: 72, atk: 18, def: 2, gold: [30, 54], xp: 22, debuff: 'poison' },
+    ],
+  },
+];
 const BUILDING_ANCHORS = {
   tavern: { x: 37, y: 212 }, guild: { x: 121, y: 200 }, market: { x: 204, y: 206 },
   forge: { x: 44, y: 298 }, alchemy: { x: 120, y: 300 }, research: { x: 198, y: 298 },
-  gate: { x: 120, y: 346 }, hunt: { x: 206, y: 326 },
+  gate: { x: 120, y: 346 },
 };
-const WILD_MONSTER_TYPES = [
-  { kind: 'slime', name: '史萊姆', color: '#5fbf5f', hp: 34, atk: 5, def: 1, gold: [10, 22], xp: 8 },
-  { kind: 'wolf', name: '腐狼', color: '#8a8f7a', hp: 48, atk: 8, def: 2, gold: [16, 30], xp: 12 },
-  { kind: 'bat', name: '灰燼蝠', color: '#9b59b6', hp: 28, atk: 10, def: 0, gold: [12, 26], xp: 10 },
-];
 const wildMonsters = [];
 function getWildMonsters() { return wildMonsters; }
+function huntZoneById(id) { return HUNT_ZONES.find(z => z.id === id) || HUNT_ZONES[0]; }
+function bestHuntZone(h) {
+  const lv = h.level || 1;
+  const z = HUNT_ZONES.find(z => lv >= z.minLv && lv <= z.maxLv);
+  if (z) return z;
+  return lv < HUNT_ZONES[0].minLv ? HUNT_ZONES[0] : HUNT_ZONES[HUNT_ZONES.length - 1];
+}
 function ensureWildMonsters() {
-  while (wildMonsters.length < 4) {
-    const t = choice(WILD_MONSTER_TYPES);
-    wildMonsters.push({
-      id: uid(), kind: t.kind, name: t.name, color: t.color,
-      x: HUNT_ZONE.x + 8 + rand(0, HUNT_ZONE.w - 18), y: HUNT_ZONE.y + 10 + rand(0, HUNT_ZONE.h - 22),
-      hp: t.hp, maxHp: t.hp, atk: t.atk, def: t.def, gold: t.gold, xp: t.xp,
-      alive: true, respawnTicks: 0,
-    });
+  for (const z of HUNT_ZONES) {
+    const inZone = wildMonsters.filter(m => m.zone === z.id);
+    for (let i = inZone.length; i < z.spawn; i++) {
+      const t = choice(z.monsters);
+      wildMonsters.push({
+        id: uid(), zone: z.id, kind: t.kind, name: t.name, color: t.color, debuff: t.debuff || null,
+        x: z.x + 8 + rand(0, z.w - 18), y: z.y + 12 + rand(0, z.h - 24),
+        hp: t.hp, maxHp: t.hp, atk: t.atk, def: t.def, gold: t.gold, xp: t.xp,
+        alive: true, respawnTicks: 0,
+      });
+    }
   }
 }
 function sceneToClient(x, y) {
@@ -1616,20 +1648,57 @@ function moveActor(h, dt, speed = 26) {
 }
 function decideWanderingNeed(h) {
   const st = getHeroStats(h);
-  if (h.hp < st.maxHp * 0.45 || h.fatigue > 75) { setWanderingTarget(h, 'toRest', BUILDING_ANCHORS.tavern.x, BUILDING_ANCHORS.tavern.y); return; }
+  if (h.hp < st.maxHp * 0.45 || h.fatigue > 75) { h.effects = []; setWanderingTarget(h, 'toRest', BUILDING_ANCHORS.tavern.x, BUILDING_ANCHORS.tavern.y); return; }
   if ((h.inventory.healthPotion || 0) === 0 && h.wallet >= 25) { setWanderingTarget(h, 'toShopAlchemy', BUILDING_ANCHORS.alchemy.x, BUILDING_ANCHORS.alchemy.y); return; }
   if (h.wallet >= 120 && (h.gearAtk || 0) < 6) { setWanderingTarget(h, 'toShopForge', BUILDING_ANCHORS.forge.x, BUILDING_ANCHORS.forge.y); return; }
-  setWanderingTarget(h, 'toHunt', BUILDING_ANCHORS.hunt.x, BUILDING_ANCHORS.hunt.y);
+  const z = bestHuntZone(h);
+  h.huntZoneId = z.id;
+  setWanderingTarget(h, 'toHunt', z.x + z.w / 2, z.y + z.h / 2);
+}
+// ── Buff / Debuff（流浪獵人城內戰鬥用）──
+const EFFECTS = {
+  poison: { label: '☠ 中毒', color: '#b678ff', dur: 4, dps: 3 },
+  bleed: { label: '🩸 流血', color: '#ff6b6b', dur: 3, dps: 2.5 },
+};
+function addEffect(h, kind) {
+  const def = EFFECTS[kind]; if (!def) return;
+  h.effects = h.effects || [];
+  const cur = h.effects.find(e => e.kind === kind);
+  if (cur) { cur.dur = def.dur; return; }
+  h.effects.push({ kind, dur: def.dur, tick: 0 });
+  const p = sceneToClient(h.sx, h.sy - 18); spawnFloat(def.label, p.x, p.y, def.color);
+}
+function processEffects(h, dt) {
+  if (!h.effects || !h.effects.length) return;
+  for (let i = h.effects.length - 1; i >= 0; i--) {
+    const e = h.effects[i], def = EFFECTS[e.kind];
+    e.dur -= dt; e.tick = (e.tick || 0) - dt;
+    h.hp = Math.max(1, h.hp - def.dps * dt);
+    if (e.tick <= 0) {
+      e.tick = 0.9;
+      const p = sceneToClient(h.sx, h.sy - 15);
+      spawnFloat(`-${Math.max(1, Math.round(def.dps * 0.9))}`, p.x, p.y, def.color);
+    }
+    if (e.dur <= 0) h.effects.splice(i, 1);
+  }
 }
 function updateWanderingScene(dt) {
   if (!dt || dt <= 0) return;
   ensureWildMonsters();
   for (const m of wildMonsters) {
-    if (!m.alive) { m.respawnTicks -= dt; if (m.respawnTicks <= 0) { m.alive = true; m.hp = m.maxHp; m.x = HUNT_ZONE.x + 8 + rand(0, HUNT_ZONE.w - 18); m.y = HUNT_ZONE.y + 10 + rand(0, HUNT_ZONE.h - 22); } }
+    if (!m.alive) {
+      m.respawnTicks -= dt;
+      if (m.respawnTicks <= 0) {
+        const z = huntZoneById(m.zone);
+        m.alive = true; m.hp = m.maxHp;
+        m.x = z.x + 8 + rand(0, z.w - 18); m.y = z.y + 12 + rand(0, z.h - 24);
+      }
+    }
   }
   for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
     const h = wanderingHeroes[i];
     const st = getHeroStats(h);
+    processEffects(h, dt);
     switch (h.aiState) {
       case 'arrive':
       case 'idle':
@@ -1667,24 +1736,51 @@ function updateWanderingScene(dt) {
         break;
       case 'toHunt': {
         if (!moveActor(h, dt)) break;
-        const m = wildMonsters.find(mm => mm.alive);
+        const zid = h.huntZoneId || bestHuntZone(h).id;
+        let m = wildMonsters.find(mm => mm.alive && mm.zone === zid);
+        if (!m) m = wildMonsters.find(mm => mm.alive);
         if (!m) { h.aiState = 'idle'; h.actionTicks = 1.2; break; }
-        h.opponentId = m.id; h.aiState = 'fighting'; h.actionTicks = 0.7;
+        h.opponentId = m.id; h.aiState = 'fighting'; h.actionTicks = 0.7; h.combo = 0;
         break;
       }
       case 'fighting': {
         let m = wildMonsters.find(mm => mm.id === h.opponentId && mm.alive);
-        if (!m) { m = wildMonsters.find(mm => mm.alive); if (m) h.opponentId = m.id; }
+        if (!m) {
+          const zid = h.huntZoneId || bestHuntZone(h).id;
+          m = wildMonsters.find(mm => mm.alive && mm.zone === zid) || wildMonsters.find(mm => mm.alive);
+          if (m) h.opponentId = m.id;
+        }
         if (!m) { h.aiState = 'idle'; h.actionTicks = 1; break; }
         // 走向怪物
         const dx = m.x - h.sx, dy = m.y - h.sy, dist = Math.hypot(dx, dy);
         if (dist > 6) { h.sx += dx / dist * 26 * dt; h.sy += dy / dist * 26 * dt; break; }
+        // 神官被動：戰鬥中緩慢再生
+        if (h.class === 'priest') {
+          h.regenTick = (h.regenTick || 0) - dt;
+          if (h.regenTick <= 0 && h.hp < st.maxHp) {
+            h.regenTick = 1; const heal = Math.max(1, Math.round(st.maxHp * 0.02));
+            h.hp = Math.min(st.maxHp, h.hp + heal);
+            const p = sceneToClient(h.sx, h.sy - 16); spawnFloat(`+${heal} ✚再生`, p.x, p.y, '#7dffa8');
+          }
+        }
         h.actionTicks -= dt;
         if (h.actionTicks <= 0) {
           h.actionTicks = 0.7;
+          h.combo = (h.combo || 0) + 1;
           const heroAtk = st.atk + (h.gearAtk || 0);
-          const dmgToMob = Math.max(1, Math.round(heroAtk * randf(0.85, 1.25)) - m.def);
-          m.hp -= dmgToMob;
+          let dmgToMob = Math.max(1, Math.round(heroAtk * randf(0.85, 1.25)) - m.def);
+          let dmgColor = '#ffd76a', tag = '';
+          // 職業攻擊被動
+          if (h.class === 'rogue' && Math.random() < 0.25) { dmgToMob *= 2; dmgColor = '#ff9f43'; tag = ' 暴擊!'; }
+          else if (h.class === 'mage' && h.combo % 3 === 0) { dmgToMob = Math.round(dmgToMob * 1.5); dmgColor = '#d9a0ff'; tag = ' 咒能增幅'; }
+          const hits = (h.class === 'archer' && Math.random() < 0.2) ? 2 : 1;
+          if (hits === 2) tag = ' 連射';
+          for (let k = 0; k < hits; k++) {
+            m.hp -= dmgToMob;
+            const pm = sceneToClient(m.x + rand(-3, 3), m.y - 8);
+            spawnFloat(`-${dmgToMob}${k === 0 ? tag : ''}`, pm.x, pm.y, dmgColor);
+            if (m.hp <= 0) break;
+          }
           if (m.hp <= 0) {
             m.alive = false; m.respawnTicks = 6;
             const gold = Math.round(rand(m.gold[0], m.gold[1]) * getCombatGoldMultiplier());
@@ -1693,13 +1789,23 @@ function updateWanderingScene(dt) {
             const p = sceneToClient(m.x, m.y - 6); spawnFloat(`+${gold}🪙`, p.x, p.y, '#f4d03f');
             if (Math.random() < BW_LEAVE_CHANCE) { setWanderingTarget(h, 'leaving', BUILDING_ANCHORS.gate.x, BUILDING_ANCHORS.gate.y); break; }
             if (h.hp < st.maxHp * 0.45 || h.fatigue > 75) { decideWanderingNeed(h); break; }
-            const nxt = wildMonsters.find(mm => mm.alive);
+            const zid = h.huntZoneId || bestHuntZone(h).id;
+            const nxt = wildMonsters.find(mm => mm.alive && mm.zone === zid) || wildMonsters.find(mm => mm.alive);
             if (nxt) { h.opponentId = nxt.id; h.actionTicks = 0.5; } else { h.aiState = 'idle'; h.actionTicks = 1.2; }
           } else {
-            const dmgToHero = Math.max(1, Math.round(m.atk * randf(0.8, 1.3)) - Math.floor(st.def / 2));
+            let dmgToHero = Math.max(1, Math.round(m.atk * randf(0.8, 1.3)) - Math.floor(st.def / 2));
+            let heroDmgColor = '#ff7b7b', htag = '';
+            if (h.class === 'warrior' && Math.random() < 0.3) { dmgToHero = Math.max(1, Math.floor(dmgToHero / 2)); heroDmgColor = '#8ecbff'; htag = ' 格擋'; }
             h.hp = Math.max(1, h.hp - dmgToHero);
+            const ph = sceneToClient(h.sx, h.sy - 14);
+            spawnFloat(`-${dmgToHero}${htag}`, ph.x, ph.y, heroDmgColor);
+            if (m.debuff && Math.random() < 0.25) addEffect(h, m.debuff);
             if (h.hp < st.maxHp * 0.25) {
-              if ((h.inventory.healthPotion || 0) > 0) usePotion(h, true);
+              if ((h.inventory.healthPotion || 0) > 0) {
+                usePotion(h, true);
+                const pp = sceneToClient(h.sx, h.sy - 18);
+                spawnFloat('🧪 喝藥', pp.x, pp.y, '#7dffa8');
+              }
               else { decideWanderingNeed(h); break; }
             }
           }
@@ -1713,30 +1819,39 @@ function updateWanderingScene(dt) {
   }
 }
 function drawWanderingActors(c, t) {
-  // 怪區圍籬與警告牌
-  c.fillStyle = 'rgba(60,38,26,0.55)'; c.fillRect(HUNT_ZONE.x, HUNT_ZONE.y, HUNT_ZONE.w, HUNT_ZONE.h);
-  c.strokeStyle = '#6b4a2f'; c.lineWidth = 2; c.strokeRect(HUNT_ZONE.x + 1, HUNT_ZONE.y + 1, HUNT_ZONE.w - 2, HUNT_ZONE.h - 2);
-  c.fillStyle = '#3a2a1c'; for (let x = HUNT_ZONE.x; x <= HUNT_ZONE.x + HUNT_ZONE.w; x += 9) { c.fillRect(x, HUNT_ZONE.y - 2, 2, 6); c.fillRect(x, HUNT_ZONE.y + HUNT_ZONE.h - 4, 2, 6); }
-  c.fillStyle = '#dfe7ff'; c.fillRect(HUNT_ZONE.x + 4, HUNT_ZONE.y + 4, 2, 2); c.fillRect(HUNT_ZONE.x + 8, HUNT_ZONE.y + 6, 2, 2);
-  c.font = '7px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3;
-  c.strokeText('野怪區', HUNT_ZONE.x + 14, HUNT_ZONE.y - 4); c.fillStyle = '#ff8a8a'; c.fillText('野怪區', HUNT_ZONE.x + 14, HUNT_ZONE.y - 4);
+  // 多怪區：地面、圍籬、等級範圍名牌
+  for (const z of HUNT_ZONES) {
+    c.fillStyle = z.ground; c.fillRect(z.x, z.y, z.w, z.h);
+    c.strokeStyle = '#6b4a2f'; c.lineWidth = 2; c.strokeRect(z.x + 1, z.y + 1, z.w - 2, z.h - 2);
+    c.fillStyle = '#3a2a1c';
+    for (let x = z.x; x <= z.x + z.w; x += 9) { c.fillRect(x, z.y - 2, 2, 6); c.fillRect(x, z.y + z.h - 4, 2, 6); }
+    c.fillStyle = '#dfe7ff'; c.fillRect(z.x + 4, z.y + 4, 2, 2); c.fillRect(z.x + 8, z.y + 6, 2, 2);
+    c.font = '7px "Press Start 2P", monospace'; c.lineWidth = 3; c.strokeStyle = '#2c2c2c';
+    const tag = `${z.name} Lv${z.minLv}~${z.maxLv}`;
+    c.strokeText(tag, z.x + 3, z.y - 4); c.fillStyle = '#ff8a8a'; c.fillText(tag, z.x + 3, z.y - 4);
+  }
   // 怪物
   for (const m of wildMonsters) {
     if (!m.alive) continue;
+    const mx = Math.round(m.x), my = Math.round(m.y);
     const bob = reduceMotion ? 0 : Math.round(Math.sin(t * 5 + m.x) * 1);
     c.fillStyle = m.color;
-    if (m.kind === 'slime') { c.fillRect(Math.round(m.x) - 3, Math.round(m.y) - 2 + bob, 7, 5); c.fillRect(Math.round(m.x) - 2, Math.round(m.y) - 4 + bob, 5, 2); }
-    else if (m.kind === 'wolf') { c.fillRect(Math.round(m.x) - 4, Math.round(m.y) - 3 + bob, 8, 4); c.fillRect(Math.round(m.x) + 2, Math.round(m.y) - 5 + bob, 4, 3); }
-    else { c.fillRect(Math.round(m.x) - 2, Math.round(m.y) - 2 + bob, 4, 4); c.fillRect(Math.round(m.x) - 5, Math.round(m.y) - 3 + bob, 3, 2); c.fillRect(Math.round(m.x) + 2, Math.round(m.y) - 3 + bob, 3, 2); }
-    c.fillStyle = '#1b1026'; c.fillRect(Math.round(m.x) - 1, Math.round(m.y) - 2 + bob, 1, 1); c.fillRect(Math.round(m.x) + 1, Math.round(m.y) - 2 + bob, 1, 1);
+    if (m.kind === 'slime') { c.fillRect(mx - 3, my - 2 + bob, 7, 5); c.fillRect(mx - 2, my - 4 + bob, 5, 2); }
+    else if (m.kind === 'rat') { c.fillRect(mx - 3, my - 2 + bob, 6, 4); c.fillRect(mx + 3, my - 1 + bob, 3, 1); c.fillRect(mx - 3, my - 4 + bob, 2, 2); }
+    else if (m.kind === 'wolf') { c.fillRect(mx - 4, my - 3 + bob, 8, 4); c.fillRect(mx + 2, my - 5 + bob, 4, 3); }
+    else if (m.kind === 'golem') { c.fillRect(mx - 4, my - 7 + bob, 8, 8); c.fillStyle = '#5d4f44'; c.fillRect(mx - 3, my - 5 + bob, 6, 2); }
+    else if (m.kind === 'wisp') { c.fillStyle = `rgba(106,211,224,${0.5 + (reduceMotion ? 0 : Math.sin(t * 4 + m.x) * 0.2)})`; c.fillRect(mx - 4, my - 6 + bob, 8, 8); c.fillStyle = m.color; c.fillRect(mx - 2, my - 4 + bob, 4, 5); }
+    else { c.fillRect(mx - 2, my - 2 + bob, 4, 4); c.fillRect(mx - 5, my - 3 + bob, 3, 2); c.fillRect(mx + 2, my - 3 + bob, 3, 2); }
+    c.fillStyle = '#1b1026'; c.fillRect(mx - 1, my - 2 + bob, 1, 1); c.fillRect(mx + 1, my - 2 + bob, 1, 1);
     if (m.hp < m.maxHp) {
-      c.fillStyle = '#2c2c2c'; c.fillRect(Math.round(m.x) - 5, Math.round(m.y) - 8, 10, 2);
-      c.fillStyle = '#e74c3c'; c.fillRect(Math.round(m.x) - 5, Math.round(m.y) - 8, Math.round(10 * m.hp / m.maxHp), 2);
+      c.fillStyle = '#2c2c2c'; c.fillRect(mx - 6, my - 9, 12, 2);
+      c.fillStyle = '#e74c3c'; c.fillRect(mx - 6, my - 9, Math.max(1, Math.round(12 * m.hp / m.maxHp)), 2);
     }
   }
   // 流浪獵人小人
   const stateIcon = { resting: '💤', toRest: '💤', toShopAlchemy: '🛒', toShopForge: '⚒️', fighting: '⚔', toHunt: '⚔', leaving: '🚪' };
   const classColor = { warrior: '#e74c3c', mage: '#9b59b6', rogue: '#2c3e50', archer: '#27ae60', priest: '#f1c40f' };
+  const effectIcon = { poison: '☠', bleed: '🩸' };
   for (const h of wanderingHeroes) {
     if (h.aiState === 'gone') continue;
     const x = Math.round(h.sx), y = Math.round(h.sy);
@@ -1750,10 +1865,15 @@ function drawWanderingActors(c, t) {
     else { c.fillStyle = '#f4d03f'; c.fillRect(x + 3, y - 8 + bob, 1, 5); }
     const icon = stateIcon[h.aiState];
     if (icon) { c.font = '7px sans-serif'; c.fillText(icon, x + 4, y - 11 + bob); }
+    // debuff 圖示掛頭上
+    if (h.effects && h.effects.length) {
+      c.font = '7px sans-serif';
+      h.effects.forEach((e, k) => { c.fillText(effectIcon[e.kind] || '✦', x - 6 - k * 8, y - 11 + bob); });
+    }
     const st = getHeroStats(h);
-    if (h.hp < st.maxHp) {
-      c.fillStyle = '#2c2c2c'; c.fillRect(x - 4, y - 15 + bob, 9, 2);
-      c.fillStyle = '#2ecc71'; c.fillRect(x - 4, y - 15 + bob, Math.round(9 * h.hp / st.maxHp), 2);
+    if (h.hp < st.maxHp || h.aiState === 'fighting') {
+      c.fillStyle = '#2c2c2c'; c.fillRect(x - 5, y - 16 + bob, 11, 2);
+      c.fillStyle = '#2ecc71'; c.fillRect(x - 5, y - 16 + bob, Math.max(1, Math.round(11 * h.hp / st.maxHp)), 2);
     }
     if (h.aiState === 'fighting' && !reduceMotion && Math.sin(t * 14 + x) > 0.2) {
       c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 1;
@@ -1799,12 +1919,12 @@ function scenePoint(e) {
 function hotspotAt(x, y) { return SCENE_HOTSPOTS.find(h => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) || null; }
 function handleHotspot(hs, e) {
   burst(e.clientX, e.clientY, '#f4d03f');
-  if (hs.id === 'guild') return collectGuildClick(e);
-  if (hs.id === 'market') return collectMarketClick(e);
+  if (hs.id === 'guild') { collectGuildClick(e); openPanel('res'); return; }
+  if (hs.id === 'market') { collectMarketClick(e); openPanel('build'); return; }
   sfx('click');
   if (hs.id === 'tavern') { heroSubTab = 'wander'; openPanel('hero'); showToast(wanderingHeroes.length ? '酒館有新的流浪獵人' : '酒館外目前沒有流浪獵人', 'info'); }
-  else if (hs.id === 'forge') { openPanel('shop'); showToast('鐵匠鋪：製作武器，防具在皮甲工坊。', 'info'); }
-  else if (hs.id === 'alchemy') { openPanel('shop'); showToast('煉金工房：製作藥水與查看倉庫。', 'info'); }
+  else if (hs.id === 'forge') { shopFilter = 'weapon'; openPanel('shop'); showToast('鐵匠鋪：製作武器，防具在皮甲工坊。', 'info'); }
+  else if (hs.id === 'alchemy') { shopFilter = 'potion'; openPanel('shop'); showToast('煉金工房：製作藥水與查看倉庫。', 'info'); }
   else if (hs.id === 'research') { openPanel('ach'); showToast('魔核研究所：查看成就與村莊重建。', 'info'); }
   else if (hs.id === 'gate') { openPanel('map'); showToast('選擇獵場與難度，派遣獵人出征。', 'info'); }
 }
@@ -1867,9 +1987,7 @@ function drawScene(t, dt) {
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26); c.fillStyle = `rgba(155,89,182,${0.35 + Math.sin(t * 4) * 0.12})`; c.fillRect(107, 325, 26, 20);
   c.fillStyle = '#ff5252'; const blink = reduceMotion || Math.sin(t * 3) > -0.2; if (blink) { c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); }
   label('獵場', 106, 310, '#e1b3ff');
-  // Villagers / hunters / patrols
-  for (let i = 0; i < 9; i++) { const x = (i * 27 + (reduceMotion ? 0 : t * (5 + i))) % (w - 18) + 9, y = 214 + (i % 4) * 22; c.fillStyle = ['#f4d03f', '#3498db', '#9b59b6', '#e74c3c'][i % 4]; c.fillRect(Math.round(x), y, 4, 5); c.fillStyle = '#241a16'; c.fillRect(Math.round(x), y + 5, 4, 4); }
-  // 流浪獵人與城內野怪（可點擊互動）
+  // 流浪獵人與城內野怪（可點擊互動；不再使用裝飾用直線路人）
   drawWanderingActors(c, t);
   // Hotspot feedback
   for (const hs of SCENE_HOTSPOTS) {
@@ -1925,6 +2043,10 @@ function openPanel(name) {
   const panel = $('panel-' + name), nav = $('nav-' + name);
   if (panel) panel.classList.add('open'); if (nav) nav.classList.add('active');
   sfx('click'); renderPanel(name);
+}
+function togglePanel(name) {
+  if (activePanel === name) { closePanel(); return; }
+  openPanel(name);
 }
 function closePanel() {
   activePanel = null;
@@ -2012,7 +2134,9 @@ function renderMapPanel() {
   }).join('');
 }
 function renderShopPanel() {
-  $('shop-grid').innerHTML = Object.values(ITEMS).map(item => {
+  $('shop-filter').innerHTML = [['all', '全部'], ['weapon', '⚔️ 武器'], ['armor', '🛡️ 防具'], ['potion', '🧪 藥水']]
+    .map(([k, label]) => `<button class="report-sub-btn ${shopFilter === k ? 'active' : ''}" onclick="shopFilter='${k}';renderShopPanel()">${label}</button>`).join('');
+  $('shop-grid').innerHTML = Object.values(ITEMS).filter(item => shopFilter === 'all' || item.type === shopFilter).map(item => {
     const chk = canCraft(item.id);
     return `<div class="shop-card rar-${item.rarity} ${chk.ok ? '' : 'locked-item'}"><div class="shop-ico">${item.icon}</div><div class="shop-name">${item.name}</div><div class="shop-stats">${itemStatsText(item)}${item.forClass ? '・' + CLASS_NAMES_ZH[item.forClass] : ''}</div><div class="shop-stock">倉庫 ×${invCount(item.id)}・售價 ${item.price}🪙</div><div class="shop-req">${chk.ok ? '' : chk.reason}</div><div class="building-cost">${Object.entries(item.cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn btn-gold btn-sm" ${chk.ok ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作</button></div>`;
   }).join('');

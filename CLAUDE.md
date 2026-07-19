@@ -37,8 +37,10 @@
 - SHOP / EQUIP：製作、販售、裝備、卸下、強化
 - SCENE / AUDIO：Canvas 日夜村莊、點擊公會、飄字粒子、WebAudio 音效
 - 城內可視 AI：流浪獵人會從獵場門走進城，依需求（低血/疲勞→酒館休息、缺藥→煉金買藥、錢夠→鐵匠強化）走位進店，
-  再前往右下「野怪區」即時打怪賺自己的金幣；玩家可直接點小人開招募頁。狀態機在 `updateWanderingScene(dt)`，
-  rAF 驅動；`prefers-reduced-motion` 時改由每秒 tick 推進。
+  再依自己等級挑三個怪區（村郊原野 Lv1~5 / 霧林小徑 Lv4~9 / 荒嶺隘口 Lv8~14）即時打怪賺自己的金幣；
+  戰鬥有傷害數字、血條、中毒/流血 debuff 與職業被動字樣。玩家可直接點小人開招募頁。
+  狀態機在 `updateWanderingScene(dt)`，rAF 驅動；`prefers-reduced-motion` 時改由每秒 tick 推進。
+  每個場景建築點擊都會開對應操作面板；底部導覽按鈕可收合/展開面板（`togglePanel`）。
 - UI / TICK / INIT：面板渲染、每秒 `gameTick()`、10 秒自動存檔
 
 ## 開發約定
@@ -53,4 +55,4 @@
 
 - `manifest.json` 使用 `./index.html` 與 `./`，避免 GitHub Pages 子路徑問題。
 - `sw.js` 只快取 `./`、`./index.html`、`./manifest.json`；大型 assets 不放入 install 快取。
-- 每次玩法 release 必 bump `CACHE_NAME`（目前 `hunter-village-v6`），否則舊 PWA client 會繼續吃舊 `index.html`。
+- 每次玩法 release 必 bump `CACHE_NAME`（目前 `hunter-village-v7`），否則舊 PWA client 會繼續吃舊 `index.html`。
