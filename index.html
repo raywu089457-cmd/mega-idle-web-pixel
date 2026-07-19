@@ -365,11 +365,11 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     </div>
   </div>
   <div class="hud-center" id="hud-mats">
-    <div class="mat-icon" title="劣等水果"><div class="ico">🍎</div><div class="amt" id="hc-fruit">0</div></div>
-    <div class="mat-icon" title="髒水"><div class="ico">💧</div><div class="amt" id="hc-water">0</div></div>
-    <div class="mat-icon" title="腐朽木頭"><div class="ico">🪵</div><div class="amt" id="hc-wood">0</div></div>
-    <div class="mat-icon" title="鏽跡斑斑的鐵"><div class="ico">⚙️</div><div class="amt" id="hc-iron">0</div></div>
-    <div class="mat-icon" title="低等藥材"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
+    <div class="mat-icon" title="獸肉"><div class="ico">🍖</div><div class="amt" id="hc-fruit">0</div></div>
+    <div class="mat-icon" title="清泉"><div class="ico">💧</div><div class="amt" id="hc-water">0</div></div>
+    <div class="mat-icon" title="木材"><div class="ico">🪵</div><div class="amt" id="hc-wood">0</div></div>
+    <div class="mat-icon" title="鐵礦"><div class="ico">⛏️</div><div class="amt" id="hc-iron">0</div></div>
+    <div class="mat-icon" title="藥草"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
   </div>
   <div class="hud-right">
     <button class="btn-icon" id="btn-settings" title="設定">⚙️</button>
@@ -381,8 +381,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
   <canvas id="scene-canvas"></canvas>
   <div class="scene-overlay">
     <div class="castle-label">獵魔村</div>
-    <div class="castle-sub" id="castle-level">卡斯特公會 Lv.1</div>
-    <div class="click-hint">點擊公會收取金幣</div>
+    <div class="castle-sub" id="castle-level">獵魔公會 Lv.1</div>
+    <div class="click-hint" id="scene-hint">點擊建築互動：公會收金、酒館招募、工坊製作、獵場門派遣</div>
   </div>
 </main>
 
@@ -1557,65 +1557,122 @@ function startMusic() {
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let sceneCtx = null, sceneCanvas = null, sceneW = 240, sceneH = 360, sceneStart = performance.now();
 const floatState = { canvas: null, ctx: null, floats: [], particles: [] };
+const SCENE_HOTSPOTS = [
+  { id: 'tavern', name: '獵人酒館', hint: '招募流浪獵人 / 查看獵人', x: 8, y: 148, w: 58, h: 62 },
+  { id: 'guild', name: '獵魔公會', hint: '點擊收金與素材', x: 88, y: 112, w: 66, h: 82 },
+  { id: 'market', name: '市集', hint: '收取市集金幣', x: 176, y: 152, w: 56, h: 58 },
+  { id: 'forge', name: '鐵匠鋪', hint: '製作/強化武器', x: 14, y: 236, w: 62, h: 58 },
+  { id: 'alchemy', name: '煉金工房', hint: '藥水與倉庫', x: 90, y: 242, w: 62, h: 54 },
+  { id: 'research', name: '魔核研究所', hint: '成就 / 村莊重建', x: 166, y: 236, w: 62, h: 58 },
+  { id: 'gate', name: '獵場門', hint: '前往狩獵地圖', x: 92, y: 306, w: 56, h: 44 },
+];
+let hoverHotspot = null;
 function initScene() {
   sceneCanvas = $('scene-canvas'); sceneCtx = sceneCanvas.getContext('2d');
   sceneCanvas.width = sceneW; sceneCanvas.height = sceneH; sceneCtx.imageSmoothingEnabled = false;
-  sceneCanvas.addEventListener('pointerdown', (e) => { ensureAudio(); castleClick(e); });
+  sceneCanvas.addEventListener('pointermove', (e) => {
+    const p = scenePoint(e); hoverHotspot = hotspotAt(p.x, p.y);
+    sceneCanvas.style.cursor = hoverHotspot ? 'pointer' : 'default';
+    setSceneHint(hoverHotspot ? `${hoverHotspot.name}：${hoverHotspot.hint}` : '點擊建築互動：公會收金、酒館招募、工坊製作、獵場門派遣');
+  });
+  sceneCanvas.addEventListener('pointerleave', () => { hoverHotspot = null; setSceneHint('點擊建築互動：公會收金、酒館招募、工坊製作、獵場門派遣'); });
+  sceneCanvas.addEventListener('pointerdown', (e) => {
+    ensureAudio();
+    const p = scenePoint(e); const hs = hotspotAt(p.x, p.y);
+    if (hs) handleHotspot(hs, e);
+    else { setSceneHint('請點擊發亮建築或獵場門'); spawnFloat('選擇建築', e.clientX, e.clientY, '#d2b48c'); }
+  });
   const loop = (now) => { drawScene((now - sceneStart) / 1000); if (!reduceMotion) requestAnimationFrame(loop); };
   requestAnimationFrame(loop);
 }
+function setSceneHint(text) { const el = $('scene-hint'); if (el && el.textContent !== text) el.textContent = text; }
+function scenePoint(e) {
+  const rect = sceneCanvas.getBoundingClientRect();
+  return { x: (e.clientX - rect.left) / rect.width * sceneW, y: (e.clientY - rect.top) / rect.height * sceneH, cx: e.clientX, cy: e.clientY };
+}
+function hotspotAt(x, y) { return SCENE_HOTSPOTS.find(h => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) || null; }
+function handleHotspot(hs, e) {
+  burst(e.clientX, e.clientY, '#f4d03f');
+  if (hs.id === 'guild') return collectGuildClick(e);
+  if (hs.id === 'market') return collectMarketClick(e);
+  sfx('click');
+  if (hs.id === 'tavern') { heroSubTab = 'wander'; openPanel('hero'); showToast(wanderingHeroes.length ? '酒館有新的流浪獵人' : '酒館外目前沒有流浪獵人', 'info'); }
+  else if (hs.id === 'forge') { openPanel('shop'); showToast('鐵匠鋪：製作武器，防具在皮甲工坊。', 'info'); }
+  else if (hs.id === 'alchemy') { openPanel('shop'); showToast('煉金工房：製作藥水與查看倉庫。', 'info'); }
+  else if (hs.id === 'research') { openPanel('ach'); showToast('魔核研究所：查看成就與村莊重建。', 'info'); }
+  else if (hs.id === 'gate') { openPanel('map'); showToast('選擇獵場與難度，派遣獵人出征。', 'info'); }
+}
+function collectGuildClick(e) {
+  const amount = getClickGold() + BuildingSystem_getLevel('monument');
+  gainGold(amount); stats.clicks += 1;
+  const mat = choice(MATERIAL_TYPES); ResourceSystem_add(mat, 1);
+  spawnFloat(`🪙+${fmt(amount)} ${RESOURCES[mat].icon}+1`, e.clientX, e.clientY, '#f4d03f');
+  sfx('gold'); checkAchievements(); renderHUD();
+}
+function collectMarketClick(e) {
+  const amount = getClickGold() + BuildingSystem_getGoldRate() * 5;
+  if (amount <= 0) { showToast('市集尚未建造，先到建築面板興建。', 'error'); return; }
+  gainGold(amount); stats.clicks += 1;
+  spawnFloat(`⚖️+${fmt(amount)}`, e.clientX, e.clientY, '#f4d03f');
+  sfx('gold'); checkAchievements(); renderHUD();
+}
+function castleClick(e) { collectGuildClick(e); }
 function drawScene(t) {
   const c = sceneCtx, w = sceneW, h = sceneH;
   const day = (Math.sin(t / 18) + 1) / 2;
-  const skyTop = mixColor([22, 28, 58], [116, 185, 255], day), skyBot = mixColor([48, 38, 74], [255, 214, 153], day);
-  const grad = c.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, rgb(skyTop)); grad.addColorStop(0.62, rgb(skyBot)); grad.addColorStop(0.63, '#6f9f52'); grad.addColorStop(1, '#3f6b35');
+  const night = 1 - day;
+  const skyTop = mixColor([10, 14, 34], [92, 154, 214], day), skyBot = mixColor([38, 24, 54], [230, 176, 126], day);
+  const grad = c.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, rgb(skyTop)); grad.addColorStop(0.60, rgb(skyBot)); grad.addColorStop(0.61, '#4c7042'); grad.addColorStop(1, '#263b2b');
   c.fillStyle = grad; c.fillRect(0, 0, w, h);
-  // sun / moon
-  const orbX = w * (0.18 + 0.64 * ((t / 36) % 1)), orbY = 52 + Math.sin(t / 18) * 18;
-  c.fillStyle = day > 0.35 ? '#ffd76a' : '#e8ecff'; c.fillRect(Math.round(orbX), Math.round(orbY), 14, 14);
-  // clouds
-  c.fillStyle = day > 0.35 ? 'rgba(255,255,255,0.85)' : 'rgba(210,220,255,0.35)';
-  for (let i = 0; i < 4; i++) {
-    const x = ((t * (5 + i * 2) + i * 70) % (w + 60)) - 30, y = 34 + i * 24;
-    c.fillRect(Math.round(x), y, 22, 7); c.fillRect(Math.round(x) + 5, y - 5, 12, 6); c.fillRect(Math.round(x) + 16, y + 3, 16, 6);
+  // moon/sun and drifting clouds
+  const orbX = w * (0.18 + 0.64 * ((t / 36) % 1)), orbY = 48 + Math.sin(t / 18) * 16;
+  c.fillStyle = day > 0.35 ? '#ffd76a' : '#dfe7ff'; c.fillRect(Math.round(orbX), Math.round(orbY), 13, 13);
+  c.fillStyle = day > 0.35 ? 'rgba(255,255,255,0.82)' : 'rgba(188,202,255,0.28)';
+  for (let i = 0; i < 4; i++) { const x = ((t * (5 + i * 2) + i * 70) % (w + 60)) - 30, y = 30 + i * 22; c.fillRect(Math.round(x), y, 22, 7); c.fillRect(Math.round(x) + 5, y - 5, 12, 6); c.fillRect(Math.round(x) + 16, y + 3, 16, 6); }
+  // dark forest silhouette behind the village
+  c.fillStyle = day > 0.35 ? '#3f6b45' : '#13202a';
+  for (let x = -8; x < w; x += 18) { const hh = 34 + ((x * 13) % 23); c.fillRect(x, 132 - hh, 12, hh); c.fillRect(x - 4, 132 - hh + 8, 20, 8); }
+  c.fillStyle = day > 0.35 ? '#6f9f52' : '#20351f'; c.fillRect(0, 132, w, h - 132);
+  // roads
+  c.fillStyle = '#7a5a3c'; c.fillRect(0, 206, w, 14); c.fillRect(112, 120, 16, 236); c.fillRect(0, 292, w, 12);
+  c.fillStyle = 'rgba(244,208,63,0.12)'; for (let x = 6; x < w; x += 24) { c.fillRect(x, 211, 8, 3); c.fillRect(x, 297, 8, 3); }
+  const label = (txt, x, y, color = '#fff8dc') => { c.font = '7px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
+  const house = (x, y, ww, hh, roof, wall) => { c.fillStyle = wall; c.fillRect(x, y, ww, hh); c.fillStyle = roof; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + ww / 2, y - 18); c.lineTo(x + ww + 4, y); c.closePath(); c.fill(); c.fillStyle = '#2c2c2c'; c.fillRect(x + ww / 2 - 5, y + hh - 18, 10, 18); };
+  // Tavern
+  house(16, 164, 42, 42, '#6d3f2a', '#a9764b'); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); label('酒館', 20, 150);
+  // Guild hall with crossed-sword banner
+  house(96, 132, 50, 62, '#46324a', '#c9b082'); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
+  c.fillStyle = '#2c2c2c'; c.fillRect(112, 104, 4, 30); c.fillStyle = '#e74c3c'; c.fillRect(116, 104, 24, 12);
+  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); label('公會', 104, 98, '#f4d03f');
+  // Market stalls
+  c.fillStyle = '#8b5a2b'; c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); label('市集', 188, 150);
+  // Forge with animated chimney smoke
+  house(22, 252, 44, 40, '#3c3c46', '#8f8f9d'); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
+  if (!reduceMotion) for (let i = 0; i < 4; i++) { const sy = 238 - ((t * 10 + i * 9) % 34); c.fillStyle = `rgba(220,220,220,${0.35 - i * 0.06})`; c.fillRect(50 + Math.sin(t + i) * 4, sy, 6 + i, 5); }
+  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); label('鐵匠', 24, 238);
+  // Alchemy shop with bubbling cauldron
+  house(100, 258, 40, 36, '#4b3a63', '#9b7bb8'); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
+  if (!reduceMotion) for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(190,255,210,0.8)'; c.fillRect(116 + i * 5, 272 - ((t * 8 + i * 4) % 10), 2, 2); }
+  label('煉金', 104, 244);
+  // Research tower with glowing core
+  house(178, 252, 40, 42, '#2d3d63', '#7890c9'); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); label('研究', 182, 238);
+  // Hunt gate: stone arch, portal glow and monster eyes
+  c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26); c.fillStyle = `rgba(155,89,182,${0.35 + Math.sin(t * 4) * 0.12})`; c.fillRect(107, 325, 26, 20);
+  c.fillStyle = '#ff5252'; const blink = reduceMotion || Math.sin(t * 3) > -0.2; if (blink) { c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); }
+  label('獵場', 106, 310, '#e1b3ff');
+  // Villagers / hunters / patrols
+  for (let i = 0; i < 9; i++) { const x = (i * 27 + (reduceMotion ? 0 : t * (5 + i))) % (w - 18) + 9, y = 214 + (i % 4) * 22; c.fillStyle = ['#f4d03f', '#3498db', '#9b59b6', '#e74c3c'][i % 4]; c.fillRect(Math.round(x), y, 4, 5); c.fillStyle = '#241a16'; c.fillRect(Math.round(x), y + 5, 4, 4); }
+  // Hotspot feedback
+  for (const hs of SCENE_HOTSPOTS) {
+    const active = hoverHotspot && hoverHotspot.id === hs.id;
+    c.fillStyle = active ? 'rgba(244,208,63,0.20)' : 'rgba(255,248,220,0.035)'; c.fillRect(hs.x, hs.y, hs.w, hs.h);
+    c.strokeStyle = active ? '#f4d03f' : 'rgba(255,248,220,0.10)'; c.lineWidth = active ? 2 : 1; c.strokeRect(hs.x + 0.5, hs.y + 0.5, hs.w - 1, hs.h - 1);
   }
-  // far hills / fields
-  c.fillStyle = day > 0.35 ? '#5d8a46' : '#263a3f'; hill(c, -20, 150, 90, 70); hill(c, 80, 138, 110, 82); hill(c, 190, 154, 90, 66);
-  c.fillStyle = day > 0.35 ? '#8fae4f' : '#2f4a3c';
-  for (let y = 190; y < h; y += 18) for (let x = ((y / 18) % 2) * 9; x < w; x += 18) c.fillRect(x, y, 8, 10);
-  // castle
-  const bx = 74, by = 128;
-  c.fillStyle = '#5a4638'; c.fillRect(bx - 10, by + 66, 108, 12);
-  c.fillStyle = '#d8c39a'; c.fillRect(bx, by + 24, 88, 48);
-  c.fillStyle = '#b9a37e'; c.fillRect(bx + 8, by + 34, 72, 38);
-  c.fillStyle = '#8b5a2b'; c.fillRect(bx + 34, by + 46, 20, 26);
-  for (const tx of [bx - 6, bx + 74]) { c.fillStyle = '#cbb489'; c.fillRect(tx, by, 20, 72); c.fillStyle = '#7a4b2a'; c.fillRect(tx - 2, by - 8, 24, 10); }
-  c.fillStyle = '#7a4b2a'; c.fillRect(bx + 20, by + 12, 48, 12);
-  // flag + windows + torches
-  const wave = reduceMotion ? 0 : Math.round(Math.sin(t * 6) * 3);
-  c.fillStyle = '#2c2c2c'; c.fillRect(bx + 42, by - 22, 3, 34); c.fillStyle = '#e74c3c'; c.fillRect(bx + 45, by - 22, 20 + wave, 10);
-  c.fillStyle = day > 0.35 ? '#3e2723' : '#ffd76a';
-  for (const wx of [bx + 14, bx + 54, bx + 6, bx + 78]) c.fillRect(wx, by + (wx > bx + 50 ? 30 : 20), 6, 8);
-  for (const fx of [bx - 18, bx + 100]) { c.fillStyle = '#4a3527'; c.fillRect(fx, by + 58, 4, 18); c.fillStyle = reduceMotion ? '#f4d03f' : (Math.random() < 0.5 ? '#f4d03f' : '#ff9f43'); c.fillRect(fx - 1, by + 53, 6, 6); }
-  // workers / patrol dots
-  for (let i = 0; i < 7; i++) {
-    const x = (i * 31 + (reduceMotion ? 0 : t * (4 + i))) % (w - 20) + 10, y = 232 + (i % 3) * 26;
-    c.fillStyle = ['#f4d03f', '#3498db', '#9b59b6'][i % 3]; c.fillRect(Math.round(x), y, 4, 5); c.fillStyle = '#3e2723'; c.fillRect(Math.round(x), y + 5, 4, 4);
-  }
-  // fireflies at night
-  if (day < 0.35 && !reduceMotion) { c.fillStyle = 'rgba(244,208,63,0.8)'; for (let i = 0; i < 12; i++) { const x = (i * 47 + Math.sin(t + i) * 8 + w) % w, y = 150 + ((i * 37) % 140) + Math.cos(t * 1.7 + i) * 5; c.fillRect(Math.round(x), Math.round(y), 2, 2); } }
+  // Night wisps near the hunt gate
+  if (night > 0.55 && !reduceMotion) { c.fillStyle = 'rgba(225,179,255,0.75)'; for (let i = 0; i < 10; i++) { const x = 90 + ((i * 17 + Math.sin(t + i) * 8 + 40) % 60), y = 300 + ((i * 23) % 46) + Math.cos(t * 1.7 + i) * 4; c.fillRect(Math.round(x), Math.round(y), 2, 2); } }
 }
-function hill(c, x, y, w, h) { c.beginPath(); c.moveTo(x, y + h); c.lineTo(x + w * 0.5, y); c.lineTo(x + w, y + h); c.closePath(); c.fill(); }
 function mixColor(a, b, k) { return [Math.round(a[0] + (b[0] - a[0]) * k), Math.round(a[1] + (b[1] - a[1]) * k), Math.round(a[2] + (b[2] - a[2]) * k)]; }
 function rgb(arr) { return `rgb(${arr[0]},${arr[1]},${arr[2]})`; }
-function castleClick(e) {
-  const amount = getClickGold();
-  gainGold(amount); stats.clicks += 1;
-  const rect = sceneCanvas.getBoundingClientRect();
-  const x = e?.clientX ?? (rect.left + rect.width / 2), y = e?.clientY ?? (rect.top + rect.height * 0.45);
-  spawnFloat(`🪙+${fmt(amount)}`, x, y, '#f4d03f');
-  burst(x, y, '#f4d03f'); sfx('gold'); checkAchievements(); renderHUD();
-}
 function initFloatCanvas() {
   floatState.canvas = $('float-canvas'); floatState.ctx = floatState.canvas.getContext('2d');
   const resize = () => { floatState.canvas.width = window.innerWidth; floatState.canvas.height = window.innerHeight; };

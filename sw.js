@@ -1,9 +1,10 @@
 /**
- * Service Worker — Offline caching for Idle Kingdom Builder
- * PWA Tier 0
+ * Service Worker — Offline caching for Hunter Village Tycoon
+ * Bump CACHE_NAME on every gameplay release so old Pages clients do not keep
+ * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'idle-kingdom-v4';
+const CACHE_NAME = 'hunter-village-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

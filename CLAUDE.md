@@ -50,3 +50,4 @@
 
 - `manifest.json` 使用 `./index.html` 與 `./`，避免 GitHub Pages 子路徑問題。
 - `sw.js` 只快取 `./`、`./index.html`、`./manifest.json`；大型 assets 不放入 install 快取。
+- 每次玩法 release 必 bump `CACHE_NAME`（目前 `hunter-village-v5`），否則舊 PWA client 會繼續吃舊 `index.html`。
