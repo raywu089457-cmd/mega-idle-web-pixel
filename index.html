@@ -183,6 +183,16 @@ body{
 .rar-common{border-color:var(--rar-common) !important;}
 .rar-rare{border-color:var(--rar-rare) !important;}
 .rar-epic{border-color:var(--rar-epic) !important;}
+/* 獵人稀有度框（普通/稀有/英雄/傳說） */
+.rar-frame-normal{border-color:#c8bfa8 !important;}
+.rar-frame-rare{border-color:#5db3ff !important;box-shadow:0 0 6px rgba(93,179,255,0.35);}
+.rar-frame-hero{border-color:#b678ff !important;box-shadow:0 0 8px rgba(182,120,255,0.45);}
+.rar-frame-legend{border-color:#ffb84d !important;box-shadow:0 0 10px rgba(255,184,77,0.55);}
+.portrait-rar-normal{border-color:#c8bfa8 !important;}
+.portrait-rar-rare{border-color:#5db3ff !important;}
+.portrait-rar-hero{border-color:#b678ff !important;}
+.portrait-rar-legend{border-color:#ffb84d !important;}
+.rarity-tag{font-size:10px;padding:1px 5px;border:1px solid currentColor;border-radius:2px;}
 .rar-legendary{border-color:var(--rar-legend) !important;}
 .rar-txt-common{color:var(--rar-common);}
 .rar-txt-rare{color:var(--rar-rare);}
@@ -241,6 +251,7 @@ body{
 /* ── SHOP ── */
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .shop-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.shop-stock-row{font-size:12px;color:var(--text-dim);padding:4px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .shop-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
 .shop-card.locked-item{opacity:0.55;}
 .shop-ico{font-size:44px;}
@@ -446,6 +457,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="shop-filter" id="shop-filter"></div>
+    <div id="shop-stock"></div>
     <div class="shop-grid" id="shop-grid"></div>
     <div class="inventory">
       <div class="inv-title">📦 獵魔村倉庫</div>
@@ -580,10 +592,11 @@ const BUILDINGS = {
   tavern:     { id: 'tavern', name: '獵人酒館', description: '流浪獵人會在此停留。升級可增加村莊獵人空位，並讓更強的流浪獵人更快造訪。', startLevel: 1, maxLevel: 5, baseCost: { gold: 300, woodRotten: 80 }, costMultiplier: 1.5, icon: '🍺' },
   weaponShop: { id: 'weaponShop', name: '鐵匠鋪', description: '打造獵魔武器。等級越高可製作越強武器，且全體獵人攻擊力提升。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️' },
   armorShop:  { id: 'armorShop', name: '皮甲工坊', description: '縫製獵魔防具。等級越高可製作越強防具，且全體獵人防禦力提升。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️' },
-  potionShop: { id: 'potionShop', name: '煉金工房', description: '調配治療藥水，定期自動生產存入倉庫。等級越高生產越快越多。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️' },
+  potionShop: { id: 'potionShop', name: '煉金工房', description: '調配治療藥水，定期自動生產上架給獵人購買（營收歸村莊）。等級越高生產越快越多。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️' },
   altar:      { id: 'altar', name: '魔核研究所', description: '解析魔核與怪物素材，永久提升全隊狩獵金幣與經驗獲取。', startLevel: 0, maxLevel: 10, baseCost: { gold: 400, magicStones: 3, herbLow: 40 }, costMultiplier: 2.0, icon: '🔯' },
+  trinketShop:{ id: 'trinketShop', name: '飾品店', description: '打造護符、項鍊與戒指。等級越高可製作越強飾品，飾品帶有特殊詞綴。', startLevel: 0, maxLevel: 5, baseCost: { gold: 350, woodRotten: 60, magicStones: 2 }, costMultiplier: 1.9, icon: '📿' },
 };
-const BUILDING_ORDER = ['monument', 'goldMine', 'tavern', 'weaponShop', 'armorShop', 'potionShop', 'altar'];
+const BUILDING_ORDER = ['monument', 'goldMine', 'tavern', 'weaponShop', 'armorShop', 'potionShop', 'trinketShop', 'altar'];
 
 const HERO_CLASSES = {
   warrior: { name: '劍士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
@@ -610,6 +623,19 @@ const WANDERING_HERO_TYPES = [
   { typeId: 'wandering_priest_1', class: 'priest', name: '旅行神官', level: 2, dropGold: 22, dropMagicStoneChance: 0.14 },
   { typeId: 'wandering_priest_2', class: 'priest', name: '聖印祭司', level: 7, dropGold: 58, dropMagicStoneChance: 0.2 },
 ];
+
+const RARITIES = {
+  normal: { id: 'normal', name: '普通', color: '#c8bfa8', weight: 60, starBonus: 0, walletMult: 1 },
+  rare:   { id: 'rare', name: '稀有', color: '#5db3ff', weight: 28, starBonus: 1, walletMult: 1.3 },
+  hero:   { id: 'hero', name: '英雄', color: '#b678ff', weight: 10, starBonus: 1, walletMult: 1.8 },
+  legend: { id: 'legend', name: '傳說', color: '#ffb84d', weight: 2, starBonus: 2, walletMult: 2.6 },
+};
+function rollRarity() {
+  const total = Object.values(RARITIES).reduce((s, r) => s + r.weight, 0);
+  let r = Math.random() * total;
+  for (const k of Object.keys(RARITIES)) { r -= RARITIES[k].weight; if (r <= 0) return k; }
+  return 'normal';
+}
 
 const ZONES = [
   {
@@ -672,6 +698,9 @@ const ITEMS = {
   ironArmor: { id: 'ironArmor', name: '獵魔鎧甲', type: 'armor', rarity: 'rare', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️', def: 10, hp: 40, req: { b: 'armorShop', lv: 2 } },
   knightArmor: { id: 'knightArmor', name: '屠魔重甲', type: 'armor', rarity: 'epic', price: 300, cost: { ironRusty: 120, magicStones: 3, gold: 1000 }, icon: '⚜️', def: 16, hp: 80, req: { b: 'armorShop', lv: 4 } },
   healthPotion: { id: 'healthPotion', name: '治療藥水', type: 'potion', rarity: 'common', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪', healPct: 0.3, req: { b: 'potionShop', lv: 1 } },
+  hunterCharm: { id: 'hunterCharm', name: '獵魔護符', type: 'accessory', rarity: 'rare', price: 180, cost: { magicStones: 4, herbLow: 60 }, icon: '🧿', crit: 0.06, msFind: 0.1, req: { b: 'trinketShop', lv: 1 } },
+  wolfFang: { id: 'wolfFang', name: '狼牙項鍊', type: 'accessory', rarity: 'rare', price: 150, cost: { fruitPoor: 80, ironRusty: 40 }, icon: '📿', atk: 7, req: { b: 'trinketShop', lv: 2 } },
+  springRing: { id: 'springRing', name: '清泉戒指', type: 'accessory', rarity: 'epic', price: 220, cost: { waterDirty: 90, magicStones: 3 }, icon: '💍', hp: 60, def: 4, req: { b: 'trinketShop', lv: 3 } },
 };
 const RARITY_NAMES = { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' };
 const DIFF_LABELS = { easy: '驅逐', normal: '討伐', hard: '獵殺', boss: '頭目' };
@@ -716,7 +745,7 @@ let potionShopTickCounter = 0;
 let mapProgress = null;
 let activeExplorations = [];
 let battleReports = [];
-let stats = { kills: 0, bossKills: 0, goldEarned: 0, clicks: 0, crafted: 0, prestiges: 0 };
+let stats = { kills: 0, bossKills: 0, goldEarned: 0, clicks: 0, crafted: 0, prestiges: 0, shopRevenue: 0 };
 let achievementsUnlocked = {};   // { [achId]: timestamp }
 let prestige = { shards: 0, count: 0 };
 let daily = { lastClaim: null, streak: 0, bestStreak: 0 };
@@ -734,7 +763,18 @@ let pendingDailyReward = null;
 let dispatchHeroId = null;
 let activePanel = null;
 let heroSubTab = 'territory';        // 'territory' | 'wander' | 'reports'
-let shopFilter = 'all';              // 'all' | 'weapon' | 'armor' | 'potion'
+let shopFilter = 'all';              // 'all' | 'weapon' | 'armor' | 'potion' | 'accessory'
+// 村莊商店貨架（賣給獵人的商品庫存）與定價策略 —— 村莊金庫主要收入來源
+let shopStock = { healthPotion: 2, gear: 1 };
+let priceMult = { potion: 1, gear: 1 };
+let gearTickCounter = 0;
+const PRICE_TIERS = [0.8, 1.2, 1.6];
+function potionStockCap() { return 8 + BuildingSystem_getLevel('potionShop') * 2; }
+function gearStockCap() { return 3 + BuildingSystem_getLevel('weaponShop') + BuildingSystem_getLevel('armorShop'); }
+function salePrice(base, kind) { return Math.max(1, Math.round(base * priceMult[kind] * 1.2)); }
+function setPriceTier(kind, mult) { priceMult[kind] = mult; sfx('click'); renderPanel('shop'); }
+function getShopStock() { return shopStock; }
+function getPriceMult() { return priceMult; }
 let heroReportSubTab = 'all';        // 'all' | 'zone' | 'wander'
 const expandedReports = new Set();
 
@@ -829,6 +869,8 @@ function saveGame() {
     for (const [id, state] of Object.entries(buildingStates)) gameState.buildings[id] = { level: state.level };
     gameState.mapProgress = mapProgress;
     gameState.shopInventory = shopInventory;
+    gameState.shopStock = shopStock;
+    gameState.priceMult = priceMult;
     gameState.potionShopAutoProduce = potionShopAutoProduce;
     gameState.nextWanderingSpawnIn = nextWanderingSpawnIn;
     gameState.battleReports = battleReports.slice(0, 50);
@@ -980,6 +1022,7 @@ function getEquipBonuses(eq) {
   }
   if (def?.type === 'weapon') out.atk += plus * 2;
   if (def?.type === 'armor') { out.def += plus * 2; out.hp += plus * 10; }
+  if (def?.type === 'accessory') { out.atk += plus; out.hp += plus * 5; out.crit += plus * 0.01; }
   return out;
 }
 function getHeroTrait(hero) { return TRAITS.find(t => t.id === hero?.trait) || null; }
@@ -994,7 +1037,7 @@ function getHeroStats(hero) {
   def += BuildingSystem_getLevel('armorShop');
   const ach = getAchievementBonuses();
   atk += ach.atk; def += ach.def;
-  for (const slot of ['weapon', 'armor']) {
+  for (const slot of ['weapon', 'armor', 'accessory']) {
     const b = getEquipBonuses(hero.equipment?.[slot]);
     atk += b.atk; def += b.def; maxHp += b.hp; crit += b.crit; msFind += b.msFind;
   }
@@ -1050,14 +1093,17 @@ function normalizeHero(h) {
   h.level = h.level || 1;
   h.xp = h.xp || 0;
   h.stars = clamp(h.stars || rollStars(), 1, 5);
+  h.rarity = h.rarity in RARITIES ? h.rarity : 'normal';
   h.trait = h.trait || randomTrait();
   h.fatigue = clamp(h.fatigue || 0, 0, 100);
+  h.mood = h.mood == null ? 70 : clamp(h.mood, 0, 100);
   h.maxHp = h.maxHp || (cls.baseHp + (h.level - 1) * 10);
   h.hp = h.hp == null ? h.maxHp : h.hp;
   h.atk = h.atk || (cls.baseAtk + (h.level - 1) * 3);
   h.def = h.def || (cls.baseDef + (h.level - 1) * 2);
   h.status = h.status || 'idle';
-  h.equipment = h.equipment || { weapon: null, armor: null };
+  h.equipment = h.equipment || { weapon: null, armor: null, accessory: null };
+  if (!('accessory' in h.equipment)) h.equipment.accessory = null;
   h.inventory = (h.inventory && !Array.isArray(h.inventory)) ? h.inventory : {};
   h.wallet = h.wallet || 0;
   h.diamonds = h.diamonds || 0;
@@ -1077,6 +1123,9 @@ function normalizeHero(h) {
   h.opponentId = h.opponentId || null;
   h.effects = Array.isArray(h.effects) ? h.effects : [];
   h.huntZoneId = h.huntZoneId || null;
+  h.deadTicks = h.deadTicks || 0;
+  h.inside = false;   // 進店/休息時不在場景繪製（瞬態，不存檔）
+  h.bubble = null;    // 對話泡泡（瞬態）
   return h;
 }
 function generateHero(classKey, level = 1, customName) {
@@ -1193,7 +1242,7 @@ function sellItem(itemId) {
 }
 function equipItem(heroId, itemId) {
   const hero = territoryHeroes.find(h => h.id === heroId); const def = ITEMS[itemId];
-  if (!hero || !def || (def.type !== 'weapon' && def.type !== 'armor')) return;
+  if (!hero || !def || (def.type !== 'weapon' && def.type !== 'armor' && def.type !== 'accessory')) return;
   if (def.forClass && def.forClass !== hero.class) { showToast(`${def.name} 限定 ${CLASS_NAMES_ZH[def.forClass]} 使用`, 'error'); return; }
   if (!removeItem(itemId, 1)) { showToast('倉庫沒有此裝備。', 'error'); return; }
   const slot = def.type;
@@ -1219,8 +1268,8 @@ let equipPick = null;
 function openEquipModal(heroId, slot) {
   equipPick = { heroId, slot };
   const hero = territoryHeroes.find(h => h.id === heroId); if (!hero) return;
-  $('inv-modal-title').textContent = slot === 'weapon' ? '🗡 選擇武器' : '🛡 選擇防具';
-  $('inv-modal-hero').textContent = `${hero.name}（${CLASS_NAMES_ZH[hero.class]}）— 限定職業才可裝備`;
+  $('inv-modal-title').textContent = slot === 'weapon' ? '🗡 選擇武器' : slot === 'armor' ? '🛡 選擇防具' : '📿 選擇飾品';
+  $('inv-modal-hero').textContent = `${hero.name}（${CLASS_NAMES_ZH[hero.class]}）— ${slot === 'accessory' ? '飾品不限職業' : '限定職業才可裝備'}`;
   const list = $('inv-modal-list');
   const options = Object.entries(shopInventory)
     .filter(([id, qty]) => qty > 0 && ITEMS[id]?.type === slot && (!ITEMS[id].forClass || ITEMS[id].forClass === hero.class));
@@ -1401,10 +1450,20 @@ function closeDispatch() { dispatchHeroId = null; hideModal('modal-dispatch'); }
 function spawnWanderingHero() {
   if (wanderingHeroes.length >= BuildingSystem_getMaxWanderingHeroes()) return;
   const t = choice(WANDERING_HERO_TYPES);
-  const hero = normalizeHero({ id: uid(), name: choice(HUNTER_NAMES), class: t.class, level: Math.max(1, t.level + rand(-1, 1)), status: 'wandering', wallet: t.dropGold, diamonds: 0, dropMagicStoneChance: t.dropMagicStoneChance });
+  const rarity = rollRarity();
+  const rc = RARITIES[rarity];
+  const hero = normalizeHero({
+    id: uid(), name: choice(HUNTER_NAMES), class: t.class,
+    level: Math.max(1, t.level + rand(-1, 1) + (rarity === 'legend' ? 2 : rarity === 'hero' ? 1 : 0)),
+    stars: clamp(rollStars() + rc.starBonus, 1, 5),
+    rarity, status: 'wandering',
+    wallet: Math.round(t.dropGold * rc.walletMult), diamonds: 0, dropMagicStoneChance: t.dropMagicStoneChance,
+  });
   // 從獵場門進城，先站一下再決定要去哪
   hero.sx = 120 + rand(-10, 10); hero.sy = 344;
   hero.aiState = 'arrive'; hero.targetX = null; hero.targetY = null; hero.actionTicks = randf(0.6, 1.6);
+  setBubble(hero, rarity === 'legend' ? '✨ 傳說獵人來了！' : rarity === 'hero' ? '聽說這裡有賺頭' : '有工作嗎？');
+  if (rarity === 'legend' || rarity === 'hero') showToast(`${rc.name}流浪獵人「${hero.name}」造訪了村莊！`, 'success');
   wanderingHeroes.push(hero);
 }
 function processWanderingTick() {
@@ -1426,7 +1485,16 @@ function produceTick() {
   if (potionShopAutoProduce && BuildingSystem_getLevel('potionShop') > 0) {
     potionShopTickCounter += 1;
     const p = BuildingSystem_getPotionProduction();
-    if (potionShopTickCounter >= p.ticks) { potionShopTickCounter = 0; addItem('healthPotion', p.amount); }
+    if (potionShopTickCounter >= p.ticks) {
+      potionShopTickCounter = 0;
+      // 一半入村莊倉庫（玩家用）、一半上架賣給獵人（村莊金庫收入來源）
+      addItem('healthPotion', p.amount);
+      shopStock.healthPotion = Math.min(potionStockCap(), shopStock.healthPotion + p.amount);
+    }
+  }
+  if (BuildingSystem_getLevel('weaponShop') > 0) {
+    gearTickCounter += 1;
+    if (gearTickCounter >= 18) { gearTickCounter = 0; shopStock.gear = Math.min(gearStockCap(), shopStock.gear + 1); }
   }
 }
 function computeOffline(seconds) {
@@ -1577,12 +1645,18 @@ const HUNT_ZONES = [
       { kind: 'slime', name: '史萊姆', color: '#5fbf5f', hp: 30, atk: 4, def: 1, gold: [8, 18], xp: 7 },
       { kind: 'rat', name: '啃齒鼠', color: '#a08a6a', hp: 22, atk: 6, def: 0, gold: [6, 15], xp: 5 },
     ],
+    nightMonsters: [
+      { kind: 'wisp', name: '夜遊怨靈', color: '#6ad3e0', hp: 40, atk: 9, def: 1, gold: [14, 26], xp: 11, debuff: 'poison' },
+    ],
   },
   {
     id: 'woods', name: '霧林小徑', minLv: 4, maxLv: 9, x: 152, y: 310, w: 82, h: 46, spawn: 3, ground: 'rgba(38,58,48,0.78)',
     monsters: [
       { kind: 'wolf', name: '腐狼', color: '#8a8f7a', hp: 55, atk: 9, def: 2, gold: [18, 34], xp: 14, debuff: 'bleed' },
       { kind: 'bat', name: '灰燼蝠', color: '#9b59b6', hp: 36, atk: 12, def: 1, gold: [14, 30], xp: 12, debuff: 'poison' },
+    ],
+    nightMonsters: [
+      { kind: 'bat', name: '嗜血蝠', color: '#c0392b', hp: 48, atk: 14, def: 1, gold: [22, 40], xp: 16, debuff: 'poison' },
     ],
   },
   {
@@ -1599,6 +1673,7 @@ const BUILDING_ANCHORS = {
   gate: { x: 120, y: 346 },
 };
 const wildMonsters = [];
+let sceneNight = 0;   // drawScene 每幀更新，0=白天 1=黑夜（影響怪區夜間怪種）
 function getWildMonsters() { return wildMonsters; }
 function huntZoneById(id) { return HUNT_ZONES.find(z => z.id === id) || HUNT_ZONES[0]; }
 function bestHuntZone(h) {
@@ -1611,12 +1686,14 @@ function ensureWildMonsters() {
   for (const z of HUNT_ZONES) {
     const inZone = wildMonsters.filter(m => m.zone === z.id);
     for (let i = inZone.length; i < z.spawn; i++) {
-      const t = choice(z.monsters);
+      // 夜晚混入夜間限定怪種
+      const pool = (sceneNight > 0.5 && z.nightMonsters) ? z.monsters.concat(z.nightMonsters) : z.monsters;
+      const t = choice(pool);
       wildMonsters.push({
         id: uid(), zone: z.id, kind: t.kind, name: t.name, color: t.color, debuff: t.debuff || null,
         x: z.x + 8 + rand(0, z.w - 18), y: z.y + 12 + rand(0, z.h - 24),
         hp: t.hp, maxHp: t.hp, atk: t.atk, def: t.def, gold: t.gold, xp: t.xp,
-        alive: true, respawnTicks: 0,
+        alive: true, respawnTicks: 0, flash: 0,
       });
     }
   }
@@ -1629,7 +1706,7 @@ function sceneToClient(x, y) {
 function wanderingHeroAt(x, y) {
   for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
     const h = wanderingHeroes[i];
-    if (h.aiState === 'gone') continue;
+    if (h.aiState === 'gone' || h.aiState === 'dead' || h.inside) continue;
     if (Math.abs(h.sx - x) <= 7 && Math.abs(h.sy - 5 - y) <= 9) return h;
   }
   return null;
@@ -1646,14 +1723,54 @@ function moveActor(h, dt, speed = 26) {
   h.sx += dx / dist * step; h.sy += dy / dist * step;
   return dist - step < 1.2;
 }
+function setBubble(h, text, dur = 2.2) { h.bubble = { text, t: dur }; }
 function decideWanderingNeed(h) {
   const st = getHeroStats(h);
-  if (h.hp < st.maxHp * 0.45 || h.fatigue > 75) { h.effects = []; setWanderingTarget(h, 'toRest', BUILDING_ANCHORS.tavern.x, BUILDING_ANCHORS.tavern.y); return; }
-  if ((h.inventory.healthPotion || 0) === 0 && h.wallet >= 25) { setWanderingTarget(h, 'toShopAlchemy', BUILDING_ANCHORS.alchemy.x, BUILDING_ANCHORS.alchemy.y); return; }
-  if (h.wallet >= 120 && (h.gearAtk || 0) < 6) { setWanderingTarget(h, 'toShopForge', BUILDING_ANCHORS.forge.x, BUILDING_ANCHORS.forge.y); return; }
+  if ((h.mood ?? 70) < 20) { setBubble(h, '沒勁…想回去了'); setWanderingTarget(h, 'leaving', BUILDING_ANCHORS.gate.x, BUILDING_ANCHORS.gate.y); return; }
+  if (h.hp < st.maxHp * 0.45 || h.fatigue > 75 || (h.mood ?? 70) < 40) { h.effects = []; setWanderingTarget(h, 'toRest', BUILDING_ANCHORS.tavern.x, BUILDING_ANCHORS.tavern.y); return; }
+  if ((h.inventory.healthPotion || 0) === 0 && h.wallet >= salePrice(25, 'potion')) { setWanderingTarget(h, 'toShopAlchemy', BUILDING_ANCHORS.alchemy.x, BUILDING_ANCHORS.alchemy.y); return; }
+  if (h.wallet >= salePrice(120, 'gear') && (h.gearAtk || 0) < 6) { setWanderingTarget(h, 'toShopForge', BUILDING_ANCHORS.forge.x, BUILDING_ANCHORS.forge.y); return; }
   const z = bestHuntZone(h);
   h.huntZoneId = z.id;
   setWanderingTarget(h, 'toHunt', z.x + z.w / 2, z.y + z.h / 2);
+}
+// ── 村莊商店交易（金庫收入來源）──
+function tryEnterShop(h, shopId) {
+  const busy = wanderingHeroes.some(o => o !== h && o.inside && o.shopId === shopId);
+  if (busy) { h.aiState = 'queue'; h.queueFor = shopId; h.actionTicks = 1.5; setBubble(h, '排隊中…'); return; }
+  h.aiState = 'inShop'; h.shopId = shopId; h.inside = true; h.actionTicks = randf(0.8, 1.4);
+}
+function buyPotionAtShop(h) {
+  const price = salePrice(25, 'potion');
+  const st = getHeroStats(h);
+  if (shopStock.healthPotion <= 0) { setBubble(h, '缺貨？真是的…'); h.mood = clamp((h.mood ?? 70) - 8, 0, 100); return; }
+  if (h.wallet < price) { setBubble(h, '太貴了吧…'); h.mood = clamp((h.mood ?? 70) - 5, 0, 100); return; }
+  h.wallet -= price; shopStock.healthPotion -= 1;
+  gainGold(price); stats.shopRevenue = (stats.shopRevenue || 0) + price;
+  h.inventory.healthPotion = (h.inventory.healthPotion || 0) + 1;
+  h.mood = clamp((h.mood ?? 70) + 4, 0, 100);
+  setBubble(h, '🧪 補給完成！');
+  const p = sceneToClient(h.sx, h.sy - 8); spawnFloat(`🧪 村莊 +${price}🪙`, p.x, p.y, '#7dffa8');
+  if (h.hp < st.maxHp * 0.6) usePotion(h, true);
+}
+function buyGearAtShop(h) {
+  const price = salePrice(120, 'gear');
+  if (shopStock.gear <= 0) { setBubble(h, '沒有像樣的裝備…'); h.mood = clamp((h.mood ?? 70) - 8, 0, 100); return; }
+  if (h.wallet < price) { setBubble(h, '太貴了吧…'); h.mood = clamp((h.mood ?? 70) - 5, 0, 100); return; }
+  h.wallet -= price; shopStock.gear -= 1;
+  gainGold(price); stats.shopRevenue = (stats.shopRevenue || 0) + price;
+  h.gearAtk = (h.gearAtk || 0) + 2;
+  h.mood = clamp((h.mood ?? 70) + 5, 0, 100);
+  setBubble(h, '⚒️ 好劍！');
+  const p = sceneToClient(h.sx, h.sy - 8); spawnFloat(`⚒️ 村莊 +${price}🪙`, p.x, p.y, '#ffc46b');
+}
+// ── 陣亡與復活 ──
+const tombstones = [];
+function getTombstones() { return tombstones; }
+function killWanderingHero(h) {
+  h.aiState = 'dead'; h.deadTicks = 18; h.effects = []; h.inside = false; h.opponentId = null;
+  tombstones.push({ id: uid(), x: h.sx, y: h.sy, name: h.name, t: 18 });
+  const p = sceneToClient(h.sx, h.sy - 12); spawnFloat(`💀 ${h.name} 陣亡`, p.x, p.y, '#ff5252');
 }
 // ── Buff / Debuff（流浪獵人城內戰鬥用）──
 const EFFECTS = {
@@ -1686,6 +1803,7 @@ function updateWanderingScene(dt) {
   if (!dt || dt <= 0) return;
   ensureWildMonsters();
   for (const m of wildMonsters) {
+    if (m.flash > 0) m.flash -= dt;
     if (!m.alive) {
       m.respawnTicks -= dt;
       if (m.respawnTicks <= 0) {
@@ -1695,10 +1813,12 @@ function updateWanderingScene(dt) {
       }
     }
   }
+  for (let i = tombstones.length - 1; i >= 0; i--) { tombstones[i].t -= dt; if (tombstones[i].t <= 0) tombstones.splice(i, 1); }
   for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
     const h = wanderingHeroes[i];
     const st = getHeroStats(h);
     processEffects(h, dt);
+    if (h.bubble) { h.bubble.t -= dt; if (h.bubble.t <= 0) h.bubble = null; }
     switch (h.aiState) {
       case 'arrive':
       case 'idle':
@@ -1706,34 +1826,49 @@ function updateWanderingScene(dt) {
         if (h.actionTicks <= 0) decideWanderingNeed(h);
         break;
       case 'toRest':
-        if (moveActor(h, dt)) { h.aiState = 'resting'; h.actionTicks = randf(2.5, 4); }
+        if (moveActor(h, dt)) { h.aiState = 'resting'; h.inside = true; h.actionTicks = randf(2.5, 4); setBubble(h, '先喝一杯…'); }
         break;
       case 'resting': {
         h.actionTicks -= dt;
         h.hp = Math.min(st.maxHp, h.hp + st.maxHp * 0.2 * dt);
         h.fatigue = clamp(h.fatigue - 22 * dt, 0, 100);
-        if (h.actionTicks <= 0) decideWanderingNeed(h);
+        h.mood = clamp((h.mood ?? 70) + 9 * dt, 0, 100);
+        if (h.actionTicks <= 0) { h.inside = false; setBubble(h, '神清氣爽！'); decideWanderingNeed(h); }
         break;
       }
       case 'toShopAlchemy':
-        if (moveActor(h, dt)) {
-          if (h.wallet >= 25) {
-            h.wallet -= 25; h.inventory.healthPotion = (h.inventory.healthPotion || 0) + 1;
-            const p = sceneToClient(h.sx, h.sy - 8); spawnFloat('🧪 購買藥水 -25🪙', p.x, p.y, '#7dffa8');
-          }
-          h.aiState = 'idle'; h.actionTicks = randf(0.4, 1);
-          if (h.hp < st.maxHp * 0.6) usePotion(h, true);
-        }
+        if (moveActor(h, dt)) tryEnterShop(h, 'alchemy');
         break;
       case 'toShopForge':
-        if (moveActor(h, dt)) {
-          if (h.wallet >= 120) {
-            h.wallet -= 120; h.gearAtk = (h.gearAtk || 0) + 2;
-            const p = sceneToClient(h.sx, h.sy - 8); spawnFloat('⚒️ 強化裝備 攻+2', p.x, p.y, '#ffc46b');
-          }
+        if (moveActor(h, dt)) tryEnterShop(h, 'forge');
+        break;
+      case 'queue': {
+        const busy = wanderingHeroes.some(o => o !== h && o.inside && o.shopId === h.queueFor);
+        if (!busy) { tryEnterShop(h, h.queueFor); break; }
+        h.actionTicks -= dt;
+        if (h.actionTicks <= 0) { h.actionTicks = 1.5; setBubble(h, '還要等多久…', 1.4); h.mood = clamp((h.mood ?? 70) - 2, 0, 100); }
+        break;
+      }
+      case 'inShop': {
+        h.actionTicks -= dt;
+        if (h.actionTicks <= 0) {
+          if (h.shopId === 'alchemy') buyPotionAtShop(h); else buyGearAtShop(h);
+          h.inside = false; h.shopId = null;
           h.aiState = 'idle'; h.actionTicks = randf(0.4, 1);
         }
         break;
+      }
+      case 'dead': {
+        h.deadTicks -= dt;
+        if (h.deadTicks <= 0) {
+          h.hp = Math.round(st.maxHp * 0.5);
+          h.mood = clamp((h.mood ?? 70) - 25, 0, 100);
+          h.sx = BUILDING_ANCHORS.gate.x + rand(-6, 6); h.sy = BUILDING_ANCHORS.gate.y;
+          h.aiState = 'arrive'; h.actionTicks = 1;
+          setBubble(h, '…我回來了');
+        }
+        break;
+      }
       case 'toHunt': {
         if (!moveActor(h, dt)) break;
         const zid = h.huntZoneId || bestHuntZone(h).id;
@@ -1776,7 +1911,7 @@ function updateWanderingScene(dt) {
           const hits = (h.class === 'archer' && Math.random() < 0.2) ? 2 : 1;
           if (hits === 2) tag = ' 連射';
           for (let k = 0; k < hits; k++) {
-            m.hp -= dmgToMob;
+            m.hp -= dmgToMob; m.flash = 0.12;
             const pm = sceneToClient(m.x + rand(-3, 3), m.y - 8);
             spawnFloat(`-${dmgToMob}${k === 0 ? tag : ''}`, pm.x, pm.y, dmgColor);
             if (m.hp <= 0) break;
@@ -1785,8 +1920,12 @@ function updateWanderingScene(dt) {
             m.alive = false; m.respawnTicks = 6;
             const gold = Math.round(rand(m.gold[0], m.gold[1]) * getCombatGoldMultiplier());
             h.wallet += gold; grantXp(h, m.xp); h.fatigue = clamp(h.fatigue + 9, 0, 100);
+            h.mood = clamp((h.mood ?? 70) + 2, 0, 100);
             if (Math.random() < (h.dropMagicStoneChance || 0.1)) h.diamonds += 1;
-            const p = sceneToClient(m.x, m.y - 6); spawnFloat(`+${gold}🪙`, p.x, p.y, '#f4d03f');
+            const p = sceneToClient(m.x, m.y - 6);
+            spawnFloat(`+${gold}🪙`, p.x, p.y, '#f4d03f');
+            burst(p.x, p.y, '#f4d03f'); burst(p.x, p.y - 4, '#fff3b0');
+            if (Math.random() < 0.3) setBubble(h, choice(['解決了。', '小菜一碟', '為了村莊！', '還有誰？']));
             if (Math.random() < BW_LEAVE_CHANCE) { setWanderingTarget(h, 'leaving', BUILDING_ANCHORS.gate.x, BUILDING_ANCHORS.gate.y); break; }
             if (h.hp < st.maxHp * 0.45 || h.fatigue > 75) { decideWanderingNeed(h); break; }
             const zid = h.huntZoneId || bestHuntZone(h).id;
@@ -1796,10 +1935,11 @@ function updateWanderingScene(dt) {
             let dmgToHero = Math.max(1, Math.round(m.atk * randf(0.8, 1.3)) - Math.floor(st.def / 2));
             let heroDmgColor = '#ff7b7b', htag = '';
             if (h.class === 'warrior' && Math.random() < 0.3) { dmgToHero = Math.max(1, Math.floor(dmgToHero / 2)); heroDmgColor = '#8ecbff'; htag = ' 格擋'; }
-            h.hp = Math.max(1, h.hp - dmgToHero);
+            h.hp = Math.max(0, h.hp - dmgToHero);
             const ph = sceneToClient(h.sx, h.sy - 14);
             spawnFloat(`-${dmgToHero}${htag}`, ph.x, ph.y, heroDmgColor);
             if (m.debuff && Math.random() < 0.25) addEffect(h, m.debuff);
+            if (h.hp <= 0) { killWanderingHero(h); break; }
             if (h.hp < st.maxHp * 0.25) {
               if ((h.inventory.healthPotion || 0) > 0) {
                 usePotion(h, true);
@@ -1843,23 +1983,33 @@ function drawWanderingActors(c, t) {
     else if (m.kind === 'wisp') { c.fillStyle = `rgba(106,211,224,${0.5 + (reduceMotion ? 0 : Math.sin(t * 4 + m.x) * 0.2)})`; c.fillRect(mx - 4, my - 6 + bob, 8, 8); c.fillStyle = m.color; c.fillRect(mx - 2, my - 4 + bob, 4, 5); }
     else { c.fillRect(mx - 2, my - 2 + bob, 4, 4); c.fillRect(mx - 5, my - 3 + bob, 3, 2); c.fillRect(mx + 2, my - 3 + bob, 3, 2); }
     c.fillStyle = '#1b1026'; c.fillRect(mx - 1, my - 2 + bob, 1, 1); c.fillRect(mx + 1, my - 2 + bob, 1, 1);
+    if (m.flash > 0) { c.fillStyle = 'rgba(255,255,255,0.75)'; c.fillRect(mx - 5, my - 8 + bob, 10, 9); }
     if (m.hp < m.maxHp) {
       c.fillStyle = '#2c2c2c'; c.fillRect(mx - 6, my - 9, 12, 2);
       c.fillStyle = '#e74c3c'; c.fillRect(mx - 6, my - 9, Math.max(1, Math.round(12 * m.hp / m.maxHp)), 2);
     }
   }
-  // 流浪獵人小人
-  const stateIcon = { resting: '💤', toRest: '💤', toShopAlchemy: '🛒', toShopForge: '⚒️', fighting: '⚔', toHunt: '⚔', leaving: '🚪' };
+  // 墓碑（陣亡獵人，復活後消失）
+  for (const ts of tombstones) {
+    const tx = Math.round(ts.x), ty = Math.round(ts.y);
+    c.fillStyle = '#7a7a85'; c.fillRect(tx - 3, ty - 8, 7, 8); c.fillRect(tx - 1, ty - 10, 3, 2);
+    c.fillStyle = '#4a4a55'; c.fillRect(tx - 1, ty - 6, 1, 4); c.fillRect(tx - 2, ty - 5, 3, 1);
+  }
+  // 流浪獵人小人（進店/休息/陣亡時不繪製）
+  const stateIcon = { toRest: '💤', toShopAlchemy: '🛒', toShopForge: '⚒️', queue: '⏳', fighting: '⚔', toHunt: '⚔', leaving: '🚪' };
   const classColor = { warrior: '#e74c3c', mage: '#9b59b6', rogue: '#2c3e50', archer: '#27ae60', priest: '#f1c40f' };
   const effectIcon = { poison: '☠', bleed: '🩸' };
   for (const h of wanderingHeroes) {
-    if (h.aiState === 'gone') continue;
+    if (h.aiState === 'gone' || h.aiState === 'dead' || h.inside) continue;
     const x = Math.round(h.sx), y = Math.round(h.sy);
-    const bob = (reduceMotion || h.aiState === 'resting') ? 0 : Math.round(Math.sin(t * 6 + x) * 1);
+    const bob = reduceMotion ? 0 : Math.round(Math.sin(t * 6 + x) * 1);
+    // 稀有度光環
+    const rc = RARITIES[h.rarity || 'normal'];
+    if (rc && h.rarity !== 'normal') { c.fillStyle = rc.color + '55'; c.fillRect(x - 4, y - 1 + bob, 9, 2); }
     c.fillStyle = classColor[h.class] || '#3498db';
     c.fillRect(x - 2, y - 6 + bob, 5, 6);                      // 身體
     c.fillStyle = '#f0c8a0'; c.fillRect(x - 2, y - 10 + bob, 5, 4); // 頭
-    c.fillStyle = '#241a16'; c.fillRect(x - 2, y - 11 + bob, 5, 2); // 頭髮
+    c.fillStyle = rc ? rc.color : '#241a16'; c.fillRect(x - 2, y - 11 + bob, 5, 2); // 稀有度色頭帶
     if (h.class === 'warrior' || h.class === 'rogue') { c.fillStyle = '#dfe7ff'; c.fillRect(x + 3, y - 9 + bob, 1, 6); }
     else if (h.class === 'archer') { c.strokeStyle = '#8b5a2b'; c.lineWidth = 1; c.strokeRect(x + 3.5, y - 10 + bob, 2, 7); }
     else { c.fillStyle = '#f4d03f'; c.fillRect(x + 3, y - 8 + bob, 1, 5); }
@@ -1874,6 +2024,16 @@ function drawWanderingActors(c, t) {
     if (h.hp < st.maxHp || h.aiState === 'fighting') {
       c.fillStyle = '#2c2c2c'; c.fillRect(x - 5, y - 16 + bob, 11, 2);
       c.fillStyle = '#2ecc71'; c.fillRect(x - 5, y - 16 + bob, Math.max(1, Math.round(11 * h.hp / st.maxHp)), 2);
+    }
+    // 對話泡泡
+    if (h.bubble && h.bubble.text) {
+      c.font = '7px "Press Start 2P", monospace';
+      const bw = Math.min(56, h.bubble.text.length * 7 + 6);
+      const bx = clamp(x - bw / 2, 2, sceneW - bw - 2), by = y - 30 + bob;
+      c.fillStyle = 'rgba(255,248,220,0.95)'; c.fillRect(bx, by, bw, 10);
+      c.fillStyle = '#fff8dc'; c.fillRect(x - 1, by + 10, 2, 2);
+      c.strokeStyle = '#6b4a2f'; c.lineWidth = 1; c.strokeRect(bx + 0.5, by + 0.5, bw - 1, 9);
+      c.fillStyle = '#3a2a1c'; c.fillText(h.bubble.text, bx + 3, by + 8);
     }
     if (h.aiState === 'fighting' && !reduceMotion && Math.sin(t * 14 + x) > 0.2) {
       c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 1;
@@ -1948,6 +2108,7 @@ function drawScene(t, dt) {
   const c = sceneCtx, w = sceneW, h = sceneH;
   const day = (Math.sin(t / 18) + 1) / 2;
   const night = 1 - day;
+  sceneNight = night;
   const skyTop = mixColor([10, 14, 34], [92, 154, 214], day), skyBot = mixColor([38, 24, 54], [230, 176, 126], day);
   const grad = c.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, rgb(skyTop)); grad.addColorStop(0.60, rgb(skyBot)); grad.addColorStop(0.61, '#4c7042'); grad.addColorStop(1, '#263b2b');
   c.fillStyle = grad; c.fillRect(0, 0, w, h);
@@ -1965,24 +2126,28 @@ function drawScene(t, dt) {
   c.fillStyle = 'rgba(244,208,63,0.12)'; for (let x = 6; x < w; x += 24) { c.fillRect(x, 211, 8, 3); c.fillRect(x, 297, 8, 3); }
   const label = (txt, x, y, color = '#fff8dc') => { c.font = '7px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
   const house = (x, y, ww, hh, roof, wall) => { c.fillStyle = wall; c.fillRect(x, y, ww, hh); c.fillStyle = roof; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + ww / 2, y - 18); c.lineTo(x + ww + 4, y); c.closePath(); c.fill(); c.fillStyle = '#2c2c2c'; c.fillRect(x + ww / 2 - 5, y + hh - 18, 10, 18); };
+  // 建築等級外觀：Lv3+ 石造牆、屋簷下金磚等級 pip
+  const blv = (id) => BuildingSystem_getLevel(id);
+  const bwall = (id, wood, stone) => blv(id) >= 3 ? stone : wood;
+  const bpips = (id, x, y) => { const n = Math.min(10, blv(id)); c.fillStyle = '#f4d03f'; for (let i = 0; i < n; i++) c.fillRect(x + i * 4, y, 3, 2); };
   // Tavern
-  house(16, 164, 42, 42, '#6d3f2a', '#a9764b'); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); label('酒館', 20, 150);
+  house(16, 164, 42, 42, '#6d3f2a', bwall('tavern', '#a9764b', '#9d9da8')); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); label('酒館', 20, 150); bpips('tavern', 16, 210);
   // Guild hall with crossed-sword banner
-  house(96, 132, 50, 62, '#46324a', '#c9b082'); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
+  house(96, 132, 50, 62, '#46324a', bwall('monument', '#c9b082', '#b8b8c4')); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
   c.fillStyle = '#2c2c2c'; c.fillRect(112, 104, 4, 30); c.fillStyle = '#e74c3c'; c.fillRect(116, 104, 24, 12);
-  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); label('公會', 104, 98, '#f4d03f');
+  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); label('公會', 104, 98, '#f4d03f'); bpips('monument', 96, 198);
   // Market stalls
-  c.fillStyle = '#8b5a2b'; c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); label('市集', 188, 150);
+  c.fillStyle = bwall('goldMine', '#8b5a2b', '#8a8a96'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); label('市集', 188, 150); bpips('goldMine', 184, 204);
   // Forge with animated chimney smoke
-  house(22, 252, 44, 40, '#3c3c46', '#8f8f9d'); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
+  house(22, 252, 44, 40, '#3c3c46', bwall('weaponShop', '#8f8f9d', '#787882')); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
   if (!reduceMotion) for (let i = 0; i < 4; i++) { const sy = 238 - ((t * 10 + i * 9) % 34); c.fillStyle = `rgba(220,220,220,${0.35 - i * 0.06})`; c.fillRect(50 + Math.sin(t + i) * 4, sy, 6 + i, 5); }
-  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); label('鐵匠', 24, 238);
+  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); label('鐵匠', 24, 238); bpips('weaponShop', 22, 296);
   // Alchemy shop with bubbling cauldron
-  house(100, 258, 40, 36, '#4b3a63', '#9b7bb8'); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
+  house(100, 258, 40, 36, '#4b3a63', bwall('potionShop', '#9b7bb8', '#9890a8')); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
   if (!reduceMotion) for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(190,255,210,0.8)'; c.fillRect(116 + i * 5, 272 - ((t * 8 + i * 4) % 10), 2, 2); }
-  label('煉金', 104, 244);
+  label('煉金', 104, 244); bpips('potionShop', 100, 298);
   // Research tower with glowing core
-  house(178, 252, 40, 42, '#2d3d63', '#7890c9'); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); label('研究', 182, 238);
+  house(178, 252, 40, 42, '#2d3d63', bwall('altar', '#7890c9', '#8890b0')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); label('研究', 182, 238); bpips('altar', 178, 298);
   // Hunt gate: stone arch, portal glow and monster eyes
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26); c.fillStyle = `rgba(155,89,182,${0.35 + Math.sin(t * 4) * 0.12})`; c.fillRect(107, 325, 26, 20);
   c.fillStyle = '#ff5252'; const blink = reduceMotion || Math.sin(t * 3) > -0.2; if (blink) { c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); }
@@ -2090,13 +2255,14 @@ function renderResourcesPanel() {
 }
 function heroCardHtml(h) {
   const st = getHeroStats(h), cls = HERO_CLASSES[h.class];
+  const rc = RARITIES[h.rarity || 'normal'];
   const statusBadge = h.status === 'exploring' ? '<span class="hero-badge badge-exploring">狩獵中</span>' : h.status === 'resting' ? '<span class="hero-badge badge-resting">休整中</span>' : '<span class="hero-badge badge-idle">閒置</span>';
   const eq = (slot, label) => {
     const e = h.equipment?.[slot];
     return e ? `<span class="equip-slot rar-${ITEMS[e.id]?.rarity || 'common'}" title="點擊卸下，右鍵/長按強化" onclick="unequipItem('${h.id}','${slot}')" oncontextmenu="event.preventDefault();enhanceEquip('${h.id}','${slot}')">${e.icon}${e.name}+${e.plus || 0}</span>` : `<span class="equip-slot" onclick="openEquipModal('${h.id}','${slot}')">＋${label}</span>`;
   };
   const canAct = h.status === 'idle';
-  return `<div class="hero-card"><div class="hero-top"><div class="hero-portrait">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" ${(h.inventory.healthPotion || 0) > 0 ? '' : 'disabled'} onclick="usePotion(territoryHeroes.find(x=>x.id==='${h.id}'));renderAll()">用藥</button></div></div>`;
+  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" ${(h.inventory.healthPotion || 0) > 0 ? '' : 'disabled'} onclick="usePotion(territoryHeroes.find(x=>x.id==='${h.id}'));renderAll()">用藥</button></div></div>`;
 }
 function renderHeroesPanel() {
   $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`]].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
@@ -2104,7 +2270,7 @@ function renderHeroesPanel() {
   if (heroSubTab === 'territory') {
     $('hero-territory').innerHTML = `<div class="section-label">獵人空位 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（升級酒館可增加）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">尚未招募獵人，到「流浪者」分頁招募</div>');
   } else if (heroSubTab === 'wander') {
-    $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-card"><div class="hero-top"><div class="hero-portrait">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="hero-badge badge-wandering">流浪</span></div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・😪${h.fatigue || 0}%</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💠${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪獵人</div>';
+    $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); const rc = RARITIES[h.rarity || 'normal']; const stateBadge = h.aiState === 'dead' ? '<span class="hero-badge badge-resting">陣亡復活中</span>' : '<span class="hero-badge badge-wandering">流浪</span>'; return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${stateBadge}</div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・😪${h.fatigue || 0}%・😊${Math.round(h.mood ?? 70)}</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💠${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪獵人</div>';
   } else {
     const filtered = battleReports.filter(r => heroReportSubTab === 'all' || r.kind === heroReportSubTab);
     $('hero-reports').innerHTML = `<div class="report-sub-tabs">${[['all', '全部'], ['zone', '狩獵'], ['wander', '流浪']].map(([k, label]) => `<button class="report-sub-btn ${heroReportSubTab === k ? 'active' : ''}" onclick="heroReportSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('')}<button class="report-sub-btn" onclick="clearReports()">清空</button></div>` + (filtered.length ? filtered.map(r => `<div class="report-entry"><div class="report-head" onclick="toggleReport('${r.id}')"><span class="report-result" style="color:${r.result.includes('敗') || r.result.includes('撤退') ? 'var(--red)' : 'var(--green)'}">${r.result}</span><div class="report-info"><div class="report-title">${r.title}</div><div class="report-time">${timeAgo(r.time)}</div></div><span class="report-expand ${expandedReports.has(r.id) ? 'open' : ''}">▼</span></div><div class="report-body ${expandedReports.has(r.id) ? 'open' : ''}"><div class="combat-log">${r.lines.map(line => `<div class="log-line ${line.includes('勝利') ? 'log-victory' : line.includes('戰敗') ? 'log-defeat' : line.includes('藥水') ? 'log-heal' : line.includes('掉落') ? 'log-drop' : 'log-round'}">${line}</div>`).join('')}</div></div></div>`).join('') : '<div class="empty-state">尚無戰報</div>');
@@ -2134,8 +2300,14 @@ function renderMapPanel() {
   }).join('');
 }
 function renderShopPanel() {
-  $('shop-filter').innerHTML = [['all', '全部'], ['weapon', '⚔️ 武器'], ['armor', '🛡️ 防具'], ['potion', '🧪 藥水']]
+  $('shop-filter').innerHTML = [['all', '全部'], ['weapon', '⚔️ 武器'], ['armor', '🛡️ 防具'], ['potion', '🧪 藥水'], ['accessory', '📿 飾品']]
     .map(([k, label]) => `<button class="report-sub-btn ${shopFilter === k ? 'active' : ''}" onclick="shopFilter='${k}';renderShopPanel()">${label}</button>`).join('');
+  // 村莊貨架與定價（獵人消費 → 村莊金庫）
+  const tierBtn = (kind, mult, label) => `<button class="report-sub-btn ${priceMult[kind] === mult ? 'active' : ''}" onclick="setPriceTier('${kind}',${mult})">${label}</button>`;
+  $('shop-stock').innerHTML = `<div class="section-label">🏪 村莊貨架（賣給獵人・營收累計 ${fmt(stats.shopRevenue || 0)}🪙）</div>
+    <div class="shop-stock-row">🧪 藥水貨架 <b>${shopStock.healthPotion}/${potionStockCap()}</b>・售價 ${salePrice(25, 'potion')}🪙　${tierBtn('potion', 0.8, '薄利')}${tierBtn('potion', 1, '標準')}${tierBtn('potion', 1.6, '高價')}</div>
+    <div class="shop-stock-row">⚒️ 裝備貨架 <b>${shopStock.gear}/${gearStockCap()}</b>・售價 ${salePrice(120, 'gear')}🪙　${tierBtn('gear', 0.8, '薄利')}${tierBtn('gear', 1, '標準')}${tierBtn('gear', 1.6, '高價')}</div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">定價越高獵人越可能嫌貴不買；缺貨會讓獵人心情變差。貨架由煉金工房/鐵匠鋪自動補貨。</div>`;
   $('shop-grid').innerHTML = Object.values(ITEMS).filter(item => shopFilter === 'all' || item.type === shopFilter).map(item => {
     const chk = canCraft(item.id);
     return `<div class="shop-card rar-${item.rarity} ${chk.ok ? '' : 'locked-item'}"><div class="shop-ico">${item.icon}</div><div class="shop-name">${item.name}</div><div class="shop-stats">${itemStatsText(item)}${item.forClass ? '・' + CLASS_NAMES_ZH[item.forClass] : ''}</div><div class="shop-stock">倉庫 ×${invCount(item.id)}・售價 ${item.price}🪙</div><div class="shop-req">${chk.ok ? '' : chk.reason}</div><div class="building-cost">${Object.entries(item.cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn btn-gold btn-sm" ${chk.ok ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作</button></div>`;
@@ -2194,6 +2366,8 @@ function applyStateToRuntime() {
   territoryHeroes = (gameState.heroes || []).map(normalizeHero);
   wanderingHeroes = (gameState.wanderingHeroes || []).map(normalizeHero);
   shopInventory = gameState.shopInventory || {};
+  shopStock = Object.assign({ healthPotion: 2, gear: 1 }, gameState.shopStock || {});
+  priceMult = Object.assign({ potion: 1, gear: 1 }, gameState.priceMult || {});
   potionShopAutoProduce = gameState.potionShopAutoProduce !== false;
   nextWanderingSpawnIn = gameState.nextWanderingSpawnIn || 3;
   mapProgress = gameState.mapProgress || defaultMapProgress();
