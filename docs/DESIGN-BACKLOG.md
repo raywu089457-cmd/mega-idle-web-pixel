@@ -15,12 +15,12 @@
 - ✅ #15 技能洗點：技能分頁「重置」按鈕，花 5💠 返還全部 AP
 - ✅ #30 存檔匯出/匯入：設定面板 base64 存檔碼複製/貼上
 
-## Wave 5 — 戰鬥深化
+## Wave 5 — 戰鬥深化 ✅ commit: wave 5
 
-- ⬜ #13 戰報 DPS 摘要：`liveCombats` 追蹤 dmgDealt/dmgTaken/crits，`finishLiveCombat` 寫入戰報
-- ⬜ #14 夜間狩獵加成：夜晚派遣掉落率 +10%；接場景日夜狀態
-- ⬜ #11 Boss 機制多樣化：各王專屬機制（樹心=回血、母巢=毒、魔像王=護盾、暴君=吸血、大君=AOE）
-- ⬜ #12 元素相剋：武器/怪物元素標籤，相剋 +25% 傷（火→自然→毒→土→雷→火；聖↔暗互剋）
+- ✅ #13 戰報 DPS 摘要：`liveCombats` 追蹤 dmgDealt/dmgTaken/crits，`finishLiveCombat` 寫入戰報（📊 行）
+- ✅ #14 夜間狩獵加成：`sceneNight > 0.5` 時掉落率 0.28→0.38（即時+離線戰鬥），戰報加 🌙 行
+- ✅ #11 Boss 機制多樣化：`zone.boss.mechanic` — 樹心 regen（每5回合回血8%）、母巢 poison（每3回合毒5%）、魔像王 shield（前10回合受傷-40%）、暴君 lifesteal（反擊吸血50%）、大君 aoe（每6回合無視防禦20%）
+- ✅ #12 元素相剋：武器 element（短刃雷/匕首毒/長弓自然/法杖冰/戰錘聖）剋 zone element（森林自然←毒、沼澤毒←自然、礦坑土←雷、熔岩火←冰、魔域暗←聖），+25% 傷；難度 modal 顯示弱點
 
 ## Wave 6 — 裝備深度
 

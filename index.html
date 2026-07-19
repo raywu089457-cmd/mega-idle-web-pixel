@@ -789,6 +789,49 @@ const ITEMS = {
   springRing: { id: 'springRing', name: '清泉戒指', type: 'accessory', rarity: 'epic', price: 220, cost: { waterDirty: 90, magicStones: 3 }, icon: '💍', hp: 60, def: 4, req: { b: 'trinketShop', lv: 3 } },
 };
 const RARITY_NAMES = { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' };
+// ══ 裝備品質 / 詞綴 / 套裝（wave 6）══
+// gearInventory 存實例 { iid, id, tier, affix, plus, name, icon }；藥水仍是 shopInventory 計數
+const GEAR_TIERS = {
+  normal: { name: '', mult: 1 },
+  fine:   { name: '精良', mult: 1.15, color: '#5db3ff' },
+  legend: { name: '傳說', mult: 1.30, color: '#ffb84d' },
+};
+const AFFIXES = [
+  { id: 'vamp',    name: '吸血', text: '擊殺回血 4%',    effect: st => { st.killHeal = (st.killHeal || 0) + 0.04; } },
+  { id: 'hunter',  name: '獵手', text: '對頭目傷害 +12%', effect: st => { st.bossDmg = (st.bossDmg || 0) + 0.12; } },
+  { id: 'scholar', name: '學者', text: '經驗 +10%',      effect: st => { st.xpMult *= 1.10; } },
+  { id: 'miner',   name: '尋寶', text: '魔核發現 +8%',   effect: st => { st.msFind = (st.msFind || 0) + 0.08; } },
+  { id: 'thorn',   name: '荊棘', text: '反彈 8% 承傷',   effect: st => { st.thorns = (st.thorns || 0) + 0.08; } },
+];
+const GEAR_SETS = [
+  { id: 'hunter', name: '獵魔套', pieces: ['woodenSword', 'ironArmor'], text: '對頭目傷害 +15%', effect: st => { st.bossDmg = (st.bossDmg || 0) + 0.15; } },
+  { id: 'slayer', name: '屠魔套', pieces: ['holyMace', 'knightArmor'], text: '攻/防/HP +8%', effect: st => { st.atk = Math.round(st.atk * 1.08); st.def = Math.round(st.def * 1.08); st.maxHp = Math.round(st.maxHp * 1.08); } },
+];
+function isGear(id) { const t = ITEMS[id]?.type; return t === 'weapon' || t === 'armor' || t === 'accessory'; }
+function rollGearTier() { const r = Math.random(); return r < 0.6 ? 'normal' : r < 0.9 ? 'fine' : 'legend'; }
+function makeGearInstance(id, opts = {}) {
+  const def = ITEMS[id] || {};
+  const tier = opts.tier || (opts.roll ? rollGearTier() : 'normal');
+  let affix = opts.affix || null;
+  if (!affix && tier === 'legend') affix = choice(AFFIXES).id;
+  else if (!affix && tier === 'fine' && opts.roll && Math.random() < 0.4) affix = choice(AFFIXES).id;
+  return { iid: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), id, tier, affix, plus: 0, name: def.name, icon: def.icon };
+}
+function gearTierMult(tier) { return GEAR_TIERS[tier]?.mult || 1; }
+function gearDisplayName(inst) {
+  const def = ITEMS[inst.id]; if (!def) return inst.id;
+  const t = inst.tier === 'legend' ? '傳說・' : inst.tier === 'fine' ? '精良・' : '';
+  const a = inst.affix ? '・' + (AFFIXES.find(x => x.id === inst.affix)?.name || '') : '';
+  return t + def.name + a;
+}
+function gearSellPrice(inst) { const base = ITEMS[inst.id]?.price || 0; return Math.round(base * (inst.tier === 'legend' ? 2.5 : inst.tier === 'fine' ? 1.5 : 1)); }
+function applySetBonuses(hero, st) {
+  const equipped = ['weapon', 'armor', 'accessory'].map(s => hero.equipment?.[s]?.id).filter(Boolean);
+  hero.activeSets = [];
+  for (const set of GEAR_SETS) {
+    if (set.pieces.every(p => equipped.includes(p))) { set.effect(st); hero.activeSets.push(set); }
+  }
+}
 const DIFF_LABELS = { easy: '驅逐', normal: '討伐', hard: '獵殺', boss: '頭目' };
 const DIFF_COLORS = { easy: '#27ae60', normal: '#f39c12', hard: '#c0392b', boss: '#8e44ad' };
 // 元素相剋：武器 element 剋制對應 zone element（傷害 +25%）
@@ -950,6 +993,7 @@ let buildingStates = {};
 let territoryHeroes = [];
 let wanderingHeroes = [];
 let shopInventory = {};
+let gearInventory = [];   // 裝備實例倉庫（wave 6）：{ iid, id, tier, affix, plus, name, icon }
 let potionShopAutoProduce = true;
 let potionShopTickCounter = 0;
 let mapProgress = null;
@@ -1067,6 +1111,14 @@ function migrateSave(parsed) {
     if (h.diamonds == null) h.diamonds = 0;
   }
   if (!parsed.shopInventory) parsed.shopInventory = {};
+  // wave 6：裝備改為實例制；舊存檔 shopInventory 內的裝備計數轉為普通品質實例
+  if (!parsed.gearInventory) parsed.gearInventory = [];
+  for (const id of Object.keys(parsed.shopInventory)) {
+    if (isGear(id)) {
+      for (let i = 0; i < parsed.shopInventory[id]; i++) parsed.gearInventory.push(makeGearInstance(id));
+      delete parsed.shopInventory[id];
+    }
+  }
   if (!parsed.battleReports) parsed.battleReports = [];
   if (!parsed.activeExplorations) parsed.activeExplorations = [];
   return parsed;
@@ -1083,6 +1135,7 @@ function saveGame() {
     for (const [id, state] of Object.entries(buildingStates)) gameState.buildings[id] = { level: state.level };
     gameState.mapProgress = mapProgress;
     gameState.shopInventory = shopInventory;
+    gameState.gearInventory = gearInventory;
     gameState.shopStock = shopStock;
     gameState.priceMult = priceMult;
     gameState.potionShopAutoProduce = potionShopAutoProduce;
@@ -1226,22 +1279,24 @@ function buildingEffectText(id) {
 // HERO STATS (base + building passives + equipment + achievements)
 // ═══════════════════════════════════════════════════════════════════
 function getEquipBonuses(eq) {
-  // Equipment instances store { id, name, icon, plus }; stats come from ITEMS by id,
-  // so pre-fix saves with plain {id,name,icon} equipment automatically gain stats.
-  const out = { atk: 0, def: 0, hp: 0, crit: 0, msFind: 0 };
+  // Equipment instances store { id, iid, tier, affix, plus, name, icon }; stats come from ITEMS by id,
+  // so pre-fix saves with plain {id,name,icon} equipment automatically gain stats (tier undefined → ×1).
+  const out = { atk: 0, def: 0, hp: 0, crit: 0, msFind: 0, affix: null };
   if (!eq || !eq.id) return out;
   const def = ITEMS[eq.id];
   const plus = eq.plus || 0;
+  const tmult = gearTierMult(eq.tier);
   if (def) {
-    out.atk += def.atk || 0;
-    out.def += def.def || 0;
-    out.hp += def.hp || 0;
-    out.crit += def.crit || 0;
-    out.msFind += def.msFind || 0;
+    out.atk += Math.round((def.atk || 0) * tmult);
+    out.def += Math.round((def.def || 0) * tmult);
+    out.hp += Math.round((def.hp || 0) * tmult);
+    out.crit += (def.crit || 0) * tmult;
+    out.msFind += (def.msFind || 0) * tmult;
   }
   if (def?.type === 'weapon') out.atk += plus * 2;
   if (def?.type === 'armor') { out.def += plus * 2; out.hp += plus * 10; }
   if (def?.type === 'accessory') { out.atk += plus; out.hp += plus * 5; out.crit += plus * 0.01; }
+  if (eq.affix) out.affix = AFFIXES.find(a => a.id === eq.affix) || null;
   return out;
 }
 function getHeroTrait(hero) { return TRAITS.find(t => t.id === hero?.trait) || null; }
@@ -1256,9 +1311,11 @@ function getHeroStats(hero) {
   def += BuildingSystem_getLevel('armorShop');
   const ach = getAchievementBonuses();
   atk += ach.atk; def += ach.def;
+  const affixes = [];
   for (const slot of ['weapon', 'armor', 'accessory']) {
     const b = getEquipBonuses(hero.equipment?.[slot]);
     atk += b.atk; def += b.def; maxHp += b.hp; crit += b.crit; msFind += b.msFind;
+    if (b.affix) affixes.push(b.affix);
   }
   const st = { atk, def, maxHp, crit, msFind, goldMult: getCombatGoldMultiplier(), xpMult: getXpMultiplier() };
   // Star rank: 1~5 stars adjust the whole combat body (3 stars = baseline).
@@ -1269,6 +1326,9 @@ function getHeroStats(hero) {
   // One innate hunter trait.
   const trait = getHeroTrait(hero);
   if (trait) trait.apply(st);
+  // Gear affixes & set bonuses
+  for (const af of affixes) af.effect(st);
+  applySetBonuses(hero, st);
   // Apply passive skills
   applyPassiveSkills(hero, st);
   // Fatigue: long hunts without rest lower combat performance.
@@ -1436,15 +1496,46 @@ function recruitWanderingHero(heroId) {
 // ═══════════════════════════════════════════════════════════════════
 // INVENTORY / SHOP / EQUIPMENT
 // ═══════════════════════════════════════════════════════════════════
-function invCount(itemId) { return shopInventory[itemId] || 0; }
-function invTotal() { return Object.values(shopInventory).reduce((s, n) => s + (n || 0), 0); }
-function addItem(itemId, qty = 1) {
+function invCount(itemId) {
+  if (isGear(itemId)) return gearInventory.filter(g => g.id === itemId).length;
+  return shopInventory[itemId] || 0;
+}
+function invTotal() { return Object.values(shopInventory).reduce((s, n) => s + (n || 0), 0) + gearInventory.length; }
+function addItem(itemId, qty = 1, opts = {}) {
   if (!ITEMS[itemId] || qty <= 0) return false;
   if (invTotal() + qty > MAX_INV) return false;
-  shopInventory[itemId] = invCount(itemId) + qty;
+  if (isGear(itemId)) {
+    for (let i = 0; i < qty; i++) gearInventory.push(makeGearInstance(itemId, opts));
+    return true;
+  }
+  shopInventory[itemId] = (shopInventory[itemId] || 0) + qty;
   return true;
 }
+function addGearInstance(inst) {
+  if (invTotal() + 1 > MAX_INV) return false;
+  gearInventory.push({ ...inst });
+  return true;
+}
+function takeGearInstance(itemId) {
+  const idx = gearInventory.findIndex(g => g.id === itemId);
+  if (idx < 0) return null;
+  return gearInventory.splice(idx, 1)[0];
+}
+function addDropItem(itemId) {
+  const def = ITEMS[itemId]; if (!def) return null;
+  if (!isGear(itemId)) return addItem(itemId, 1) ? def.icon + def.name : null;
+  const inst = makeGearInstance(itemId, { roll: true });
+  if (!addGearInstance(inst)) return null;
+  return def.icon + gearDisplayName(inst);
+}
 function removeItem(itemId, qty = 1) {
+  if (isGear(itemId)) {
+    let removed = 0;
+    for (let i = gearInventory.length - 1; i >= 0 && removed < qty; i--) {
+      if (gearInventory[i].id === itemId) { gearInventory.splice(i, 1); removed++; }
+    }
+    return removed === qty;
+  }
   if (invCount(itemId) < qty) return false;
   shopInventory[itemId] -= qty;
   if (shopInventory[itemId] <= 0) delete shopInventory[itemId];
@@ -1479,30 +1570,56 @@ function sellItem(itemId) {
   const def = ITEMS[itemId]; if (!def || !removeItem(itemId, 1)) return;
   gainGold(def.price); sfx('gold'); showToast(`賣出 ${def.name} +${def.price}🪙`, 'info'); renderAll();
 }
+function sellGear(id, tier, affix) {
+  const idx = gearInventory.findIndex(g => g.id === id && (g.tier || 'normal') === tier && (g.affix || '') === (affix || ''));
+  if (idx < 0) return;
+  const inst = gearInventory.splice(idx, 1)[0];
+  const price = gearSellPrice(inst);
+  gainGold(price); sfx('gold'); showToast(`賣出 ${gearDisplayName(inst)} +${price}🪙`, 'info'); renderAll();
+}
+function salvageGear(id, tier, affix) {
+  const idx = gearInventory.findIndex(g => g.id === id && (g.tier || 'normal') === tier && (g.affix || '') === (affix || ''));
+  if (idx < 0) return;
+  const inst = gearInventory.splice(idx, 1)[0];
+  const def = ITEMS[inst.id];
+  const parts = [];
+  for (const [rid, amt] of Object.entries(def.cost || {})) {
+    if (rid === 'gold' || rid === 'magicStones') continue;
+    const back = Math.max(1, Math.floor(amt / 2));
+    ResourceSystem_add(rid, back); parts.push(`${RESOURCES[rid].icon}${back}`);
+  }
+  let ms = 0;
+  const msChance = inst.tier === 'legend' ? 0.6 : inst.tier === 'fine' ? 0.3 : 0;
+  if (Math.random() < msChance) { ms = 1; ResourceSystem_add('magicStones', 1); }
+  sfx('craft'); showToast(`分解 ${gearDisplayName(inst)}：回收 ${parts.join(' ') || '—'}${ms ? ' +1💠' : ''}`, 'success'); renderAll();
+}
 function sellAllCommons() {
   let total = 0, count = 0;
-  for (const [id, qty] of Object.entries(shopInventory)) {
-    const d = ITEMS[id];
-    if (!d || d.rarity !== 'common' || d.type === 'potion' || qty <= 0) continue;
-    total += d.price * qty; count += qty; delete shopInventory[id];
-  }
+  gearInventory = gearInventory.filter(g => {
+    const d = ITEMS[g.id];
+    if (d && d.rarity === 'common' && (g.tier || 'normal') === 'normal') { total += gearSellPrice(g); count++; return false; }
+    return true;
+  });
   if (!count) { showToast('沒有可賣的普通裝備。', 'info'); return; }
   gainGold(total); sfx('gold'); showToast(`賣出 ${count} 件普通裝備，+${total}🪙`, 'success'); renderAll();
 }
-function equipItem(heroId, itemId) {
-  const hero = territoryHeroes.find(h => h.id === heroId); const def = ITEMS[itemId];
-  if (!hero || !def || (def.type !== 'weapon' && def.type !== 'armor' && def.type !== 'accessory')) return;
+function equipItem(heroId, iid) {
+  const hero = territoryHeroes.find(h => h.id === heroId);
+  const idx = gearInventory.findIndex(g => g.iid === iid);
+  const inst = idx >= 0 ? gearInventory[idx] : null;
+  const def = inst ? ITEMS[inst.id] : null;
+  if (!hero || !def) return;
   if (def.forClass && def.forClass !== hero.class) { showToast(`${def.name} 限定 ${CLASS_NAMES_ZH[def.forClass]} 使用`, 'error'); return; }
-  if (!removeItem(itemId, 1)) { showToast('倉庫沒有此裝備。', 'error'); return; }
   const slot = def.type;
-  if (hero.equipment[slot]) addItem(hero.equipment[slot].id, 1);
-  hero.equipment[slot] = { id: def.id, name: def.name, icon: def.icon, plus: 0 };
+  gearInventory.splice(idx, 1);
+  if (hero.equipment[slot]) addGearInstance(hero.equipment[slot]);
+  hero.equipment[slot] = inst;
   hero.hp = Math.min(hero.hp, getHeroStats(hero).maxHp);
-  closeInventory(); sfx('equip'); showToast(`${hero.name} 裝備了 ${def.name}`, 'success'); renderAll();
+  closeInventory(); sfx('equip'); showToast(`${hero.name} 裝備了 ${gearDisplayName(inst)}`, 'success'); renderAll();
 }
 function unequipItem(heroId, slot) {
   const hero = territoryHeroes.find(h => h.id === heroId); if (!hero || !hero.equipment?.[slot]) return;
-  if (!addItem(hero.equipment[slot].id, 1)) { showToast('倉庫已滿，無法卸下。', 'error'); return; }
+  if (!addGearInstance(hero.equipment[slot])) { showToast('倉庫已滿，無法卸下。', 'error'); return; }
   hero.equipment[slot] = null; sfx('click'); renderAll();
 }
 function enhanceCost(eq) { const disc = 1 - BuildingSystem_getLevel('enhanceForge') * 0.06; return { gold: Math.max(10, Math.round(120 * ((eq.plus || 0) + 1) * disc)), magicStones: Math.floor(((eq.plus || 0) + 1) / 2) }; }
@@ -1514,14 +1631,15 @@ function enhanceEquip(heroId, slot) {
   eq.plus = (eq.plus || 0) + 1; sfx('enhance'); showToast(`強化成功 +${eq.plus}`, 'success'); renderAll();
 }
 let equipPick = null;
-function compareItemText(def, curEq) {
+function compareItemText(candEq, curEq) {
   if (!curEq) return ' <span style="color:var(--green);font-size:11px;">（空位）</span>';
+  const cand = getEquipBonuses(candEq);
   const cur = getEquipBonuses(curEq);
   const keys = [['atk', '攻'], ['def', '防'], ['hp', 'HP'], ['crit', '暴'], ['msFind', '核']];
   const parts = [];
   for (const [k, label] of keys) {
     const isPct = k === 'crit' || k === 'msFind';
-    const d = isPct ? Math.round(((def[k] || 0) - (cur[k] || 0)) * 100) : (def[k] || 0) - (cur[k] || 0);
+    const d = isPct ? Math.round(((cand[k] || 0) - (cur[k] || 0)) * 100) : (cand[k] || 0) - (cur[k] || 0);
     if (d !== 0) parts.push(`<span style="color:${d > 0 ? 'var(--green)' : 'var(--red)'}">${label}${d > 0 ? '▲+' : '▼-'}${Math.abs(d)}${isPct ? '%' : ''}</span>`);
   }
   return parts.length ? ' ' + parts.join(' ') : ' <span style="color:var(--text-faint);font-size:11px;">（數值相同）</span>';
@@ -1532,11 +1650,12 @@ function openEquipModal(heroId, slot) {
   $('inv-modal-title').textContent = slot === 'weapon' ? '🗡 選擇武器' : slot === 'armor' ? '🛡 選擇防具' : '📿 選擇飾品';
   $('inv-modal-hero').textContent = `${hero.name}（${CLASS_NAMES_ZH[hero.class]}）— ${slot === 'accessory' ? '飾品不限職業' : '限定職業才可裝備'}`;
   const list = $('inv-modal-list');
-  const options = Object.entries(shopInventory)
-    .filter(([id, qty]) => qty > 0 && ITEMS[id]?.type === slot && (!ITEMS[id].forClass || ITEMS[id].forClass === hero.class));
-  list.innerHTML = options.length ? options.map(([id, qty]) => {
-    const d = ITEMS[id];
-    return `<div class="hero-pick-row rar-${d.rarity}"><span style="font-size:22px">${d.icon}</span><div class="hp-info"><div class="hp-name">${d.name} ×${qty}</div><div class="hp-stats">${itemStatsText(d)}${compareItemText(d, hero.equipment[slot])}</div></div><button class="btn btn-gold btn-sm" onclick="equipItem('${heroId}','${id}')">裝備</button></div>`;
+  const options = gearInventory.filter(g => ITEMS[g.id]?.type === slot && (!ITEMS[g.id].forClass || ITEMS[g.id].forClass === hero.class));
+  list.innerHTML = options.length ? options.map(g => {
+    const d = ITEMS[g.id];
+    const tc = GEAR_TIERS[g.tier]?.color;
+    const affixText = g.affix ? '・' + (AFFIXES.find(a => a.id === g.affix)?.text || '') : '';
+    return `<div class="hero-pick-row rar-${d.rarity}"><span style="font-size:22px">${d.icon}</span><div class="hp-info"><div class="hp-name">${tc ? `<span style="color:${tc}">${gearDisplayName(g)}</span>` : gearDisplayName(g)}</div><div class="hp-stats">${itemStatsText(d)}${affixText}${compareItemText(g, hero.equipment[slot])}</div></div><button class="btn btn-gold btn-sm" onclick="equipItem('${heroId}','${g.iid}')">裝備</button></div>`;
   }).join('') : '<div class="empty-state">倉庫沒有可用的對應裝備</div>';
   showModal('modal-inventory');
 }
@@ -1589,7 +1708,7 @@ function runCombat(hero, enemyTemplate, ctx) {
     if (Math.random() < msChance) { rewards.magicStones = 1; ResourceSystem_add('magicStones', 1); }
     const dropChance = sceneNight > 0.5 ? 0.38 : 0.28;
     for (const dropId of (ctx.drops || [])) {
-      if (Math.random() < dropChance && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
+      if (Math.random() < dropChance) { const label = addDropItem(dropId); if (label) rewards.drops.push(label); }
     }
     lines.push(`🏆 勝利！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、1💠' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
   } else {
@@ -1678,15 +1797,16 @@ function advanceLiveCombat(hero, lc) {
   const skillAtkMult = 1 + (st.atkBonus || 0) + (st.skillDmgBonus || 0);
   const counterMult = elementCounterMult(hero, zone);
   const shieldMult = (lc.bossMech === 'shield' && lc.round <= 10) ? 0.6 : 1;
+  const bossMult = lc.isBoss ? 1 + (st.bossDmg || 0) : 1;
   const critEff = (st.crit || 0) + (st.critBonus || 0);
   const defEff = Math.max(0, Math.round((lc.enemy.def || 0) * (1 - Math.min(0.9, st.pierce || 0))));
-  const hit = calcDamage(Math.round(st.atk * party.mult * skillAtkMult * counterMult * shieldMult), defEff, critEff);
+  const hit = calcDamage(Math.round(st.atk * party.mult * skillAtkMult * counterMult * shieldMult * bossMult), defEff, critEff);
   lc.enemy.hp -= hit.dmg;
   lc.dmgDealt += hit.dmg; if (hit.isCrit) lc.crits += 1;
   lc.lines.push(`第${lc.round}回合：${hero.name} 造成 ${hit.dmg} 傷害${hit.isCrit ? '（暴擊！）' : ''}${party.classes > 1 ? `（編隊 +${Math.round((party.mult - 1) * 100)}%）` : ''}，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
   if (st.doubleAttack && lc.enemy.hp > 0) {
     const dblLv = getHeroSkillLevel(hero, 'r_speed');
-    const hit2 = calcDamage(Math.round(st.atk * party.mult * Math.max(0.4, 1 - 0.2 * dblLv) * counterMult * shieldMult), defEff, critEff);
+    const hit2 = calcDamage(Math.round(st.atk * party.mult * Math.max(0.4, 1 - 0.2 * dblLv) * counterMult * shieldMult * bossMult), defEff, critEff);
     lc.enemy.hp -= hit2.dmg;
     lc.dmgDealt += hit2.dmg; if (hit2.isCrit) lc.crits += 1;
     lc.lines.push(`🌪️ 疾風追加攻擊造成 ${hit2.dmg} 傷害，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
@@ -1717,6 +1837,12 @@ function advanceLiveCombat(hero, lc) {
     hero.hp -= ehit.dmg;
     lc.dmgTaken += ehit.dmg; lc.lastCounterDmg = ehit.dmg;
     lc.lines.push(`${lc.enemy.name} 反擊造成 ${ehit.dmg} 傷害，${hero.name} HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
+    if (st.thorns && lc.enemy.hp > 0) {
+      const th = Math.max(1, Math.round(ehit.dmg * st.thorns));
+      lc.enemy.hp -= th; lc.dmgDealt += th;
+      lc.lines.push(`🌵 荊棘反彈 ${th} 傷害，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
+      if (lc.enemy.hp <= 0) { finishLiveCombat(hero, lc, true); return; }
+    }
   }
   // ══ Boss 專屬機制 ══
   if (lc.bossMech && lc.enemy.hp > 0 && hero.hp > 0) {
@@ -1755,10 +1881,15 @@ function finishLiveCombat(hero, lc, won) {
     if (Math.random() < msChance) { rewards.magicStones = 1; ResourceSystem_add('magicStones', 1); }
     const dropChance = sceneNight > 0.5 ? 0.38 : 0.28;
     for (const dropId of (lc.cfg.drops || [])) {
-      if (Math.random() < dropChance && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
+      if (Math.random() < dropChance) { const label = addDropItem(dropId); if (label) rewards.drops.push(label); }
     }
     lc.lines.push(`🏆 勝利！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、1💠' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
     if (sceneNight > 0.5) lc.lines.push('🌙 夜晚狩獵加成：掉落率提升');
+    if (st.killHeal) {
+      const kh = Math.max(1, Math.round(st.maxHp * st.killHeal));
+      hero.hp = Math.min(st.maxHp, hero.hp + kh);
+      lc.lines.push(`🩸 吸血詞綴恢復 ${kh} HP（${Math.round(hero.hp)}/${st.maxHp}）`);
+    }
   } else {
     hero.hp = Math.max(1, Math.round(st.maxHp * 0.2));
     lc.lines.push(`💀 ${hero.name} 戰敗撤退，返回獵魔村休整。`);
@@ -2978,11 +3109,15 @@ function heroCardHtml(h) {
   const statusBadge = h.status === 'exploring' ? '<span class="hero-badge badge-exploring">狩獵中</span>' : h.status === 'resting' ? '<span class="hero-badge badge-resting">休整中</span>' : '<span class="hero-badge badge-idle">閒置</span>';
   const eq = (slot, label) => {
     const e = h.equipment?.[slot];
-    return e ? `<span class="equip-slot rar-${ITEMS[e.id]?.rarity || 'common'}" title="點擊卸下，右鍵/長按強化" onclick="unequipItem('${h.id}','${slot}')" oncontextmenu="event.preventDefault();enhanceEquip('${h.id}','${slot}')">${e.icon}${e.name}+${e.plus || 0}</span>` : `<span class="equip-slot" onclick="openEquipModal('${h.id}','${slot}')">＋${label}</span>`;
+    if (!e) return `<span class="equip-slot" onclick="openEquipModal('${h.id}','${slot}')">＋${label}</span>`;
+    const tc = GEAR_TIERS[e.tier]?.color;
+    const name = tc ? `<span style="color:${tc}">${e.icon}${e.name}</span>` : `${e.icon}${e.name}`;
+    return `<span class="equip-slot rar-${ITEMS[e.id]?.rarity || 'common'}" title="點擊卸下，右鍵/長按強化" onclick="unequipItem('${h.id}','${slot}')" oncontextmenu="event.preventDefault();enhanceEquip('${h.id}','${slot}')">${name}+${e.plus || 0}</span>`;
   };
+  const setBadge = (h.activeSets || []).length ? `<span style="color:var(--golden-wheat);font-size:11px;">⚜ ${h.activeSets.map(s => s.name).join('・')}</span>` : '';
   const canAct = h.status === 'idle';
   const ap = h.skillPoints || 0;
-  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span></div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button></div></div>`;
+  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span></div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button></div></div>`;
 }
 function renderHeroesPanel() {
   $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡技能']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
@@ -3087,9 +3222,21 @@ function renderShopPanel() {
     const chk = canCraft(item.id);
     return `<div class="shop-card rar-${item.rarity} ${chk.ok ? '' : 'locked-item'}"><div class="shop-ico">${item.icon}</div><div class="shop-name">${item.name}</div><div class="shop-stats">${itemStatsText(item)}${item.forClass ? '・' + CLASS_NAMES_ZH[item.forClass] : ''}</div><div class="shop-stock">倉庫 ×${invCount(item.id)}・售價 ${item.price}🪙</div><div class="shop-req">${chk.ok ? '' : chk.reason}</div><div class="building-cost">${Object.entries(item.cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn btn-gold btn-sm" ${chk.ok ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作</button></div>`;
   }).join('');
-  const inv = Object.entries(shopInventory).filter(([, qty]) => qty > 0);
-  const commonCount = inv.reduce((s, [id, qty]) => { const d = ITEMS[id]; return s + (d && d.rarity === 'common' && d.type !== 'potion' ? qty : 0); }, 0);
-  $('inv-list').innerHTML = (commonCount ? `<button class="btn btn-outline btn-sm" onclick="sellAllCommons()">🪙 一鍵賣出普通裝（${commonCount} 件）</button>` : '') + (inv.length ? inv.map(([id, qty]) => { const d = ITEMS[id]; return `<div class="inv-item rar-${d.rarity}"><span class="inv-ico">${d.icon}</span><span class="inv-name">${d.name}<span style="color:var(--text-faint);font-size:11px;">　${itemStatsText(d)}</span></span><span class="inv-qty">×${qty}</span><button class="btn btn-outline btn-sm" onclick="sellItem('${id}')">賣</button></div>`; }).join('') : '<div class="empty-state">倉庫是空的</div>');
+  const potionInv = Object.entries(shopInventory).filter(([, qty]) => qty > 0);
+  const gearGroups = {};
+  for (const g of gearInventory) { const k = `${g.id}|${g.tier || 'normal'}|${g.affix || ''}`; gearGroups[k] = (gearGroups[k] || 0) + 1; }
+  const commonCount = gearInventory.filter(g => ITEMS[g.id]?.rarity === 'common' && (g.tier || 'normal') === 'normal').length;
+  const potionRows = potionInv.map(([id, qty]) => { const d = ITEMS[id]; return `<div class="inv-item rar-${d.rarity}"><span class="inv-ico">${d.icon}</span><span class="inv-name">${d.name}<span style="color:var(--text-faint);font-size:11px;">　${itemStatsText(d)}</span></span><span class="inv-qty">×${qty}</span><button class="btn btn-outline btn-sm" onclick="sellItem('${id}')">賣</button></div>`; });
+  const gearRows = Object.entries(gearGroups).map(([k, qty]) => {
+    const [id, tier, affix] = k.split('|');
+    const d = ITEMS[id];
+    const tc = GEAR_TIERS[tier]?.color;
+    const affixText = affix ? '・' + (AFFIXES.find(a => a.id === affix)?.text || '') : '';
+    const nameHtml = tc ? `<span style="color:${tc}">${gearDisplayName({ id, tier, affix })}</span>` : gearDisplayName({ id, tier, affix });
+    return `<div class="inv-item rar-${d.rarity}"><span class="inv-ico">${d.icon}</span><span class="inv-name">${nameHtml}<span style="color:var(--text-faint);font-size:11px;">　${itemStatsText(d)}${affixText}</span></span><span class="inv-qty">×${qty}</span><button class="btn btn-outline btn-sm" title="分解為素材" onclick="salvageGear('${id}','${tier}','${affix}')">解</button><button class="btn btn-outline btn-sm" onclick="sellGear('${id}','${tier}','${affix}')">賣</button></div>`;
+  });
+  const allRows = potionRows.concat(gearRows).join('');
+  $('inv-list').innerHTML = (commonCount ? `<button class="btn btn-outline btn-sm" onclick="sellAllCommons()">🪙 一鍵賣出普通裝（${commonCount} 件）</button>` : '') + (allRows || '<div class="empty-state">倉庫是空的</div>');
 }
 function renderAchPanel() {
   const canPrestige = finalBossDefeated();
@@ -3174,6 +3321,7 @@ function applyStateToRuntime() {
   territoryHeroes = (gameState.heroes || []).map(normalizeHero);
   wanderingHeroes = (gameState.wanderingHeroes || []).map(normalizeHero);
   shopInventory = gameState.shopInventory || {};
+  gearInventory = gameState.gearInventory || [];
   shopStock = Object.assign({ healthPotion: 2, gear: 1 }, gameState.shopStock || {});
   priceMult = Object.assign({ potion: 1, gear: 1 }, gameState.priceMult || {});
   potionShopAutoProduce = gameState.potionShopAutoProduce !== false;
