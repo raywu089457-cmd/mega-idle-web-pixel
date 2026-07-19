@@ -6,7 +6,38 @@ type: project
 
 # mega-idle-web-pixel 開發進度
 
-## 最後更新: 2026-07-19
+## 最後更新: 2026-07-19（wave 6 完成）
+
+## 執行中計畫：DESIGN-BACKLOG 23 項
+
+追蹤檔：`docs/DESIGN-BACKLOG.md`（每 wave 完成更新狀態）。
+
+| Wave | 內容 | 狀態 |
+|------|------|------|
+| 3 | 技能系統接通（本 session 前半） | ✅ bd98a22 |
+| 4 | QoL 8 項（疲勞召回/全隊派遣/戰鬥加速/批量賣/裝備比較/新手引導/洗點/存檔碼） | ✅ b1a5d02 |
+| 5 | Boss 機制×5、元素相剋、DPS 摘要、夜間掉落 | ✅ fa36ca3 |
+| 6 | 裝備實例制、品質 roll、詞綴、套裝、分解（**舊存檔自動遷移**） | ✅ 5851cf4 |
+| 7 | 真·組隊戰 + 陣型（#9 #10） | 🚧 下一個 |
+| 8 | 轉職 + 第二特質（#16 #17） | ⬜ |
+| 9 | 委託訂單 + 天氣 + 無盡深淵（#25 #26 #29） | ⬜ |
+
+## 驗證流程（每 wave 必跑）
+
+1. `node extract-js.js`（Temp\opencode）抽出 inline script → `node --check`
+2. `node game-smoke-test.js`（Temp\opencode）— vm 沙盒斷言（目前 94 項全過）
+3. Playwright 真實瀏覽器 smoke（Temp\opencode\waveN-browser-smoke.js）— 零 console/page error
+4. 玩法 release 必 bump `sw.js` CACHE_NAME（目前 `hunter-village-v13`）
+5. commit + 更新 DESIGN-BACKLOG.md
+
+## 架構備註（wave 6 後）
+
+- **裝備實例制**：`gearInventory[]` 存 `{iid,id,tier,affix,plus,name,icon}`；藥水仍 `shopInventory{}` 計數。
+  `addItem/removeItem/invCount` 自動分流；`equipItem(heroId, iid)` 按實例裝備。
+- 品質：`GEAR_TIERS`（normal/fine×1.15/legend×1.30）；詞綴 `AFFIXES`；套裝 `GEAR_SETS` + `applySetBonuses()`。
+- 戰鬥旗標鏈：`getHeroStats` → st（被動技能/詞綴/套裝）→ `advanceLiveCombat` 消費
+  （counterMult 元素 / shieldMult 護盾 / bossMult 對王 / 技能旗標 / 荊棘 / 吸血）。
+- Boss 機制：`zone.boss.mechanic`（regen/poison/shield/lifesteal/aoe）在 `advanceLiveCombat` 反擊後處理。
 
 ## 架構型態
 
