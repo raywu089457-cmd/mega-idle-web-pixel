@@ -33,8 +33,10 @@
 - SAVE / LOAD：`localStorage`、v2 存檔遷移、離線收益（50%，上限 8 小時）
 - RESOURCE / BUILDING：產能、容量、升級費用與效果文字
 - HUNTER STATS：`getHeroStats()` 整合基礎屬性、星級、特質、疲勞、建築被動、成就、裝備與強化
-- COMBAT / MAP：派遣、進度、頭目解鎖、戰報
-- SHOP / EQUIP：製作、販售、裝備、卸下、強化
+- COMBAT / MAP：派遣後為即時制戰鬥（`liveCombats`，每 tick 一回合，地圖面板可見雙方血條與回合），
+  Boss 50% 血進第二階段（攻+30%）、第 30 回合狂暴（攻翻倍）；同區同難度編隊依職業數 +5%/種攻擊加成。
+  離線時探索中的獵人會在收取離線收益時結算遠征戰果。
+- SHOP / EQUIP：製作、販售、裝備（武器/防具/飾品）、卸下、強化（強化爐降費）
 - SCENE / AUDIO：Canvas 日夜村莊、點擊公會、飄字粒子、WebAudio 音效
 - 城內可視 AI：流浪獵人會從獵場門走進城，依需求（低血/疲勞/心情差→酒館休息、缺藥→煉金買藥、錢夠→鐵匠買裝備）走位進店，
   再依自己等級挑三個怪區（村郊原野 Lv1~5 / 霧林小徑 Lv4~9 / 荒嶺隘口 Lv8~14）即時打怪賺自己的金幣；
@@ -59,4 +61,4 @@
 
 - `manifest.json` 使用 `./index.html` 與 `./`，避免 GitHub Pages 子路徑問題。
 - `sw.js` 只快取 `./`、`./index.html`、`./manifest.json`；大型 assets 不放入 install 快取。
-- 每次玩法 release 必 bump `CACHE_NAME`（目前 `hunter-village-v8`），否則舊 PWA client 會繼續吃舊 `index.html`。
+- 每次玩法 release 必 bump `CACHE_NAME`（目前 `hunter-village-v9`），否則舊 PWA client 會繼續吃舊 `index.html`。

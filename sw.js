@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v8';
+const CACHE_NAME = 'hunter-village-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
