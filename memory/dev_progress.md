@@ -6,38 +6,42 @@ type: project
 
 # mega-idle-web-pixel 開發進度
 
-## 最後更新: 2026-07-19（wave 6 完成）
+## 最後更新: 2026-07-19（**23/23 全部完成** 🎉）
 
-## 執行中計畫：DESIGN-BACKLOG 23 項
+## 執行中計畫：DESIGN-BACKLOG 23 項 — 已完成
 
-追蹤檔：`docs/DESIGN-BACKLOG.md`（每 wave 完成更新狀態）。
+追蹤檔：`docs/DESIGN-BACKLOG.md`（全 wave ✅）。
 
 | Wave | 內容 | 狀態 |
 |------|------|------|
-| 3 | 技能系統接通（本 session 前半） | ✅ bd98a22 |
-| 4 | QoL 8 項（疲勞召回/全隊派遣/戰鬥加速/批量賣/裝備比較/新手引導/洗點/存檔碼） | ✅ b1a5d02 |
+| 3 | 技能系統接通 | ✅ bd98a22 |
+| 4 | QoL 8 項 | ✅ b1a5d02 |
 | 5 | Boss 機制×5、元素相剋、DPS 摘要、夜間掉落 | ✅ fa36ca3 |
-| 6 | 裝備實例制、品質 roll、詞綴、套裝、分解（**舊存檔自動遷移**） | ✅ 5851cf4 |
-| 7 | 真·組隊戰 + 陣型（#9 #10） | 🚧 下一個 |
-| 8 | 轉職 + 第二特質（#16 #17） | ⬜ |
-| 9 | 委託訂單 + 天氣 + 無盡深淵（#25 #26 #29） | ⬜ |
+| 6 | 裝備實例制、品質 roll、詞綴、套裝、分解 | ✅ 5851cf4 |
+| 7 | 真·組隊戰（共享血條）+ 陣型前後排 | ✅ fbfa2e9 |
+| 8 | 轉職 5 進階職（Lv.20）+ 第二特質（Lv.15）+ 重骰 | ✅ 2a4dd09 |
+| 9 | 委託訂單、天氣系統、無盡深淵 | ✅ 95245b4 |
 
 ## 驗證流程（每 wave 必跑）
 
 1. `node extract-js.js`（Temp\opencode）抽出 inline script → `node --check`
-2. `node game-smoke-test.js`（Temp\opencode）— vm 沙盒斷言（目前 94 項全過）
+2. `node game-smoke-test.js`（Temp\opencode）— vm 沙盒斷言（最終 147 項全過）
 3. Playwright 真實瀏覽器 smoke（Temp\opencode\waveN-browser-smoke.js）— 零 console/page error
-4. 玩法 release 必 bump `sw.js` CACHE_NAME（目前 `hunter-village-v13`）
+4. 玩法 release 必 bump `sw.js` CACHE_NAME（目前 `hunter-village-v16`）
 5. commit + 更新 DESIGN-BACKLOG.md
 
-## 架構備註（wave 6 後）
+## 架構備註（wave 9 後）
 
 - **裝備實例制**：`gearInventory[]` 存 `{iid,id,tier,affix,plus,name,icon}`；藥水仍 `shopInventory{}` 計數。
-  `addItem/removeItem/invCount` 自動分流；`equipItem(heroId, iid)` 按實例裝備。
-- 品質：`GEAR_TIERS`（normal/fine×1.15/legend×1.30）；詞綴 `AFFIXES`；套裝 `GEAR_SETS` + `applySetBonuses()`。
-- 戰鬥旗標鏈：`getHeroStats` → st（被動技能/詞綴/套裝）→ `advanceLiveCombat` 消費
-  （counterMult 元素 / shieldMult 護盾 / bossMult 對王 / 技能旗標 / 荊棘 / 吸血）。
-- Boss 機制：`zone.boss.mechanic`（regen/poison/shield/lifesteal/aoe）在 `advanceLiveCombat` 反擊後處理。
+- **戰鬥三軌**：單人即時戰（`liveCombats` + `advanceLiveCombat`）、團隊戰（`partyCombats` + `advancePartyCombat`，共享血條+前後排）、離線結算（`runCombat`）。
+  深淵戰借用 `liveCombats`（`isAbyss` 旗標，`finishLiveCombat` 分流到 `finishAbyssCombat`）。
+- **進階職業**：`ADV_CLASSES` + `CLASS_LINEAGE`；技能樹/裝備限制一律用 `baseClassOf()` 查。
+- **世界系統**：天氣 `weather`（600 tick 輪替）、委託 `craftOrders`（300 tick 生成、180s 期限）、深淵（`hero.abyssDepth` / `mapProgress.abyssBest`）。
+- 存檔遷移：舊裝備計數→實例、`partyId` 重開解散、`abyssBest` 預設 0，都在 `migrateSave()`。
+
+## 後續可做（原 30 項中未選的 7 項）
+
+#1 自動派遣、#3 勝率預估、#18 羈絆、#19 送禮、#20 退役、#27 聲望、#28 圖鑑 — 見 `docs/DESIGN-BACKLOG.md` 末段。
 
 ## 架構型態
 
