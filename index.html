@@ -1185,6 +1185,7 @@ function saveGame() {
     gameState.weather = weather;
     gameState.craftOrders = craftOrders;
     gameState.teams = teams;
+    gameState.buildingPlots = buildingPlots;
     localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
   } catch (e) { /* storage full or unavailable — ignore */ }
 }
@@ -2525,7 +2526,7 @@ function spawnWanderingHero() {
     wallet: Math.round(t.dropGold * rc.walletMult), diamonds: 0, dropMagicStoneChance: t.dropMagicStoneChance,
   });
   // 從獵場門進城，先站一下再決定要去哪
-  hero.sx = 120 + rand(-10, 10); hero.sy = 344;
+  hero.sx = BUILDING_ANCHORS.gate.x + rand(-10, 10); hero.sy = BUILDING_ANCHORS.gate.y - 2;
   hero.aiState = 'arrive'; hero.targetX = null; hero.targetY = null; hero.actionTicks = randf(0.6, 1.6);
   setBubble(hero, rarity === 'legend' ? '✨ 傳說獵人來了！' : rarity === 'hero' ? '聽說這裡有賺頭' : '有工作嗎？');
   if (rarity === 'legend' || rarity === 'hero') showToast(`${rc.name}流浪獵人「${hero.name}」造訪了村莊！`, 'success');
@@ -2760,6 +2761,38 @@ const SCENE_HOTSPOTS = [
   { id: 'drinkShop', name: '飲料店', hint: '獵人買飲料（村莊收入）', x: 154, y: 182, w: 24, h: 30 },
 ];
 let hoverHotspot = null;
+// ── 建築擺設（wave 13）：9 個空地，建築可兩兩交換位置 ──
+const PLOT_COORDS = [
+  { x: 16, y: 164 }, { x: 96, y: 132 }, { x: 184, y: 166 }, { x: 62, y: 188 }, { x: 158, y: 194 },
+  { x: 22, y: 252 }, { x: 100, y: 258 }, { x: 178, y: 252 }, { x: 96, y: 314 },
+];
+const PLOT_BUILDINGS = ['tavern', 'guild', 'market', 'restaurant', 'drinkShop', 'forge', 'alchemy', 'research', 'gate'];
+const DEFAULT_PLOT_OF = Object.fromEntries(PLOT_BUILDINGS.map((b, i) => [b, i]));
+const PLOT_NAMES = { tavern: '獵人酒館', guild: '獵魔公會', market: '市集', restaurant: '餐廳', drinkShop: '飲料店', forge: '鐵匠鋪', alchemy: '煉金工房', research: '魔核研究所', gate: '獵場門' };
+const BUILDING_TO_SCENE = { tavern: 'tavern', monument: 'guild', goldMine: 'market', restaurant: 'restaurant', drinkShop: 'drinkShop', weaponShop: 'forge', potionShop: 'alchemy', altar: 'research' };
+let buildingPlots = { ...DEFAULT_PLOT_OF };
+let placementPick = null;
+function plotNameOf(k) { return PLOT_NAMES[k] || k; }
+function plotDelta(sceneKey) {
+  const cur = PLOT_COORDS[buildingPlots[sceneKey] ?? DEFAULT_PLOT_OF[sceneKey]] || PLOT_COORDS[0];
+  const def = PLOT_COORDS[DEFAULT_PLOT_OF[sceneKey]] || PLOT_COORDS[0];
+  return { dx: cur.x - def.x, dy: cur.y - def.y };
+}
+function swapBuildingPlots(a, b) {
+  const t = buildingPlots[a]; buildingPlots[a] = buildingPlots[b]; buildingPlots[b] = t;
+  sfx('click'); showToast(`⇄ ${plotNameOf(a)} 與 ${plotNameOf(b)} 交換了位置`, 'success'); renderAll(); saveGame();
+}
+function resetBuildingPlots() {
+  buildingPlots = { ...DEFAULT_PLOT_OF };
+  placementPick = null;
+  sfx('click'); showToast('建築擺設已恢復預設。', 'info'); renderAll(); saveGame();
+}
+function pickPlacement(sceneKey) {
+  if (placementPick === null) { placementPick = sceneKey; showToast(`擺設模式：再點另一棟建築與「${plotNameOf(sceneKey)}」交換位置`, 'info'); }
+  else if (placementPick === sceneKey) { placementPick = null; showToast('已取消擺設選擇。', 'info'); }
+  else { swapBuildingPlots(placementPick, sceneKey); placementPick = null; }
+  renderBuildingsPanel();
+}
 // ── 城內可視 AI：多怪區（各自等級範圍）、建築錨點、流浪獵人走位 ──
 const HUNT_ZONES = [
   {
@@ -2790,12 +2823,20 @@ const HUNT_ZONES = [
     ],
   },
 ];
-const BUILDING_ANCHORS = {
+const ANCHOR_BASE = {
   tavern: { x: 37, y: 212 }, guild: { x: 121, y: 200 }, market: { x: 204, y: 206 },
   forge: { x: 44, y: 298 }, alchemy: { x: 120, y: 300 }, research: { x: 198, y: 298 },
   gate: { x: 120, y: 346 },
   drink: { x: 166, y: 214 },
 };
+// 錨點跟隨擺設：getter 即時加上 plotDelta
+const ANCHOR_PLOT_KEY = { drink: 'drinkShop' };
+const BUILDING_ANCHORS = {};
+for (const k of Object.keys(ANCHOR_BASE)) {
+  Object.defineProperty(BUILDING_ANCHORS, k, {
+    get() { const d = plotDelta(ANCHOR_PLOT_KEY[k] || k); return { x: ANCHOR_BASE[k].x + d.dx, y: ANCHOR_BASE[k].y + d.dy }; },
+  });
+}
 // ── 村民 NPC：沿固定路線走動，抵達時為村莊採集素材 ──
 const villagerNPCs = [
   { kind: 'farmer', name: '農夫', color: '#7a9a4a', res: 'fruitPoor', path: [{ x: 60, y: 214 }, { x: 204, y: 208 }], x: null, y: null, target: 1 },
@@ -3365,7 +3406,9 @@ function scenePoint(e) {
   const rect = sceneCanvas.getBoundingClientRect();
   return { x: (e.clientX - rect.left) / rect.width * sceneW, y: (e.clientY - rect.top) / rect.height * sceneH, cx: e.clientX, cy: e.clientY };
 }
-function hotspotAt(x, y) { return SCENE_HOTSPOTS.find(h => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) || null; }
+function hotspotAt(x, y) {
+  return SCENE_HOTSPOTS.find(h => { const d = plotDelta(h.id); return x >= h.x + d.dx && x <= h.x + d.dx + h.w && y >= h.y + d.dy && y <= h.y + d.dy + h.h; }) || null;
+}
 function handleHotspot(hs, e) {
   burst(e.clientX, e.clientY, '#f4d03f');
   if (hs.id === 'guild') { collectGuildClick(e); openPanel('res'); return; }
@@ -3422,45 +3465,64 @@ function drawScene(t, dt) {
   const bwall = (id, wood, stone) => blv(id) >= 3 ? stone : wood;
   const bpips = (id, x, y) => { const n = Math.min(10, blv(id)); c.fillStyle = '#f4d03f'; for (let i = 0; i < n; i++) c.fillRect(x + i * 4, y, 3, 2); };
   // Tavern
+  c.save(); { const d = plotDelta('tavern'); c.translate(d.dx, d.dy); }
   house(16, 164, 42, 42, '#6d3f2a', bwall('tavern', '#a9764b', '#9d9da8')); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); label('酒館', 20, 150); bpips('tavern', 16, 210);
+  c.restore();
   // Guild hall with crossed-sword banner
+  c.save(); { const d = plotDelta('guild'); c.translate(d.dx, d.dy); }
   house(96, 132, 50, 62, '#46324a', bwall('monument', '#c9b082', '#b8b8c4')); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
   c.fillStyle = '#2c2c2c'; c.fillRect(112, 104, 4, 30); c.fillStyle = '#e74c3c'; c.fillRect(116, 104, 24, 12);
   c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); label('公會', 104, 98, '#f4d03f'); bpips('monument', 96, 198);
+  c.restore();
   // Market stalls
+  c.save(); { const d = plotDelta('market'); c.translate(d.dx, d.dy); }
   c.fillStyle = bwall('goldMine', '#8b5a2b', '#8a8a96'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); label('市集', 188, 150); bpips('goldMine', 184, 204);
+  c.restore();
   // 餐廳餐車（酒館旁，建成才出現）
   if (blv('restaurant') > 0) {
+    c.save(); { const d = plotDelta('restaurant'); c.translate(d.dx, d.dy); }
     c.fillStyle = bwall('restaurant', '#a94f3c', '#9a8a86'); c.fillRect(62, 188, 22, 14);
     c.fillStyle = '#f4d03f'; c.fillRect(64, 182, 18, 6); c.fillStyle = '#2c2c2c'; c.fillRect(64, 202, 3, 4); c.fillRect(79, 202, 3, 4);
     label('餐廳', 60, 176, '#ffb84d'); bpips('restaurant', 62, 206);
+    c.restore();
   }
   // 飲料攤（市集旁，建成才出現）
   if (blv('drinkShop') > 0) {
+    c.save(); { const d = plotDelta('drinkShop'); c.translate(d.dx, d.dy); }
     c.fillStyle = bwall('drinkShop', '#3c6ea9', '#8296a8'); c.fillRect(158, 194, 16, 12);
     c.fillStyle = '#7dd6ff'; c.fillRect(160, 189, 12, 5); c.fillStyle = '#2c2c2c'; c.fillRect(160, 206, 2, 4); c.fillRect(170, 206, 2, 4);
     label('飲料', 154, 184, '#7dd6ff'); bpips('drinkShop', 158, 210);
+    c.restore();
   }
   // Forge with animated chimney smoke
+  c.save(); { const d = plotDelta('forge'); c.translate(d.dx, d.dy); }
   house(22, 252, 44, 40, '#3c3c46', bwall('weaponShop', '#8f8f9d', '#787882')); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
   if (!reduceMotion) for (let i = 0; i < 4; i++) { const sy = 238 - ((t * 10 + i * 9) % 34); c.fillStyle = `rgba(220,220,220,${0.35 - i * 0.06})`; c.fillRect(50 + Math.sin(t + i) * 4, sy, 6 + i, 5); }
   c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); label('鐵匠', 24, 238); bpips('weaponShop', 22, 296);
+  c.restore();
   // Alchemy shop with bubbling cauldron
+  c.save(); { const d = plotDelta('alchemy'); c.translate(d.dx, d.dy); }
   house(100, 258, 40, 36, '#4b3a63', bwall('potionShop', '#9b7bb8', '#9890a8')); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
   if (!reduceMotion) for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(190,255,210,0.8)'; c.fillRect(116 + i * 5, 272 - ((t * 8 + i * 4) % 10), 2, 2); }
   label('煉金', 104, 244); bpips('potionShop', 100, 298);
+  c.restore();
   // Research tower with glowing core
+  c.save(); { const d = plotDelta('research'); c.translate(d.dx, d.dy); }
   house(178, 252, 40, 42, '#2d3d63', bwall('altar', '#7890c9', '#8890b0')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); label('研究', 182, 238); bpips('altar', 178, 298);
+  c.restore();
   // Hunt gate: stone arch, portal glow and monster eyes
+  c.save(); { const d = plotDelta('gate'); c.translate(d.dx, d.dy); }
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26); c.fillStyle = `rgba(155,89,182,${0.35 + Math.sin(t * 4) * 0.12})`; c.fillRect(107, 325, 26, 20);
   c.fillStyle = '#ff5252'; const blink = reduceMotion || Math.sin(t * 3) > -0.2; if (blink) { c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); }
   label('獵場', 106, 310, '#e1b3ff');
+  c.restore();
   // 流浪獵人與城內野怪（可點擊互動；不再使用裝飾用直線路人）
   drawWanderingActors(c, t);
   // Hotspot feedback
   for (const hs of SCENE_HOTSPOTS) {
     const active = hoverHotspot && hoverHotspot.id === hs.id;
-    c.fillStyle = active ? 'rgba(244,208,63,0.20)' : 'rgba(255,248,220,0.035)'; c.fillRect(hs.x, hs.y, hs.w, hs.h);
+    const d = plotDelta(hs.id);
+    c.fillStyle = active ? 'rgba(244,208,63,0.20)' : 'rgba(255,248,220,0.035)'; c.fillRect(hs.x + d.dx, hs.y + d.dy, hs.w, hs.h);
     c.strokeStyle = active ? '#f4d03f' : 'rgba(255,248,220,0.10)'; c.lineWidth = active ? 2 : 1; c.strokeRect(hs.x + 0.5, hs.y + 0.5, hs.w - 1, hs.h - 1);
   }
   // Night wisps near the hunt gate
@@ -3663,13 +3725,16 @@ function renderSkillsTab() {
 }
 function renderBuildingsPanel() {
   const castleLv = BuildingSystem_getLevel('monument');
-  $('building-grid').innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;">🏰 建築等級上限＝獵魔公會等級 ×2（公會目前 Lv.${castleLv}，上限 Lv.${castleLv * 2}）</div>` + BUILDING_ORDER.map(id => {
+  const placeHint = placementPick ? `⇄ 擺設模式：選擇要與「${plotNameOf(placementPick)}」交換的建築` : '⇄ 點「換位」可兩兩交換建築位置（場景即時生效）';
+  $('building-grid').innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;">🏰 建築等級上限＝獵魔公會等級 ×2（公會目前 Lv.${castleLv}，上限 Lv.${castleLv * 2}）</div><div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="flex:1;">${placeHint}</span><button class="btn btn-outline btn-sm" onclick="resetBuildingPlots()">恢復預設</button></div>` + BUILDING_ORDER.map(id => {
     const b = BUILDINGS[id], lvl = BuildingSystem_getLevel(id);
     const effMax = buildingMaxLevel(id), hardMax = lvl >= b.maxLevel, castleCapped = !hardMax && lvl >= effMax;
     const maxed = hardMax || castleCapped;
     const cost = maxed ? null : getBuildingCost(id, lvl + 1);
     const afford = cost && ResourceSystem_canAfford(cost);
-    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''}"><div class="building-header"><div class="building-name">${b.name}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div><div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}</div>`;
+    const sceneKey = BUILDING_TO_SCENE[id];
+    const placeBtn = sceneKey ? `<button class="btn ${placementPick === sceneKey ? 'btn-gold' : 'btn-outline'} btn-sm" style="margin-top:4px;" onclick="pickPlacement('${sceneKey}')">${placementPick === sceneKey ? '✕ 取消換位' : '⇄ 換位'}</button>` : '';
+    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''}"><div class="building-header"><div class="building-name">${b.name}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div><div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}${placeBtn}</div>`;
   }).join('');
 }
 function upgradeBuilding(id) {
@@ -3910,6 +3975,7 @@ function applyStateToRuntime() {
     }).slice(0, 4);
     t.formation = t.formation || {};
   }
+  buildingPlots = { ...DEFAULT_PLOT_OF, ...(gameState.buildingPlots || {}) };
   syncActiveExplorations();
   if (territoryHeroes.length === 0) territoryHeroes.push(generateHero('warrior', 1, 'Ray'));
 }
