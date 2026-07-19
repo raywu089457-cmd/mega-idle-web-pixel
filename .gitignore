@@ -1,1 +1,9 @@
 superpowers/
+
+# Editor & IDE
+.obsidian/
+*.canvas
+
+# OS
+.DS_Store
+Thumbs.db

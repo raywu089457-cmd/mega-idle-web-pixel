@@ -33,6 +33,11 @@
 - SAVE / LOAD：`localStorage`、v2 存檔遷移、離線收益（50%，上限 8 小時）
 - RESOURCE / BUILDING：產能、容量、升級費用與效果文字
 - HUNTER STATS：`getHeroStats()` 整合基礎屬性、星級、特質、疲勞、建築被動、成就、裝備與強化
+- SKILLS：5 職業技能樹（`SKILL_TREE`，被動+主動各數招），升級得 AP（`skillPoints`）在獵人面板「技能」分頁學習；
+  被動在 `getHeroStats()` 內由 `applyPassiveSkills()` 套用；主動在即時戰鬥每回合 40% 觸發（`tryTriggerActiveSkill`），
+  冷卻 `combatSkillCds` 由 `tickSkillCds()` 每回合遞減；持續型技能（`duration>1`）掛在 `liveCombats[id].skillBuffs`
+  由 `applySkillBuffs()` 逐回合套用；效果旗標（critBonus/atkBonus/skillDmgBonus/pierce/doubleAttack/healPower/slowEnemy）
+  在 `advanceLiveCombat()` 當回合消費；被動閃避 `eva` 在即時戰鬥與離線 `runCombat()` 都生效。
 - COMBAT / MAP：派遣後為即時制戰鬥（`liveCombats`，每 tick 一回合，地圖面板可見雙方血條與回合），
   Boss 50% 血進第二階段（攻+30%）、第 30 回合狂暴（攻翻倍）；同區同難度編隊依職業數 +5%/種攻擊加成。
   離線時探索中的獵人會在收取離線收益時結算遠征戰果。

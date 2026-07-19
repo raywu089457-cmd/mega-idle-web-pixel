@@ -69,7 +69,7 @@ body{
 .hud-res .val { font-size: unset; }
 
 /* ── BACKGROUND ── */
-.bg-layer{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#d2b48c 0%,#c4a67c 40%,#a08060 100%);}
+.bg-layer{position:fixed;inset:0;z-index:0;background:#d2b48c;}
 
 /* ── FLOAT CANVAS (floating numbers / particles / ripples) ── */
 #float-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200;}
@@ -192,7 +192,7 @@ body{
 .portrait-rar-rare{border-color:#5db3ff !important;}
 .portrait-rar-hero{border-color:#b678ff !important;}
 .portrait-rar-legend{border-color:#ffb84d !important;}
-.rarity-tag{font-size:10px;padding:1px 5px;border:1px solid currentColor;border-radius:2px;}
+.rarity-tag{font-size:10px;padding:1px 5px;border:1px solid currentColor;border-radius:0;}
 .rar-legendary{border-color:var(--rar-legend) !important;}
 .rar-txt-common{color:var(--rar-common);}
 .rar-txt-rare{color:var(--rar-rare);}
@@ -335,6 +335,41 @@ body{
 .hero-pick-row .hp-name{font-weight:bold;color:var(--text);}
 .hero-pick-row .hp-stats{color:var(--text-dim);font-size:11px;}
 
+/* ── PARTY DISPATCH MODAL ── */
+.party-modal{display:flex;flex-direction:column;gap:12px;}
+.party-header{text-align:center;font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-dim);padding:6px 0;}
+.party-slots{display:flex;gap:6px;justify-content:center;padding:8px 0;}
+.party-slot{width:56px;height:56px;background:var(--card-bg);border:2px dashed var(--card-border);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;}
+.party-slot.filled{border-style:solid;border-color:var(--warm-wood);background:rgba(139,90,43,0.15);}
+.party-slot .slot-num{font-size:9px;color:var(--text-faint);}
+.party-slot .slot-name{font-size:9px;color:var(--text-dim);}
+.party-heroes{display:flex;flex-direction:column;gap:6px;max-height:38vh;overflow-y:auto;}
+.party-hero-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card-bg);border:2px solid var(--card-border);font-size:13px;cursor:pointer;}
+.party-hero-row:hover{background:rgba(244,208,63,0.12);}
+.party-hero-row.selected{border-color:var(--golden-wheat);background:rgba(244,208,63,0.15);}
+.party-hero-row .ph-info{flex:1;min-width:0;}
+.party-hero-row .ph-name{font-weight:bold;color:var(--text);}
+.party-hero-row .ph-stats{color:var(--text-dim);font-size:11px;}
+.party-hero-row .ph-ap{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--purple);}
+.party-power{text-align:center;font-family:'Press Start 2P',monospace;font-size:8px;color:var(--text-dim);padding:6px;background:rgba(139,90,43,0.08);}
+
+/* ── SKILLS TAB ── */
+.skill-grid{display:flex;flex-direction:column;gap:8px;}
+.skill-card{background:var(--card-bg);border:2px solid var(--card-border);padding:12px;display:flex;flex-direction:column;gap:8px;}
+.skill-card.locked{opacity:0.5;}
+.skill-card.active-skill{border-color:var(--blue);}
+.skill-card.passive-skill{border-color:var(--purple);}
+.skill-top{display:flex;align-items:center;gap:10px;}
+.skill-icon{font-size:32px;}
+.skill-info{flex:1;min-width:0;}
+.skill-name{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text);}
+.skill-desc{font-size:12px;color:var(--text-dim);font-family:'Lora',serif;}
+.skill-level-row{display:flex;align-items:center;gap:4px;}
+.skill-level{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--golden-wheat);}
+.skill-bar{flex:1;height:6px;background:rgba(139,90,43,0.2);overflow:hidden;}
+.skill-fill{height:100%;background:var(--golden-wheat);transition:width 0.3s;}
+.skill-ap-row{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--purple);text-align:center;padding:4px 0;}
+
 /* ── TOAST ── */
 #toast-container{position:fixed;top:70px;right:12px;max-width:min(480px,90vw);z-index:400;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
 .toast{padding:8px 14px;font-family:'Press Start 2P',monospace;font-size:11px;box-shadow:2px 2px 0 var(--charcoal);animation:toastIn 0.3s ease forwards;opacity:0;border:2px solid var(--charcoal);}
@@ -384,6 +419,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div class="mat-icon" title="藥草"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
   </div>
   <div class="hud-right">
+    <button class="btn-icon" id="btn-daily" title="每日登入" onclick="checkDaily()" style="font-size:11px;">🔥<span id="hud-streak" style="font-family:'Press Start 2P',monospace;font-size:7px;"></span></button>
     <button class="btn-icon" id="btn-settings" title="設定">⚙️</button>
   </div>
 </header>
@@ -421,6 +457,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div class="tab-content active" id="hero-territory"></div>
     <div class="tab-content" id="hero-wander"></div>
     <div class="tab-content" id="hero-reports"></div>
+    <div class="tab-content" id="hero-skills"></div>
   </div>
   <div class="hero-tab-bar" id="hero-tab-bar"></div>
 </div>
@@ -543,6 +580,18 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div class="dispatch-zone-grid" id="dispatch-zone-grid"></div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeDispatch()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PARTY DISPATCH MODAL ── -->
+<div class="modal-overlay" id="modal-party-dispatch">
+  <div class="modal">
+    <div class="modal-title">👥 組隊派遣</div>
+    <div class="modal-body" id="party-dispatch-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closePartyDispatch()">取消</button>
+      <button class="btn btn-gold btn-sm" id="btn-launch-party" onclick="launchPartyDispatch()">⚔ 出征</button>
     </div>
   </div>
 </div>
@@ -739,6 +788,107 @@ const ACHIEVEMENTS = [
 ];
 
 // ─── RUNTIME STATE ──────────────────────────────────────────────────
+// ─── SKILL SYSTEM ───────────────────────────────────────────────────
+// Skill trees per hero class: passive skills apply stat bonuses, active skills trigger in combat
+// id, name, icon, desc, type: 'passive'|'active', forClass, maxLevel, effect: fn(st, level)
+// Active skills: trigger every N rounds (triggerRounds), bonus damage/heal multiplier (power)
+const SKILL_TREE = {
+  warrior: [
+    { id: 'w_pow', name: '力量', icon: '💪', desc: '被動：攻擊力 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.atk = Math.round(st.atk * (1 + 0.05 * lv)); } },
+    { id: 'w_def', name: '鐵壁', icon: '🛡️', desc: '被動：防禦力 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.def = Math.round(st.def * (1 + 0.05 * lv)); } },
+    { id: 'w_crit', name: '怒斬', icon: '⚡', desc: '主動：暴擊率 +30%/級，持續 5 回合', type: 'active', maxLevel: 3, triggerRounds: 8, duration: 5, power: 0.3, effect: (st, lv) => { st.critBonus = (st.critBonus || 0) + 0.30 * lv; } },
+    { id: 'w_hp', name: '堅韌', icon: '❤️', desc: '被動：HP 上限 +8%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.maxHp = Math.round(st.maxHp * (1 + 0.08 * lv)); } },
+    { id: 'w_rage', name: '狂暴', icon: '🔥', desc: '主動：攻擊力 +25%/級，持續 3 回合', type: 'active', maxLevel: 3, triggerRounds: 10, duration: 3, power: 0.25, effect: (st, lv) => { st.atkBonus = (st.atkBonus || 0) + 0.25 * lv; } },
+  ],
+  mage: [
+    { id: 'm_pow', name: '咒能', icon: '🔮', desc: '被動：攻擊力 +6%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.atk = Math.round(st.atk * (1 + 0.06 * lv)); } },
+    { id: 'm_mp', name: '魔力', icon: '💠', desc: '被動：魔核發現率 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.msFind = (st.msFind || 0) + 0.05 * lv; } },
+    { id: 'm_fire', name: '烈焰', icon: '🔥', desc: '主動：範圍火焰攻擊，傷害 +40%/級', type: 'active', maxLevel: 3, triggerRounds: 9, power: 0.4, effect: (st, lv) => { st.skillDmgBonus = (st.skillDmgBonus || 0) + 0.40 * lv; } },
+    { id: 'm_frost', name: '寒冰', icon: '❄️', desc: '主動：敵人凍結 2 回合無法反擊，傷害 +20%/級', type: 'active', maxLevel: 3, triggerRounds: 7, power: 0.2, effect: (st, lv) => { st.skillDmgBonus = (st.skillDmgBonus || 0) + 0.20 * lv; st.slowEnemy = 2; } },
+    { id: 'm_xp', name: '博學', icon: '📖', desc: '被動：經驗獲取 +8%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.xpMult = (st.xpMult || 1) + 0.08 * lv; } },
+  ],
+  rogue: [
+    { id: 'r_atk', name: '速攻', icon: '🗡️', desc: '被動：攻擊力 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.atk = Math.round(st.atk * (1 + 0.05 * lv)); } },
+    { id: 'r_crit', name: '背刺', icon: '🎯', desc: '主動：下次攻擊必定暴擊，傷害 +25%/級', type: 'active', maxLevel: 3, triggerRounds: 6, power: 0.25, effect: (st, lv) => { st.critBonus = (st.critBonus || 0) + 0.25 * lv; } },
+    { id: 'r_eva', name: '霧影', icon: '💨', desc: '被動：閃避率 +4%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.eva = (st.eva || 0) + 0.04 * lv; } },
+    { id: 'r_gold', name: '盜賊', icon: '💰', desc: '被動：金幣獲取 +6%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.goldMult = (st.goldMult || 1) + 0.06 * lv; } },
+    { id: 'r_speed', name: '疾風', icon: '🌪️', desc: '主動：攻速提升，連續攻擊 2 次，傷害 -20%/級', type: 'active', maxLevel: 3, triggerRounds: 8, power: -0.2, effect: (st, lv) => { st.doubleAttack = (st.doubleAttack || 0) + 1; } },
+  ],
+  archer: [
+    { id: 'a_atk', name: '狙擊', icon: '🏹', desc: '被動：攻擊力 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.atk = Math.round(st.atk * (1 + 0.05 * lv)); } },
+    { id: 'a_crit', name: '鷹眼', icon: '🦅', desc: '主動：暴擊率 +35%/級，持續 4 回合', type: 'active', maxLevel: 3, triggerRounds: 9, duration: 4, power: 0.35, effect: (st, lv) => { st.critBonus = (st.critBonus || 0) + 0.35 * lv; } },
+    { id: 'a_hp', name: '野性', icon: '🐺', desc: '被動：HP 上限 +6%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.maxHp = Math.round(st.maxHp * (1 + 0.06 * lv)); } },
+    { id: 'a_pierce', name: '貫穿', icon: '➡️', desc: '主動：穿透攻擊，無視敵人 30% 防禦/級', type: 'active', maxLevel: 3, triggerRounds: 7, power: 0.30, effect: (st, lv) => { st.pierce = (st.pierce || 0) + 0.30 * lv; } },
+    { id: 'a_gold', name: '獵人', icon: '🦌', desc: '被動：金幣獲取 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.goldMult = (st.goldMult || 1) + 0.05 * lv; } },
+  ],
+  priest: [
+    { id: 'p_hp', name: '神聖', icon: '✝️', desc: '被動：HP 上限 +6%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.maxHp = Math.round(st.maxHp * (1 + 0.06 * lv)); } },
+    { id: 'p_heal', name: '治愈', icon: '💚', desc: '主動：治療自己 HP 的 25%/級', type: 'active', maxLevel: 3, triggerRounds: 8, power: 0.25, effect: (st, lv) => { st.healPower = (st.healPower || 0) + 0.25 * lv; } },
+    { id: 'p_def', name: '庇護', icon: '🛡️', desc: '被動：防禦力 +5%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.def = Math.round(st.def * (1 + 0.05 * lv)); } },
+    { id: 'p_smite', name: '懲擊', icon: '⚡', desc: '主動：神聖打擊，傷害 +30%/級', type: 'active', maxLevel: 3, triggerRounds: 7, power: 0.30, effect: (st, lv) => { st.skillDmgBonus = (st.skillDmgBonus || 0) + 0.30 * lv; } },
+    { id: 'p_xp', name: '祈福', icon: '🙏', desc: '被動：經驗獲取 +6%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.xpMult = (st.xpMult || 1) + 0.06 * lv; } },
+  ],
+};
+function getSkillApGain(hero) { return 1; }
+function getHeroSkillPoints(hero) { return hero.skillPoints || 0; }
+function grantSkillPoints(hero, amount) { hero.skillPoints = (hero.skillPoints || 0) + amount; }
+function getHeroSkills(hero) { return hero.skills || []; }
+function getHeroSkillLevel(hero, skillId) { const s = (hero.skills || []).find(s => s.id === skillId); return s ? s.level : 0; }
+function getSkillDef(classKey, skillId) { const tree = SKILL_TREE[classKey] || []; return tree.find(s => s.id === skillId) || null; }
+function canLearnSkill(hero, skillId) {
+  const def = getSkillDef(hero.class, skillId); if (!def) return false;
+  const cur = getHeroSkillLevel(hero, skillId); if (cur >= def.maxLevel) return false;
+  return (hero.skillPoints || 0) >= 1;
+}
+function learnSkill(hero, skillId) {
+  if (!canLearnSkill(hero, skillId)) { showToast('無法學習此技能。', 'error'); return false; }
+  hero.skillPoints = (hero.skillPoints || 0) - 1;
+  const existing = (hero.skills || []).find(s => s.id === skillId);
+  if (existing) { existing.level += 1; } else { if (!hero.skills) hero.skills = []; hero.skills.push({ id: skillId, level: 1 }); }
+  sfx('level'); showToast(`學會了！ ${getSkillDef(hero.class, skillId).icon} ${getSkillDef(hero.class, skillId).name}`, 'success');
+  renderAll(); return true;
+}
+function applyPassiveSkills(hero, st) {
+  const skills = hero.skills || [];
+  for (const sk of skills) {
+    const def = getSkillDef(hero.class, sk.id); if (!def || def.type !== 'passive') continue;
+    def.effect(st, sk.level);
+  }
+}
+function getActiveSkills(hero) { return (SKILL_TREE[hero.class] || []).filter(s => s.type === 'active'); }
+function tickSkillCds(hero) {
+  const cds = hero.combatSkillCds; if (!cds) return;
+  for (const k of Object.keys(cds)) { if (cds[k] > 0) cds[k] -= 1; }
+}
+function applySkillBuffs(hero, st, ctx) {
+  const buffs = ctx && ctx.skillBuffs; if (!buffs) return;
+  for (const sid of Object.keys(buffs)) {
+    if (buffs[sid] <= 0) { delete buffs[sid]; continue; }
+    const def = getSkillDef(hero.class, sid); if (!def) { delete buffs[sid]; continue; }
+    def.effect(st, getHeroSkillLevel(hero, sid));
+    buffs[sid] -= 1;
+  }
+}
+function tryTriggerActiveSkill(hero, st, ctx) {
+  const actives = getActiveSkills(hero); if (!actives.length) return;
+  const cds = hero.combatSkillCds || {};
+  for (const def of actives) {
+    const lv = getHeroSkillLevel(hero, def.id);
+    if (lv <= 0) continue;                 // 未學習的技能不觸發
+    if ((cds[def.id] || 0) > 0) continue;  // 冷卻中
+    if (Math.random() < 0.4) {
+      if (!hero.combatSkillCds) hero.combatSkillCds = {};
+      hero.combatSkillCds[def.id] = def.triggerRounds;
+      def.effect(st, lv);
+      // 持續型技能（duration > 1）：本回合已生效，剩餘回合掛到戰鬥狀態由 applySkillBuffs 套用
+      if (def.duration > 1 && ctx) {
+        if (!ctx.skillBuffs) ctx.skillBuffs = {};
+        ctx.skillBuffs[def.id] = def.duration - 1;
+      }
+      if (ctx && ctx.lines) ctx.lines.push(`✦ ${hero.name} 發動 ${def.icon} ${def.name}！`);
+    }
+  }
+}
 let gameState = null;
 let resources = {};
 let buildingStates = {};
@@ -767,7 +917,8 @@ let pendingOfflineSummary = null;
 let pendingDailyReward = null;
 let dispatchHeroId = null;
 let activePanel = null;
-let heroSubTab = 'territory';        // 'territory' | 'wander' | 'reports'
+let heroSubTab = 'territory';        // 'territory' | 'wander' | 'reports' | 'skills'
+let skillTabHeroId = null;           // selected hero for skills tab
 let shopFilter = 'all';              // 'all' | 'weapon' | 'armor' | 'potion' | 'accessory'
 // 村莊商店貨架（賣給獵人的商品庫存）與定價策略 —— 村莊金庫主要收入來源
 let shopStock = { healthPotion: 2, gear: 1 };
@@ -850,6 +1001,9 @@ function migrateSave(parsed) {
     if (!h.equipment) h.equipment = { weapon: null, armor: null };
     if (h.exploreDifficulty === undefined) h.exploreDifficulty = null;
     if (h.explorationProgress == null) h.explorationProgress = 0;
+    if (!h.skills) h.skills = [];
+    if (h.skillPoints == null) h.skillPoints = 0;
+    if (!h.combatSkillCds) h.combatSkillCds = {};
   }
   for (const h of (parsed.wanderingHeroes || [])) {
     if (!h.inventory) h.inventory = [];
@@ -1060,6 +1214,8 @@ function getHeroStats(hero) {
   // One innate hunter trait.
   const trait = getHeroTrait(hero);
   if (trait) trait.apply(st);
+  // Apply passive skills
+  applyPassiveSkills(hero, st);
   // Fatigue: long hunts without rest lower combat performance.
   const fatigue = hero.fatigue || 0;
   if (fatigue >= 90) { st.atk = Math.max(1, Math.round(st.atk * 0.7)); st.def = Math.round(st.def * 0.7); }
@@ -1136,6 +1292,10 @@ function normalizeHero(h) {
   h.deadTicks = h.deadTicks || 0;
   h.inside = false;   // 進店/休息時不在場景繪製（瞬態，不存檔）
   h.bubble = null;    // 對話泡泡（瞬態）
+  // 技能系統
+  if (!Array.isArray(h.skills)) h.skills = [];
+  h.skillPoints = h.skillPoints || 0;
+  h.combatSkillCds = h.combatSkillCds || {};
   return h;
 }
 function generateHero(classKey, level = 1, customName) {
@@ -1159,6 +1319,7 @@ function grantXp(hero, amount) {
     hero.atk += Math.round(3 * growth);
     hero.def += Math.round(2 * growth);
     hero.hp = getHeroStats(hero).maxHp;
+    grantSkillPoints(hero, getSkillApGain(hero));
   }
   if (ups > 0) { sfx('level'); showToast(`${hero.name} 升到了 Lv.${hero.level}！`, 'success'); }
   return ups;
@@ -1317,9 +1478,13 @@ function runCombat(hero, enemyTemplate, ctx) {
     enemy.hp -= hit.dmg;
     lines.push(`第${rounds}回合：${hero.name} 造成 ${hit.dmg} 傷害${hit.isCrit ? '（暴擊！）' : ''}，${enemy.name} HP ${Math.max(0, enemy.hp)}`);
     if (enemy.hp <= 0) { won = true; break; }
-    const ehit = calcDamage(enemy.atk || 1, st.def, 0.03);
-    hero.hp -= ehit.dmg;
-    lines.push(`${enemy.name} 反擊造成 ${ehit.dmg} 傷害，${hero.name} HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
+    if (Math.random() < (st.eva || 0)) {
+      lines.push(`💨 ${hero.name} 閃避了 ${enemy.name} 的反擊！`);
+    } else {
+      const ehit = calcDamage(enemy.atk || 1, st.def, 0.03);
+      hero.hp -= ehit.dmg;
+      lines.push(`${enemy.name} 反擊造成 ${ehit.dmg} 傷害，${hero.name} HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
+    }
   }
   const rewards = { gold: 0, xp: 0, magicStones: 0, drops: [] };
   if (won) {
@@ -1371,6 +1536,7 @@ function dispatchHero(heroId, zoneId, difficulty) {
   const carry = Math.min(2, invCount('healthPotion'));
   if (carry > 0) { removeItem('healthPotion', carry); hero.inventory.healthPotion = (hero.inventory.healthPotion || 0) + carry; }
   hero.status = 'exploring'; hero.exploreZoneId = zone.id; hero.exploreDifficulty = difficulty; hero.explorationProgress = 0;
+  hero.combatSkillCds = {}; // Reset skill cooldowns on new exploration
   closeDispatch(); closeModal(); sfx('dispatch'); showToast(`${hero.name} 前往 ${zone.name}（${DIFF_LABELS[difficulty]}）`, 'info'); syncActiveExplorations(); renderAll();
 }
 // ── 即時派遣戰鬥：每秒一回合，Boss 有階段與狂暴 ──
@@ -1398,24 +1564,54 @@ function advanceLiveCombat(hero, lc) {
   const st = getHeroStats(hero);
   const party = partyInfoFor(hero);
   lc.round += 1;
+  tickSkillCds(hero);
+  applySkillBuffs(hero, st, lc);
   if (lc.isBoss && !lc.enraged && lc.round >= 30) {
     lc.enraged = true; lc.enemy.atk = Math.round(lc.enemy.atk * 2);
     lc.lines.push('👹 頭目進入狂暴狀態，攻擊翻倍！');
     showToast(`👹 ${lc.enemy.name} 狂暴了！`, 'error'); sfx('boss');
   }
   if (hero.autoPotion && hero.hp < st.maxHp * 0.35 && usePotion(hero, true)) lc.lines.push(`🧪 ${hero.name} 喝下藥水，HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
-  const hit = calcDamage(Math.round(st.atk * party.mult), lc.enemy.def || 0, st.crit);
+  // Try trigger active skill
+  tryTriggerActiveSkill(hero, st, lc);
+  // Consume active skill effects set on st this round
+  const skillAtkMult = 1 + (st.atkBonus || 0) + (st.skillDmgBonus || 0);
+  const critEff = (st.crit || 0) + (st.critBonus || 0);
+  const defEff = Math.max(0, Math.round((lc.enemy.def || 0) * (1 - Math.min(0.9, st.pierce || 0))));
+  const hit = calcDamage(Math.round(st.atk * party.mult * skillAtkMult), defEff, critEff);
   lc.enemy.hp -= hit.dmg;
   lc.lines.push(`第${lc.round}回合：${hero.name} 造成 ${hit.dmg} 傷害${hit.isCrit ? '（暴擊！）' : ''}${party.classes > 1 ? `（編隊 +${Math.round((party.mult - 1) * 100)}%）` : ''}，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
+  if (st.doubleAttack && lc.enemy.hp > 0) {
+    const dblLv = getHeroSkillLevel(hero, 'r_speed');
+    const hit2 = calcDamage(Math.round(st.atk * party.mult * Math.max(0.4, 1 - 0.2 * dblLv)), defEff, critEff);
+    lc.enemy.hp -= hit2.dmg;
+    lc.lines.push(`🌪️ 疾風追加攻擊造成 ${hit2.dmg} 傷害，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
+  }
+  if (st.healPower) {
+    const healAmt = Math.round(st.maxHp * st.healPower);
+    hero.hp = Math.min(st.maxHp, hero.hp + healAmt);
+    lc.lines.push(`💚 治療恢復 ${healAmt} HP，${hero.name} HP ${Math.round(hero.hp)}/${st.maxHp}`);
+  }
+  if (st.slowEnemy) {
+    lc.enemySlowRounds = (lc.enemySlowRounds || 0) + st.slowEnemy;
+    lc.lines.push(`❄️ ${lc.enemy.name} 被凍結，${st.slowEnemy} 回合無法反擊！`);
+  }
   if (lc.isBoss && !lc.phase2 && lc.enemy.hp > 0 && lc.enemy.hp < lc.enemy.maxHp * 0.5) {
     lc.phase2 = true; lc.enemy.atk = Math.round(lc.enemy.atk * 1.3);
     lc.lines.push('⚠️ 頭目進入第二階段，攻擊提升 30%！');
     showToast(`⚠️ ${lc.enemy.name} 進入第二階段！`, 'error'); sfx('boss');
   }
   if (lc.enemy.hp <= 0) { finishLiveCombat(hero, lc, true); return; }
-  const ehit = calcDamage(lc.enemy.atk || 1, st.def, 0.03);
-  hero.hp -= ehit.dmg;
-  lc.lines.push(`${lc.enemy.name} 反擊造成 ${ehit.dmg} 傷害，${hero.name} HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
+  if ((lc.enemySlowRounds || 0) > 0) {
+    lc.enemySlowRounds -= 1;
+    lc.lines.push(`❄️ ${lc.enemy.name} 凍結中，無法反擊。`);
+  } else if (Math.random() < (st.eva || 0)) {
+    lc.lines.push(`💨 ${hero.name} 閃避了 ${lc.enemy.name} 的反擊！`);
+  } else {
+    const ehit = calcDamage(lc.enemy.atk || 1, st.def, 0.03);
+    hero.hp -= ehit.dmg;
+    lc.lines.push(`${lc.enemy.name} 反擊造成 ${ehit.dmg} 傷害，${hero.name} HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
+  }
   if (hero.hp <= 0) finishLiveCombat(hero, lc, false);
   else if (lc.round >= 60) { lc.lines.push('⏱ 戰鬥拖太久，獵人體力不支撤退。'); finishLiveCombat(hero, lc, false); }
 }
@@ -1501,7 +1697,7 @@ function openDifficultyModal(zoneId, diff) {
     <div class="offline-item"><span class="offline-label">💠 魔核機率</span><span class="offline-val">${Math.round(cfg.magicStoneChance * 100)}%</span></div>
     <div class="offline-item"><span class="offline-label">✨ 經驗</span><span class="offline-val">${cfg.xp}</span></div>
     <div class="section-label">派遣獵人</div>
-    ${idleHeroes.length ? `<div style="margin-bottom:6px;"><button class="btn btn-purple btn-sm" onclick="dispatchParty(${zone.id},'${diff}')">👥 全隊派遣（最多 4 人，職業越多加成越高）</button></div>` : ''}
+    ${idleHeroes.length ? `<div style="margin-bottom:6px;"><button class="btn btn-purple btn-sm" onclick="partyDispatch(${zone.id},'${diff}')">👥 組隊派遣（最多 4 人）</button></div>` : ''}
     ${idleHeroes.length ? idleHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-pick-row"><span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span><div class="hp-info"><div class="hp-name">${h.name} Lv.${h.level}</div><div class="hp-stats">攻${st.atk} 防${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div></div><button class="btn btn-blue btn-sm" onclick="dispatchHero('${h.id}',${zone.id},'${diff}')">派遣</button></div>`; }).join('') : '<div class="empty-state">沒有閒置獵人，請先招募或召回</div>'}
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button></div>`;
   showModal('modal-detail');
@@ -1527,6 +1723,89 @@ function openDispatch(heroId) {
   showModal('modal-dispatch');
 }
 function closeDispatch() { dispatchHeroId = null; hideModal('modal-dispatch'); }
+
+// ─── PARTY DISPATCH ────────────────────────────────────────────────────
+let partyDispatchState = { zoneId: null, difficulty: null, selected: [] };
+function calcPartyPower(heroes) {
+  if (!heroes || !heroes.length) return { atk: 0, def: 0, count: 0 };
+  let totalAtk = 0, maxDef = 0;
+  for (const h of heroes) { const st = getHeroStats(h); totalAtk += st.atk; maxDef = Math.max(maxDef, st.def); }
+  const count = heroes.length;
+  const atkMult = 1 + 0.1 * (count - 1);
+  return { atk: Math.round(totalAtk * atkMult), def: maxDef, count };
+}
+function openPartyDispatch(zoneId, diff) {
+  partyDispatchState = { zoneId, difficulty: diff, selected: [] };
+  renderPartyDispatchModal();
+  showModal('modal-party-dispatch');
+}
+function renderPartyDispatchModal() {
+  const { zoneId, difficulty, selected } = partyDispatchState;
+  const zone = getZone(zoneId);
+  const cfg = difficulty === 'boss' ? zone.boss : zone.difficulties[difficulty];
+  const idle = territoryHeroes.filter(h => (h.status === 'idle' || h.status === 'exploring') && (h.fatigue || 0) < 90);
+  const selectedHeroes = selected.map(id => territoryHeroes.find(h => h.id === id)).filter(Boolean);
+  const power = calcPartyPower(selectedHeroes);
+  const slotCount = 4;
+  const slotsHtml = Array.from({ length: slotCount }, (_, i) => {
+    const h = selectedHeroes[i];
+    if (h) {
+      const st = getHeroStats(h);
+      return `<div class="party-slot filled" onclick="togglePartyHero('${h.id}')" title="${h.name}"><span>${HERO_CLASSES[h.class].icon}</span><span class="slot-name">${h.name.slice(0, 3)}</span></div>`;
+    }
+    return `<div class="party-slot"><span style="color:var(--text-faint);font-size:20px;">+</span><span class="slot-num">空位</span></div>`;
+  }).join('');
+  const heroesHtml = idle.map(h => {
+    const isSelected = selected.includes(h.id);
+    const st = getHeroStats(h);
+    return `<div class="party-hero-row ${isSelected ? 'selected' : ''}" onclick="togglePartyHero('${h.id}')">
+      <span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span>
+      <div class="ph-info">
+        <div class="ph-name">${esc(h.name)} Lv.${h.level}</div>
+        <div class="ph-stats">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div>
+      </div>
+      <span class="ph-ap">🗡 AP ${h.skillPoints || 0}</span>
+      ${isSelected ? '<span style="color:var(--golden-wheat);font-size:16px;">✓</span>' : ''}
+    </div>`;
+  }).join('');
+  const enemyAtk = difficulty === 'boss' ? zone.boss.atk : Math.max(...(cfg.enemies || []).map(e => e.atk || 0));
+  $('party-dispatch-body').innerHTML = `
+    <div class="party-header">選擇 1~4 位獵人組隊挑戰 ${zone.icon} ${zone.name}（${DIFF_LABELS[difficulty]}）</div>
+    <div class="party-slots">${slotsHtml}</div>
+    <div class="party-power">⚔ 編隊總攻擊力 ${power.atk}　🛡 總防禦 ${power.def}　👥 ${power.count} 人</div>
+    <div class="section-label">選擇獵人（點擊切換）</div>
+    <div class="party-heroes">${heroesHtml || '<div class="empty-state">沒有可派遣的獵人</div>'}</div>
+    <div class="section-label" style="margin-top:6px;">敵人情報</div>
+    <div class="offline-item"><span class="offline-label">👾 ${difficulty === 'boss' ? zone.boss.name : cfg.enemies?.map(e => e.name).join('、') || '怪物'}</span></div>
+    <div class="offline-item"><span class="offline-label">⚔ 敵人攻擊</span><span class="offline-val">${enemyAtk}</span></div>
+  `;
+  $('btn-launch-party').disabled = selectedHeroes.length === 0;
+}
+function togglePartyHero(heroId) {
+  const idx = partyDispatchState.selected.indexOf(heroId);
+  if (idx >= 0) {
+    partyDispatchState.selected.splice(idx, 1);
+  } else {
+    if (partyDispatchState.selected.length >= 4) { showToast('最多 4 位獵人', 'info'); return; }
+    partyDispatchState.selected.push(heroId);
+  }
+  renderPartyDispatchModal();
+}
+function closePartyDispatch() { hideModal('modal-party-dispatch'); partyDispatchState = { zoneId: null, difficulty: null, selected: [] }; }
+function launchPartyDispatch() {
+  const { zoneId, difficulty, selected } = partyDispatchState;
+  if (!selected.length) { showToast('請選擇至少一位獵人', 'error'); return; }
+  closePartyDispatch();
+  closeModal();
+  for (const heroId of selected) {
+    dispatchHero(heroId, zoneId, difficulty);
+  }
+  showToast(`👥 ${selected.length} 人編隊出發！`, 'success');
+}
+function partyDispatch(zoneId, diff) {
+  closeModal();
+  openPartyDispatch(zoneId, diff);
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // WANDERING HEROES
@@ -1597,7 +1876,9 @@ function offlineModalHtml(gains, seconds) {
     const conf = k === 'healthPotion' ? ITEMS.healthPotion : RESOURCES[k];
     return `<div class="offline-item"><span class="offline-label">${conf.icon} ${conf.name}</span><span class="offline-val">+${fmt(v)}</span></div>`;
   }).join('');
-  return `<div style="text-align:center;font-size:13px;color:var(--text-dim);">離線約 ${mins} 分鐘，獵魔村以 50% 效率持續運作</div>${rows || '<div class="empty-state">沒有可收取資源</div>'}`;
+  const exploringHeroes = territoryHeroes.filter(h => h.status === 'exploring');
+  const expHtml = exploringHeroes.length ? `<div style="margin-top:8px;"><div class="section-label">⚔ 離線遠征（${exploringHeroes.length} 位獵人探索中）</div>${exploringHeroes.map(h => { const z = getZone(h.exploreZoneId); return `<div class="offline-item"><span class="offline-label">${HERO_CLASSES[h.class].icon} ${esc(h.name)}</span><span class="offline-val">${z ? z.icon + ' ' + z.name : ''}・${DIFF_LABELS[h.exploreDifficulty] || ''}</span></div>`; }).join('')}<div style="font-size:11px;color:var(--text-faint);padding:4px 0;">離線時自動結算，最多 8 小時</div></div>` : '';
+  return `<div style="text-align:center;font-size:13px;color:var(--text-dim);">離線約 ${mins} 分鐘，獵魔村以 50% 效率持續運作</div>${rows || '<div class="empty-state">沒有可收取資源</div>'}${expHtml}`;
 }
 function collectOffline() {
   if (pendingOfflineSummary) {
@@ -1605,23 +1886,37 @@ function collectOffline() {
       if (k === 'healthPotion') addItem('healthPotion', v);
       else if (k === 'gold') gainGold(v); else ResourceSystem_add(k, v);
     }
-    // 離線遠征：探索中的獵人繼續狩獵（最多各 3 場）
+    // 離線遠征結算：探索中的獵人自動結算（最多 8 小時）
     const expeditionLines = [];
     for (const hero of territoryHeroes.filter(h => h.status === 'exploring')) {
       const zone = getZone(hero.exploreZoneId); if (!zone) continue;
       const isBoss = hero.exploreDifficulty === 'boss';
       const cfg = isBoss ? zone.boss : zone.difficulties[hero.exploreDifficulty];
-      const battles = Math.min(3, Math.floor(pendingOfflineSummary.seconds / 40));
-      let g = 0, x = 0, wins = 0;
+      // 每 30 秒 = 1 場戰鬥，上限取決於離線秒數，最多 8 小時 = 960 秒 = 32 場
+      const maxBattles = Math.floor(pendingOfflineSummary.seconds / 30);
+      const battles = Math.min(maxBattles, 24);
+      let g = 0, x = 0, ms = 0, wins = 0, drops = [];
       for (let i = 0; i < battles; i++) {
-        const res = runCombat(hero, isBoss ? zone.boss : choice(cfg.enemies), { boss: isBoss, goldRange: cfg.goldRange, magicStoneChance: cfg.magicStoneChance, xp: cfg.xp, drops: cfg.drops });
-        if (res.won) { wins += 1; g += res.rewards.gold; x += res.rewards.xp; } else break;
+        const enemyTemplate = isBoss ? zone.boss : choice(cfg.enemies);
+        const res = runCombat(hero, enemyTemplate, { boss: isBoss, goldRange: cfg.goldRange, magicStoneChance: cfg.magicStoneChance, xp: cfg.xp, drops: cfg.drops });
+        if (res.won) {
+          wins += 1; g += res.rewards.gold; x += res.rewards.xp; ms += res.rewards.magicStones;
+          if (res.rewards.drops) drops.push(...res.rewards.drops);
+        } else {
+          // 失敗後不中斷，繼續下一場（疲勞累計但離線不計算）
+          break;
+        }
       }
-      if (battles > 0) expeditionLines.push(`${hero.name} ${wins}/${battles} 勝（+${g}🪙 +${x}XP）`);
-      hero.explorationProgress = Math.min(99, (hero.explorationProgress || 0) + battles * 25);
+      if (battles > 0) {
+        const dropStr = drops.length ? `・掉落 ${drops.slice(0, 3).join('')}` : '';
+        expeditionLines.push(`${hero.name} ${wins}/${battles} 勝（+${g}🪙 +${x}XP${ms ? ' +' + ms + '💠' : ''}）${dropStr}`);
+        hero.explorationProgress = Math.min(99, (hero.explorationProgress || 0) + wins * 20);
+      }
     }
     spawnFloat('✦ 離線收益已收取', window.innerWidth / 2, window.innerHeight / 2, '#f4d03f');
-    if (expeditionLines.length) showToast(`⚔ 離線遠征：${expeditionLines.join('、')}`, 'info');
+    if (expeditionLines.length) {
+      showToast(`⚔ 離線遠征結算：${expeditionLines.join('、')}`, 'info');
+    }
     sfx('gold');
   }
   pendingOfflineSummary = null; hideModal('modal-welcome'); renderAll(); saveGame();
@@ -1725,7 +2020,9 @@ function startMusic() {
 // SCENE CANVAS + FLOATING TEXT / PARTICLES
 // ═══════════════════════════════════════════════════════════════════
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-let sceneCtx = null, sceneCanvas = null, sceneW = 240, sceneH = 360, sceneStart = performance.now();
+let sceneCtx = null, sceneCanvas = null;
+const SCENE_SCALE = 2;  // 內部畫布放大倍率 (1=原 240x360, 2=480x720)。保留像素風,讓畫面更清晰。
+let sceneW = 240 * SCENE_SCALE, sceneH = 360 * SCENE_SCALE, sceneStart = performance.now();
 const floatState = { canvas: null, ctx: null, floats: [], particles: [] };
 const SCENE_HOTSPOTS = [
   { id: 'tavern', name: '獵人酒館', hint: '招募流浪獵人 / 查看獵人', x: 8, y: 148, w: 58, h: 62 },
@@ -2518,6 +2815,9 @@ function renderHUD() {
   $('hc-iron').textContent = fmt(ResourceSystem_get('ironRusty'));
   $('hc-herb').textContent = fmt(ResourceSystem_get('herbLow'));
   $('castle-level').textContent = `獵魔村傳承 ${prestige.count}・碎片 ${prestige.shards}`;
+  const streak = daily.streak || 0;
+  const streakEl = $('hud-streak');
+  if (streakEl) streakEl.textContent = streak > 0 ? streak + '天' : '';
 }
 function renderBadges() {
   const idle = territoryHeroes.filter(h => h.status === 'idle').length;
@@ -2544,19 +2844,61 @@ function heroCardHtml(h) {
     return e ? `<span class="equip-slot rar-${ITEMS[e.id]?.rarity || 'common'}" title="點擊卸下，右鍵/長按強化" onclick="unequipItem('${h.id}','${slot}')" oncontextmenu="event.preventDefault();enhanceEquip('${h.id}','${slot}')">${e.icon}${e.name}+${e.plus || 0}</span>` : `<span class="equip-slot" onclick="openEquipModal('${h.id}','${slot}')">＋${label}</span>`;
   };
   const canAct = h.status === 'idle';
-  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" ${(h.inventory.healthPotion || 0) > 0 ? '' : 'disabled'} onclick="usePotion(territoryHeroes.find(x=>x.id==='${h.id}'));renderAll()">用藥</button></div></div>`;
+  const ap = h.skillPoints || 0;
+  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span></div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button></div></div>`;
 }
 function renderHeroesPanel() {
-  $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`]].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
-  for (const k of ['territory', 'wander', 'reports']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
+  $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡技能']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
+  for (const k of ['territory', 'wander', 'reports', 'skills']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
   if (heroSubTab === 'territory') {
     $('hero-territory').innerHTML = `<div class="section-label">獵人空位 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（升級酒館可增加）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">尚未招募獵人，到「流浪者」分頁招募</div>');
   } else if (heroSubTab === 'wander') {
     $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); const rc = RARITIES[h.rarity || 'normal']; const stateBadge = h.aiState === 'dead' ? '<span class="hero-badge badge-resting">陣亡復活中</span>' : '<span class="hero-badge badge-wandering">流浪</span>'; return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${stateBadge}</div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・😪${h.fatigue || 0}%・😊${Math.round(h.mood ?? 70)}</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💠${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪獵人</div>';
+  } else if (heroSubTab === 'skills') {
+    renderSkillsTab();
   } else {
     const filtered = battleReports.filter(r => heroReportSubTab === 'all' || r.kind === heroReportSubTab);
     $('hero-reports').innerHTML = `<div class="report-sub-tabs">${[['all', '全部'], ['zone', '狩獵'], ['wander', '流浪']].map(([k, label]) => `<button class="report-sub-btn ${heroReportSubTab === k ? 'active' : ''}" onclick="heroReportSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('')}<button class="report-sub-btn" onclick="clearReports()">清空</button></div>` + (filtered.length ? filtered.map(r => `<div class="report-entry"><div class="report-head" onclick="toggleReport('${r.id}')"><span class="report-result" style="color:${r.result.includes('敗') || r.result.includes('撤退') ? 'var(--red)' : 'var(--green)'}">${r.result}</span><div class="report-info"><div class="report-title">${r.title}</div><div class="report-time">${timeAgo(r.time)}</div></div><span class="report-expand ${expandedReports.has(r.id) ? 'open' : ''}">▼</span></div><div class="report-body ${expandedReports.has(r.id) ? 'open' : ''}"><div class="combat-log">${r.lines.map(line => `<div class="log-line ${line.includes('勝利') ? 'log-victory' : line.includes('戰敗') ? 'log-defeat' : line.includes('藥水') ? 'log-heal' : line.includes('掉落') ? 'log-drop' : 'log-round'}">${line}</div>`).join('')}</div></div></div>`).join('') : '<div class="empty-state">尚無戰報</div>');
   }
+}
+function renderSkillsTab() {
+  const heroes = territoryHeroes;
+  if (!heroes.length) { $('hero-skills').innerHTML = '<div class="empty-state">沒有獵人可學習技能</div>'; return; }
+  // Auto-select first hero if none selected
+  if (!skillTabHeroId || !heroes.find(h => h.id === skillTabHeroId)) {
+    skillTabHeroId = heroes[0].id;
+  }
+  const hero = heroes.find(h => h.id === skillTabHeroId);
+  const tree = SKILL_TREE[hero.class] || [];
+  const ap = hero.skillPoints || 0;
+  const heroSelHtml = heroes.map(h => `<button class="report-sub-btn ${h.id === skillTabHeroId ? 'active' : ''}" onclick="skillTabHeroId='${h.id}';renderSkillsTab()">${HERO_CLASSES[h.class].icon} ${esc(h.name)}</button>`).join('');
+  const skillsHtml = tree.map(def => {
+    const curLevel = getHeroSkillLevel(hero, def.id);
+    const isMaxed = curLevel >= def.maxLevel;
+    const canLearn = canLearnSkill(hero, def.id);
+    const fillPct = (curLevel / def.maxLevel) * 100;
+    return `<div class="skill-card ${isMaxed ? '' : def.type === 'active' ? 'active-skill' : 'passive-skill'}">
+      <div class="skill-top">
+        <div class="skill-icon">${def.icon}</div>
+        <div class="skill-info">
+          <div class="skill-name">${def.name} ${curLevel > 0 ? `Lv.${curLevel}` : ''}</div>
+          <div class="skill-desc">${def.desc}</div>
+        </div>
+      </div>
+      <div class="skill-level-row">
+        <span class="skill-level">${curLevel}/${def.maxLevel}</span>
+        <div class="skill-bar"><div class="skill-fill" style="width:${fillPct}%"></div></div>
+        ${!isMaxed ? `<button class="btn btn-sm ${canLearn ? 'btn-gold' : 'btn-outline'}" ${canLearn ? '' : 'disabled'} onclick="learnSkill(territoryHeroes.find(h=>h.id==='${hero.id}'),'${def.id}')">學習</button>` : '<span style="font-size:11px;color:var(--text-faint);">已滿級</span>'}
+      </div>
+    </div>`;
+  }).join('');
+  $('hero-skills').innerHTML = `
+    <div class="section-label">選擇獵人</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">${heroSelHtml}</div>
+    <div class="skill-ap-row">🗡 可用技能點：<b style="color:var(--golden-wheat);">${ap}</b> AP（升級獲得）</div>
+    <div class="section-label">${HERO_CLASSES[hero.class].icon} ${CLASS_NAMES_ZH[hero.class] || hero.class} 技能樹</div>
+    <div class="skill-grid">${skillsHtml}</div>
+  `;
 }
 function renderBuildingsPanel() {
   $('building-grid').innerHTML = BUILDING_ORDER.map(id => {
