@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="description" content="王國傳說 — 像素風閒置王國建設遊戲">
+<meta name="description" content="獵魔村物語 — 像素風閒置獵魔村建設遊戲">
 <meta name="theme-color" content="#5d4037">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json">
-<title>王國傳說 — Idle Kingdom Builder</title>
+<title>獵魔村物語 — Hunter Village Tycoon</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Serif+TC:wght@400;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -358,10 +358,10 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <!-- ── HUD ── -->
 <header class="hud" id="hud">
   <div class="hud-left">
-    <div class="kingdom-name" id="hud-kingdom-name">⚔ 星辰王國</div>
+    <div class="kingdom-name" id="hud-kingdom-name">⚔ 獵魔村</div>
     <div class="hud-resources">
       <div class="hud-res"><span class="icon">🪙</span><span class="val" id="hud-gold">500</span></div>
-      <div class="hud-res"><span class="icon">💎</span><span class="val" id="hud-magic">0</span></div>
+      <div class="hud-res"><span class="icon">💠</span><span class="val" id="hud-magic">0</span></div>
     </div>
   </div>
   <div class="hud-center" id="hud-mats">
@@ -380,9 +380,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <main class="main-canvas" id="main-canvas">
   <canvas id="scene-canvas"></canvas>
   <div class="scene-overlay">
-    <div class="castle-label">星辰王國</div>
-    <div class="castle-sub" id="castle-level">卡斯特城堡 Lv.1</div>
-    <div class="click-hint">點擊城堡收取金幣</div>
+    <div class="castle-label">獵魔村</div>
+    <div class="castle-sub" id="castle-level">卡斯特公會 Lv.1</div>
+    <div class="click-hint">點擊公會收取金幣</div>
   </div>
 </main>
 
@@ -399,11 +399,11 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
   </div>
 </div>
 
-<!-- 英雄面板 -->
+<!-- 獵人面板 -->
 <div class="panel" id="panel-hero">
   <div class="panel-inner">
     <div class="panel-header">
-      <div class="panel-title">⚔ 英雄</div>
+      <div class="panel-title">⚔ 獵人</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="tab-content active" id="hero-territory"></div>
@@ -428,11 +428,11 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <div class="panel" id="panel-map">
   <div class="panel-inner">
     <div class="panel-header">
-      <div class="panel-title">🗺 地圖探索</div>
+      <div class="panel-title">🗺 地圖狩獵</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="active-explore" id="active-explore"></div>
-    <div class="section-label">探索地圖</div>
+    <div class="section-label">狩獵地圖</div>
     <div class="zone-list" id="zone-list"></div>
   </div>
 </div>
@@ -446,7 +446,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     </div>
     <div class="shop-grid" id="shop-grid"></div>
     <div class="inventory">
-      <div class="inv-title">📦 王國倉庫</div>
+      <div class="inv-title">📦 獵魔村倉庫</div>
       <div class="inv-list" id="inv-list"></div>
     </div>
   </div>
@@ -468,7 +468,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <!-- ── BOTTOM NAV ── -->
 <nav class="bottom-nav">
   <button class="nav-btn" id="nav-res" onclick="openPanel('res')"><div class="nav-ico">📦</div>資源</button>
-  <button class="nav-btn" id="nav-hero" onclick="openPanel('hero')"><div class="nav-ico">⚔️</div>英雄<span class="nav-badge" id="nav-badge-hero" style="display:none;"></span></button>
+  <button class="nav-btn" id="nav-hero" onclick="openPanel('hero')"><div class="nav-ico">⚔️</div>獵人<span class="nav-badge" id="nav-badge-hero" style="display:none;"></span></button>
   <button class="nav-btn" id="nav-build" onclick="openPanel('build')"><div class="nav-ico">🏗️</div>建築</button>
   <button class="nav-btn" id="nav-map" onclick="openPanel('map')"><div class="nav-ico">🗺️</div>地圖</button>
   <button class="nav-btn" id="nav-shop" onclick="openPanel('shop')"><div class="nav-ico">🛒</div>商店</button>
@@ -506,10 +506,10 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
       <div class="setting-row"><div class="setting-label">🔔 推播通知</div><div class="toggle on" id="toggle-notif"></div></div>
       <div class="divider"></div>
       <details class="gallery">
-        <summary>🖼 王國畫廊（點擊展開）</summary>
-        <img class="gallery-img" loading="lazy" src="assets/69ef3e982096d9fee79e5ff5.png" alt="王國騎士">
-        <img class="gallery-img" loading="lazy" src="assets/69ef40ce2096d9fee79efdcd.png" alt="王國英雄">
-        <img class="gallery-img" loading="lazy" src="assets/69ef424acecd6aa2ac384119.png" alt="王國場景">
+        <summary>🖼 獵魔村畫廊（點擊展開）</summary>
+        <img class="gallery-img" loading="lazy" src="assets/69ef3e982096d9fee79e5ff5.png" alt="獵魔村騎士">
+        <img class="gallery-img" loading="lazy" src="assets/69ef40ce2096d9fee79efdcd.png" alt="獵魔村獵人">
+        <img class="gallery-img" loading="lazy" src="assets/69ef424acecd6aa2ac384119.png" alt="獵魔村場景">
       </details>
       <div class="divider"></div>
       <div class="setting-row">
@@ -555,162 +555,151 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════════
-// 王國傳說 — Idle Kingdom Builder (single-file edition)
+// 獵魔村物語 — Hunter Village Tycoon (single-file edition)
 // Sections: DATA → STATE/SAVE → SYSTEMS → SCENE/AUDIO → UI → TICK/INIT
 // ═══════════════════════════════════════════════════════════════════
 
 // ─── GAME DATA ──────────────────────────────────────────────────────
 const RESOURCES = {
   gold:        { name: '金幣', icon: '🪙', initial: 500, capacity: 99999 },
-  magicStones: { name: '魔法石', icon: '💎', initial: 0, capacity: 999 },
-  fruitPoor:   { name: '劣等水果', icon: '🍎', initial: 0, capacity: 500 },
-  waterDirty:  { name: '髒水', icon: '💧', initial: 0, capacity: 500 },
-  woodRotten:  { name: '腐朽木頭', icon: '🪵', initial: 0, capacity: 500 },
-  ironRusty:   { name: '鏽跡斑斑的鐵', icon: '⚙️', initial: 0, capacity: 500 },
-  herbLow:     { name: '低等藥材', icon: '🌿', initial: 0, capacity: 500 },
+  magicStones: { name: '魔核', icon: '💠', initial: 0, capacity: 999 },
+  fruitPoor:   { name: '獸肉', icon: '🍖', initial: 0, capacity: 500 },
+  waterDirty:  { name: '清泉', icon: '💧', initial: 0, capacity: 500 },
+  woodRotten:  { name: '木材', icon: '🪵', initial: 0, capacity: 500 },
+  ironRusty:   { name: '鐵礦', icon: '⛏️', initial: 0, capacity: 500 },
+  herbLow:     { name: '藥草', icon: '🌿', initial: 0, capacity: 500 },
 };
 const MATERIAL_TYPES = ['fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
 
 // startLevel: fresh-save level (old saves missing the building migrate to this too)
 const BUILDINGS = {
-  monument:   { id: 'monument', name: '古老石碑', description: '古老的石碑散發神秘能量，每秒自動產出各種基礎材料。等級越高產量越多。', startLevel: 1, maxLevel: 10, baseCost: { gold: 500, woodRotten: 50, ironRusty: 20 }, costMultiplier: 2.0, icon: '🗿' },
-  goldMine:   { id: 'goldMine', name: '金礦場', description: '開採地底金礦，為王國帶來源源不絕的金幣收入，並提升點擊城堡的收益。', startLevel: 0, maxLevel: 15, baseCost: { gold: 250, woodRotten: 60, ironRusty: 30 }, costMultiplier: 1.8, icon: '⛏️' },
-  tavern:     { id: 'tavern', name: '酒館', description: '熱鬧的酒館吸引流浪英雄造訪，提高英雄空位並加快訪客到來的速度。', startLevel: 1, maxLevel: 5, baseCost: { gold: 300, woodRotten: 80 }, costMultiplier: 1.5, icon: '🍺' },
-  weaponShop: { id: 'weaponShop', name: '武器鋪', description: '鑄造武器的工坊。等級越高可製作的武器越強，且全體英雄攻擊力提升。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️' },
-  armorShop:  { id: 'armorShop', name: '鎧甲鋪', description: '打造鎧甲的工坊。等級越高可製作的防具越強，且全體英雄防禦力提升。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️' },
-  potionShop: { id: 'potionShop', name: '藥水鋪', description: '調配生命藥水，定期自動生產藥水存入倉庫。等級越高生產越快越多。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️' },
-  altar:      { id: 'altar', name: '魔法祭壇', description: '以魔法石獻祭的祭壇，永久提升全軍的戰鬥金幣與經驗獲取。', startLevel: 0, maxLevel: 10, baseCost: { gold: 400, magicStones: 3, herbLow: 40 }, costMultiplier: 2.0, icon: '🔯' },
+  monument:   { id: 'monument', name: '獵魔公會', description: '村莊核心。獵人回報的素材在此分類，每秒自動整理出獸肉、清泉、木材、鐵礦與藥草。', startLevel: 1, maxLevel: 10, baseCost: { gold: 500, woodRotten: 50, ironRusty: 20 }, costMultiplier: 2.0, icon: '🏰' },
+  goldMine:   { id: 'goldMine', name: '市集', description: '村民與商旅交易的地方，持續產生金幣，並提升點擊公會號召村民幹活的收益。', startLevel: 0, maxLevel: 15, baseCost: { gold: 250, woodRotten: 60, ironRusty: 30 }, costMultiplier: 1.8, icon: '⚖️' },
+  tavern:     { id: 'tavern', name: '獵人酒館', description: '流浪獵人會在此停留。升級可增加村莊獵人空位，並讓更強的流浪獵人更快造訪。', startLevel: 1, maxLevel: 5, baseCost: { gold: 300, woodRotten: 80 }, costMultiplier: 1.5, icon: '🍺' },
+  weaponShop: { id: 'weaponShop', name: '鐵匠鋪', description: '打造獵魔武器。等級越高可製作越強武器，且全體獵人攻擊力提升。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, woodRotten: 50, ironRusty: 30 }, costMultiplier: 2.0, icon: '⚔️' },
+  armorShop:  { id: 'armorShop', name: '皮甲工坊', description: '縫製獵魔防具。等級越高可製作越強防具，且全體獵人防禦力提升。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, ironRusty: 40, woodRotten: 20 }, costMultiplier: 2.0, icon: '🛡️' },
+  potionShop: { id: 'potionShop', name: '煉金工房', description: '調配治療藥水，定期自動生產存入倉庫。等級越高生產越快越多。', startLevel: 1, maxLevel: 10, baseCost: { gold: 200, herbLow: 50, waterDirty: 30 }, costMultiplier: 2.0, icon: '⚗️' },
+  altar:      { id: 'altar', name: '魔核研究所', description: '解析魔核與怪物素材，永久提升全隊狩獵金幣與經驗獲取。', startLevel: 0, maxLevel: 10, baseCost: { gold: 400, magicStones: 3, herbLow: 40 }, costMultiplier: 2.0, icon: '🔯' },
 };
 const BUILDING_ORDER = ['monument', 'goldMine', 'tavern', 'weaponShop', 'armorShop', 'potionShop', 'altar'];
 
 const HERO_CLASSES = {
-  warrior: { name: '戰士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
-  mage:    { name: '法師', baseHp: 70,  baseAtk: 25, baseDef: 5,  icon: '🧙' },
-  rogue:   { name: '盜賊', baseHp: 85,  baseAtk: 18, baseDef: 8,  icon: '🗡️' },
-  archer:  { name: '弓箭手', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
-  priest:  { name: '牧師', baseHp: 90,  baseAtk: 10, baseDef: 15, icon: '✝️' },
+  warrior: { name: '劍士', baseHp: 100, baseAtk: 15, baseDef: 10, icon: '⚔️' },
+  mage:    { name: '咒術師', baseHp: 70,  baseAtk: 25, baseDef: 5,  icon: '🧙' },
+  rogue:   { name: '刺客', baseHp: 85,  baseAtk: 18, baseDef: 8,  icon: '🗡️' },
+  archer:  { name: '遊俠', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
+  priest:  { name: '神官', baseHp: 90,  baseAtk: 10, baseDef: 15, icon: '✝️' },
 };
-const CLASS_NAMES_ZH = { warrior: '戰士', mage: '法師', rogue: '盜賊', archer: '弓箭手', priest: '牧師' };
+const CLASS_NAMES_ZH = { warrior: '劍士', mage: '咒術師', rogue: '刺客', archer: '遊俠', priest: '神官' };
 
-const ENGLISH_NAMES = [
-  'Aaron','Abigail','Adam','Adrian','Aiden','Alan','Albert','Alex','Alice','Allen',
-  'Amanda','Amber','Amy','Andrea','Andrew','Angela','Anna','Anthony','Arthur','Ashley',
-  'Austin','Barbara','Benjamin','Beth','Brandon','Brian','Brittany','Bruce','Bryan','Carl',
-  'Carol','Caroline','Catherine','Charles','Charlotte','Chloe','Chris','Christian','Christina','Claire',
-  'Clarence','Claude','Cody','Colin','Courtney','Craig','Crystal','Cynthia','Dale','Daniel',
-  'Danielle','David','Dawn','Dean','Deborah','Dennis','Diana','Diane','Donald','Donna',
-  'Dorothy','Douglas','Dylan','Edward','Elaine','Eleanor','Elizabeth','Emily','Emma','Eric',
-  'Erica','Ethan','Eugene','Eva','Evelyn','Francis','Frank','Gabriel','Gary','Gavin',
-  'George','Gerald','Gina','Gloria','Grace','Gregory','Hannah','Harold','Harry','Heather',
-  'Helen','Henry','Isaac','Isabella','Jack','Jacob','James','Jason','Jean','Jeffrey',
-  'Jennifer','Jerry','Jessica','Joan','Joe','John','Jonathan','Jordan','Jose','Joseph',
-  'Joshua','Joyce','Juan','Judith','Julia','Julie','Justin','Karen','Keith','Kelly',
-  'Kevin','Kimberly','Kyle','Larry','Laura','Lawrence','Leonard','Liam','Lillian','Linda',
-  'Lisa','Logan','Louis','Lucas','Lucy','Luis','Luke','Madison','Manuel','Margaret',
-  'Maria','Marie','Marilyn','Mark','Martin','Mason','Matthew','Megan','Michael','Michelle',
-  'Nathan','Nicholas','Nicole','Noah','Olivia','Oscar','Pamela','Patricia','Patrick','Paul',
-  'Rachel','Ralph','Randy','Raymond','Rebecca','Richard','Robert','Roger','Ronald','Rose',
-  'Ross','Russell','Ryan','Samantha','Samuel','Sandra','Sara','Sarah','Scott','Sean',
-  'Sharon','Shirley','Sophia','Stanley','Stephen','Steven','Susan','Teresa','Terry','Theresa',
-  'Thomas','Tina','Tyler','Victoria','Vincent','Virginia','Walter','Wayne','Wendy','William',
-  'Zachary','Ivan','Olga','Eve','Bruno','Felix','Hugo','Iris','Nora','Oscar'
+const HUNTER_NAMES = [
+  '阿嵐','艾琳','白洛','班恩','碧翠','布蘭','凱恩','卡菈','塞德里','達尼','德菈','艾登','艾拉','芬恩','菲歐','蓋爾','格溫','哈洛','海莉','伊格','伊蓮','傑斯','喬安','凱爾','凱菈','里昂','莉亞','洛根','露西','瑪格','馬洛','米菈','奈德','妮娜','奧登','奧菈','派克','佩姬','昆恩','蕾娜','雷恩','羅莎','盧恩','山姆','瑟菈','索恩','塔莉','烏爾','薇拉','維克','溫蒂','桑德','雅菈','約恩','札克','佐伊','阿諾','貝拉','柯林','朵拉','埃蒙','芙拉','戈登','荷莉','伊凡','潔西','凱文','蘿拉','墨林','諾拉','奧利','寶拉','雷伊','芮塔','西蒙','蒂娜','尤金','薇薇','沃特','仙菈','阿祁','布蕾','卡洛','迪恩','艾茉','法羅','葛蕾','漢娜','伊索','賈桂','凱特','路德','梅茵','納特','歐琳','帕特','琪拉','羅倫','素娜','坦恩','尤娜','凡斯','温妮','希恩','雪莉','亞德','茵娜','傑洛','葵拉','雷德','米雅','諾恩','佩恩','珂菈','達洛','瑟恩','艾諾','斑','琴','嵐','霧','霜','焰','隼','狼','燕','熊','狐','貓','鴉','鹿','獅','藤','石','泉','星','月','嵐'
 ];
 
 const WANDERING_HERO_TYPES = [
-  { typeId: 'wandering_warrior_1', class: 'warrior', name: '僱傭士兵', level: 1, dropGold: 20, dropMagicStoneChance: 0.1 },
-  { typeId: 'wandering_warrior_2', class: 'warrior', name: '資深僱傭兵', level: 5, dropGold: 50, dropMagicStoneChance: 0.15 },
-  { typeId: 'wandering_mage_1', class: 'mage', name: '流浪法師', level: 2, dropGold: 25, dropMagicStoneChance: 0.12 },
-  { typeId: 'wandering_mage_2', class: 'mage', name: '雲游術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
-  { typeId: 'wandering_rogue_1', class: 'rogue', name: '街頭頑童', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
-  { typeId: 'wandering_rogue_2', class: 'rogue', name: '盜賊大師', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
-  { typeId: 'wandering_archer_1', class: 'archer', name: '流浪弓手', level: 3, dropGold: 35, dropMagicStoneChance: 0.12 },
-  { typeId: 'wandering_archer_2', class: 'archer', name: '精準射手', level: 6, dropGold: 55, dropMagicStoneChance: 0.17 },
-  { typeId: 'wandering_priest_1', class: 'priest', name: '旅行修士', level: 2, dropGold: 22, dropMagicStoneChance: 0.14 },
-  { typeId: 'wandering_priest_2', class: 'priest', name: '聖殿騎士', level: 7, dropGold: 58, dropMagicStoneChance: 0.2 },
+  { typeId: 'wandering_warrior_1', class: 'warrior', name: '見習劍士', level: 1, dropGold: 20, dropMagicStoneChance: 0.1 },
+  { typeId: 'wandering_warrior_2', class: 'warrior', name: '老練劍士', level: 5, dropGold: 50, dropMagicStoneChance: 0.15 },
+  { typeId: 'wandering_mage_1', class: 'mage', name: '流浪咒術師', level: 2, dropGold: 25, dropMagicStoneChance: 0.12 },
+  { typeId: 'wandering_mage_2', class: 'mage', name: '禁書術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
+  { typeId: 'wandering_rogue_1', class: 'rogue', name: '巷弄刺客', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
+  { typeId: 'wandering_rogue_2', class: 'rogue', name: '無聲獵手', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+  { typeId: 'wandering_archer_1', class: 'archer', name: '遊蕩遊俠', level: 3, dropGold: 35, dropMagicStoneChance: 0.12 },
+  { typeId: 'wandering_archer_2', class: 'archer', name: '鷹眼神射', level: 6, dropGold: 55, dropMagicStoneChance: 0.17 },
+  { typeId: 'wandering_priest_1', class: 'priest', name: '旅行神官', level: 2, dropGold: 22, dropMagicStoneChance: 0.14 },
+  { typeId: 'wandering_priest_2', class: 'priest', name: '聖印祭司', level: 7, dropGold: 58, dropMagicStoneChance: 0.2 },
 ];
 
 const ZONES = [
   {
-    id: 1, name: '平靜郊野', icon: '🌾',
+    id: 1, name: '迷霧森林', icon: '🌲',
     difficulties: {
-      easy:   { recommendedLevel: 1, enemies: [{ name: '哥布林幼崽', hp: 20, atk: 5, def: 2 }, { name: '野鼠', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10, drops: ['healthPotion'] },
-      normal: { recommendedLevel: 2, enemies: [{ name: '哥布林哨兵', hp: 35, atk: 8, def: 4 }, { name: '野狼', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20, drops: ['healthPotion', 'woodenSword'] },
-      hard:   { recommendedLevel: 3, enemies: [{ name: '森林盜賊', hp: 50, atk: 12, def: 6 }, { name: '狼群領袖', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35, drops: ['woodenSword', 'healthPotion'] },
+      easy:   { recommendedLevel: 1, enemies: [{ name: '腐牙野狼', hp: 20, atk: 5, def: 2 }, { name: '迷霧哥布林', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10, drops: ['healthPotion'] },
+      normal: { recommendedLevel: 2, enemies: [{ name: '荊棘魔', hp: 35, atk: 8, def: 4 }, { name: '霧狼頭目', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20, drops: ['healthPotion', 'woodenSword'] },
+      hard:   { recommendedLevel: 3, enemies: [{ name: '枯木妖', hp: 50, atk: 12, def: 6 }, { name: '掠食藤', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35, drops: ['woodenSword', 'healthPotion'] },
     },
-    boss: { name: '叢林巨魔', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: ['woodenSword', 'leatherArmor'], xp: 50 },
+    boss: { name: '迷霧樹心', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: ['woodenSword', 'leatherArmor'], xp: 50 },
   },
   {
-    id: 2, name: '黑暗森林', icon: '🌲',
+    id: 2, name: '腐化沼澤', icon: '🪷',
     difficulties: {
-      easy:   { recommendedLevel: 3, enemies: [{ name: '洞穴蜘蛛', hp: 40, atk: 10, def: 5 }, { name: '黑暗德魯伊', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15, drops: ['healthPotion', 'leatherArmor'] },
-      normal: { recommendedLevel: 5, enemies: [{ name: '森林獸人', hp: 60, atk: 14, def: 8 }, { name: '毒蜘蛛母', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30, drops: ['huntersBow', 'ironDagger'] },
-      hard:   { recommendedLevel: 6, enemies: [{ name: '黑暗妖精', hp: 85, atk: 18, def: 10 }, { name: '食人妖', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50, drops: ['ironDagger', 'huntersBow'] },
+      easy:   { recommendedLevel: 3, enemies: [{ name: '泥沼殭屍', hp: 40, atk: 10, def: 5 }, { name: '毒霧蛙', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15, drops: ['healthPotion', 'leatherArmor'] },
+      normal: { recommendedLevel: 5, enemies: [{ name: '沼澤巫婆', hp: 60, atk: 14, def: 8 }, { name: '腐鱗鱷', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30, drops: ['huntersBow', 'ironDagger'] },
+      hard:   { recommendedLevel: 6, enemies: [{ name: '疫病使徒', hp: 85, atk: 18, def: 10 }, { name: '深泥巨怪', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50, drops: ['ironDagger', 'huntersBow'] },
     },
-    boss: { name: '森林守護者', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80 },
+    boss: { name: '腐化母巢', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80 },
   },
   {
-    id: 3, name: '廢棄礦坑', icon: '⛏️',
+    id: 3, name: '荒廢礦坑', icon: '⛏️',
     difficulties: {
-      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑僵屍', hp: 55, atk: 14, def: 8 }, { name: '骷髏戰士', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20, drops: ['ironDagger', 'healthPotion'] },
-      normal: { recommendedLevel: 7, enemies: [{ name: '礦坑監工', hp: 80, atk: 18, def: 12 }, { name: '沼澤巫師', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
-      hard:   { recommendedLevel: 9, enemies: [{ name: '傳奇怪獸', hp: 110, atk: 24, def: 14 }, { name: '黑暗機械', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65, drops: ['mysticStaff', 'ironArmor'] },
+      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑骷髏', hp: 55, atk: 14, def: 8 }, { name: '穴居魔', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20, drops: ['ironDagger', 'healthPotion'] },
+      normal: { recommendedLevel: 7, enemies: [{ name: '鏽甲監工', hp: 80, atk: 18, def: 12 }, { name: '暗影爆破者', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
+      hard:   { recommendedLevel: 9, enemies: [{ name: '礦心魔像', hp: 110, atk: 24, def: 14 }, { name: '深坑爬行者', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65, drops: ['mysticStaff', 'ironArmor'] },
     },
-    boss: { name: '礦坑之王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120 },
+    boss: { name: '礦坑魔像王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120 },
   },
   {
-    id: 4, name: '沼澤深淵', icon: '🏚️',
+    id: 4, name: '熔岩裂谷', icon: '🌋',
     difficulties: {
-      easy:   { recommendedLevel: 7, enemies: [{ name: '沼澤怪', hp: 70, atk: 18, def: 10 }, { name: '毒蛇', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25, drops: ['ironArmor', 'healthPotion'] },
-      normal: { recommendedLevel: 9, enemies: [{ name: '沼澤巨獸', hp: 100, atk: 22, def: 14 }, { name: '暗黑信徒', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50, drops: ['holyMace', 'ironArmor'] },
-      hard:   { recommendedLevel: 11, enemies: [{ name: '深淵領主', hp: 140, atk: 30, def: 18 }, { name: '黑暗審判者', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80, drops: ['holyMace', 'mysticStaff'] },
+      easy:   { recommendedLevel: 7, enemies: [{ name: '熔岩蜥', hp: 70, atk: 18, def: 10 }, { name: '灰燼蝠', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25, drops: ['ironArmor', 'healthPotion'] },
+      normal: { recommendedLevel: 9, enemies: [{ name: '焰角魔', hp: 100, atk: 22, def: 14 }, { name: '熔核祭司', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50, drops: ['holyMace', 'ironArmor'] },
+      hard:   { recommendedLevel: 11, enemies: [{ name: '裂谷督軍', hp: 140, atk: 30, def: 18 }, { name: '黑曜巨兵', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80, drops: ['holyMace', 'mysticStaff'] },
     },
-    boss: { name: '沼澤之主', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: ['holyMace', 'knightArmor', 'mysticStaff'], xp: 160 },
+    boss: { name: '熔岩暴君', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: ['holyMace', 'knightArmor', 'mysticStaff'], xp: 160 },
   },
   {
-    id: 5, name: '龍族廢墟', icon: '🐉',
+    id: 5, name: '魔域王座', icon: '👹',
     difficulties: {
-      easy:   { recommendedLevel: 10, enemies: [{ name: '遠古龍卒', hp: 100, atk: 24, def: 15 }, { name: '惡魔騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
-      normal: { recommendedLevel: 12, enemies: [{ name: '虛空泰坦', hp: 150, atk: 30, def: 20 }, { name: '龍族守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: ['holyMace', 'huntersBow'] },
-      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵巨獸', hp: 200, atk: 38, def: 26 }, { name: '黑暗破壞者', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: ['holyMace', 'knightArmor', 'mysticStaff'] },
+      easy:   { recommendedLevel: 10, enemies: [{ name: '魔域犬魔', hp: 100, atk: 24, def: 15 }, { name: '血咒騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
+      normal: { recommendedLevel: 12, enemies: [{ name: '虛空掠奪者', hp: 150, atk: 30, def: 20 }, { name: '王座守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: ['holyMace', 'huntersBow'] },
+      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵執政官', hp: 200, atk: 38, def: 26 }, { name: '破滅領主', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: ['holyMace', 'knightArmor', 'mysticStaff'] },
     },
-    boss: { name: '龍王', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200 },
+    boss: { name: '魔域大君', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200 },
   },
 ];
 
 // type: weapon/armor/potion; rarity: common/rare/epic/legendary
-// atk/def/hp: flat bonuses; crit: extra crit chance; msFind: bonus magic-stone find
+// atk/def/hp: flat bonuses; crit: extra crit chance; msFind: bonus magic-core find
 // req: { b: buildingId, lv } — minimum building level to craft
 const ITEMS = {
-  woodenSword: { id: 'woodenSword', name: '木製劍', type: 'weapon', rarity: 'common', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior', atk: 5, req: { b: 'weaponShop', lv: 1 } },
-  ironDagger: { id: 'ironDagger', name: '鐵匕首', type: 'weapon', rarity: 'rare', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪', forClass: 'rogue', atk: 9, crit: 0.08, req: { b: 'weaponShop', lv: 2 } },
-  huntersBow: { id: 'huntersBow', name: '獵人弓', type: 'weapon', rarity: 'rare', price: 90, cost: { woodRotten: 50, ironRusty: 30 }, icon: '🏹', forClass: 'archer', atk: 13, req: { b: 'weaponShop', lv: 3 } },
-  holyMace: { id: 'holyMace', name: '聖光權杖', type: 'weapon', rarity: 'rare', price: 95, cost: { ironRusty: 35, herbLow: 40 }, icon: '✝️', forClass: 'priest', atk: 12, def: 4, req: { b: 'weaponShop', lv: 4 } },
-  mysticStaff: { id: 'mysticStaff', name: '神秘法杖', type: 'weapon', rarity: 'epic', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮', forClass: 'mage', atk: 17, msFind: 0.15, req: { b: 'weaponShop', lv: 5 } },
-  leatherArmor: { id: 'leatherArmor', name: '皮甲', type: 'armor', rarity: 'common', price: 40, cost: { woodRotten: 20, fruitPoor: 20 }, icon: '🥋', def: 5, hp: 20, req: { b: 'armorShop', lv: 1 } },
-  ironArmor: { id: 'ironArmor', name: '鐵甲', type: 'armor', rarity: 'rare', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️', def: 10, hp: 40, req: { b: 'armorShop', lv: 2 } },
-  knightArmor: { id: 'knightArmor', name: '騎士鎧甲', type: 'armor', rarity: 'epic', price: 300, cost: { ironRusty: 120, magicStones: 3, gold: 1000 }, icon: '⚜️', def: 16, hp: 80, req: { b: 'armorShop', lv: 4 } },
-  healthPotion: { id: 'healthPotion', name: '生命藥水', type: 'potion', rarity: 'common', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪', healPct: 0.3, req: { b: 'potionShop', lv: 1 } },
+  woodenSword: { id: 'woodenSword', name: '獵人短刃', type: 'weapon', rarity: 'common', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior', atk: 5, req: { b: 'weaponShop', lv: 1 } },
+  ironDagger: { id: 'ironDagger', name: '毒牙匕首', type: 'weapon', rarity: 'rare', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪', forClass: 'rogue', atk: 9, crit: 0.08, req: { b: 'weaponShop', lv: 2 } },
+  huntersBow: { id: 'huntersBow', name: '穿甲長弓', type: 'weapon', rarity: 'rare', price: 90, cost: { woodRotten: 50, ironRusty: 30 }, icon: '🏹', forClass: 'archer', atk: 13, req: { b: 'weaponShop', lv: 3 } },
+  holyMace: { id: 'holyMace', name: '聖印戰錘', type: 'weapon', rarity: 'rare', price: 95, cost: { ironRusty: 35, herbLow: 40 }, icon: '✝️', forClass: 'priest', atk: 12, def: 4, req: { b: 'weaponShop', lv: 4 } },
+  mysticStaff: { id: 'mysticStaff', name: '咒核法杖', type: 'weapon', rarity: 'epic', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮', forClass: 'mage', atk: 17, msFind: 0.15, req: { b: 'weaponShop', lv: 5 } },
+  leatherArmor: { id: 'leatherArmor', name: '獸皮輕甲', type: 'armor', rarity: 'common', price: 40, cost: { woodRotten: 20, fruitPoor: 20 }, icon: '🥋', def: 5, hp: 20, req: { b: 'armorShop', lv: 1 } },
+  ironArmor: { id: 'ironArmor', name: '獵魔鎧甲', type: 'armor', rarity: 'rare', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️', def: 10, hp: 40, req: { b: 'armorShop', lv: 2 } },
+  knightArmor: { id: 'knightArmor', name: '屠魔重甲', type: 'armor', rarity: 'epic', price: 300, cost: { ironRusty: 120, magicStones: 3, gold: 1000 }, icon: '⚜️', def: 16, hp: 80, req: { b: 'armorShop', lv: 4 } },
+  healthPotion: { id: 'healthPotion', name: '治療藥水', type: 'potion', rarity: 'common', price: 25, cost: { herbLow: 20, waterDirty: 15 }, icon: '🧪', healPct: 0.3, req: { b: 'potionShop', lv: 1 } },
 };
 const RARITY_NAMES = { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' };
-const DIFF_LABELS = { easy: '簡單', normal: '普通', hard: '困難', boss: 'BOSS' };
+const DIFF_LABELS = { easy: '驅逐', normal: '討伐', hard: '獵殺', boss: '頭目' };
 const DIFF_COLORS = { easy: '#27ae60', normal: '#f39c12', hard: '#c0392b', boss: '#8e44ad' };
 const ENHANCE_MAX = 10;
 
+const TRAITS = [
+  { id: 'eagle', name: '鷹眼', desc: '暴擊 +4%', apply: st => { st.crit += 0.04; } },
+  { id: 'iron', name: '鐵壁', desc: '防禦 +8%', apply: st => { st.def = Math.round(st.def * 1.08); } },
+  { id: 'swift', name: '迅捷', desc: '攻擊 +6%', apply: st => { st.atk = Math.round(st.atk * 1.06); } },
+  { id: 'greed', name: '財迷', desc: '狩獵金幣 +8%', apply: st => { st.goldMult *= 1.08; } },
+  { id: 'sage', name: '學者', desc: '經驗 +8%', apply: st => { st.xpMult *= 1.08; } },
+  { id: 'tough', name: '強韌', desc: 'HP +10%', apply: st => { st.maxHp = Math.round(st.maxHp * 1.10); } },
+];
+
 // Achievements: permanent small bonuses once unlocked
 const ACHIEVEMENTS = [
-  { id: 'kill1',    icon: '🩸', name: '初試啼聲', desc: '贏得 1 場戰鬥', bonusText: '材料產出 +1%', bonus: { mat: 0.01 }, check: s => s.kills >= 1 },
-  { id: 'kill100',  icon: '⚔️', name: '百戰不殆', desc: '贏得 100 場戰鬥', bonusText: '材料產出 +3%', bonus: { mat: 0.03 }, check: s => s.kills >= 100 },
-  { id: 'kill500',  icon: '🎖️', name: '傳奇將領', desc: '贏得 500 場戰鬥', bonusText: '戰鬥金幣 +5%', bonus: { gold: 0.05 }, check: s => s.kills >= 500 },
-  { id: 'boss1',    icon: '👑', name: '屠龍之始', desc: '擊敗 1 個 Boss', bonusText: '全英雄攻擊 +2', bonus: { atk: 2 }, check: s => s.bossKills >= 1 },
-  { id: 'bossAll',  icon: '🐉', name: '五境征服者', desc: '擊敗全部 5 個 Boss', bonusText: '全英雄攻擊 +5、防禦 +5', bonus: { atk: 5, def: 5 }, check: s => s.bossKills >= 5 },
-  { id: 'gold10k',  icon: '💰', name: '小有積蓄', desc: '累積賺取 10,000 金幣', bonusText: '材料產出 +2%', bonus: { mat: 0.02 }, check: s => s.goldEarned >= 10000 },
-  { id: 'gold100k', icon: '🏦', name: '富可敵國', desc: '累積賺取 100,000 金幣', bonusText: '點擊金幣 +2', bonus: { click: 2 }, check: s => s.goldEarned >= 100000 },
-  { id: 'build15',  icon: '🏗️', name: '興建王國', desc: '建築總等級達 15', bonusText: '材料產出 +2%', bonus: { mat: 0.02 }, check: (s, g) => g.totalBuildingLevels >= 15 },
-  { id: 'build30',  icon: '🏰', name: '宏偉都城', desc: '建築總等級達 30', bonusText: '材料產出 +3%', bonus: { mat: 0.03 }, check: (s, g) => g.totalBuildingLevels >= 30 },
-  { id: 'click100', icon: '👆', name: '勤政之王', desc: '點擊城堡 100 次', bonusText: '點擊金幣 +1', bonus: { click: 1 }, check: s => s.clicks >= 100 },
-  { id: 'click1k',  icon: '🌟', name: '千秋點擊', desc: '點擊城堡 1,000 次', bonusText: '點擊金幣 +3', bonus: { click: 3 }, check: s => s.clicks >= 1000 },
-  { id: 'daily7',   icon: '📅', name: '七日守候', desc: '連續登入 7 天', bonusText: '經驗獲取 +5%', bonus: { xp: 0.05 }, check: (s, g) => g.dailyBestStreak >= 7 },
-  { id: 'prestige1', icon: '🌀', name: '涅槃重生', desc: '完成 1 次轉生', bonusText: '材料產出 +5%', bonus: { mat: 0.05 }, check: s => s.prestiges >= 1 },
+  { id: 'kill1',    icon: '🩸', name: '首次狩獵', desc: '贏得 1 場狩獵', bonusText: '素材產出 +1%', bonus: { mat: 0.01 }, check: s => s.kills >= 1 },
+  { id: 'kill100',  icon: '⚔️', name: '百獵好手', desc: '贏得 100 場狩獵', bonusText: '素材產出 +3%', bonus: { mat: 0.03 }, check: s => s.kills >= 100 },
+  { id: 'kill500',  icon: '🎖️', name: '魔物剋星', desc: '贏得 500 場狩獵', bonusText: '狩獵金幣 +5%', bonus: { gold: 0.05 }, check: s => s.kills >= 500 },
+  { id: 'boss1',    icon: '👑', name: '頭目獵人', desc: '擊敗 1 個頭目', bonusText: '全獵人攻擊 +2', bonus: { atk: 2 }, check: s => s.bossKills >= 1 },
+  { id: 'bossAll',  icon: '👹', name: '五域淨化', desc: '擊敗全部 5 個頭目', bonusText: '全獵人攻擊 +5、防禦 +5', bonus: { atk: 5, def: 5 }, check: s => s.bossKills >= 5 },
+  { id: 'gold10k',  icon: '💰', name: '村莊盈余', desc: '累積賺取 10,000 金幣', bonusText: '素材產出 +2%', bonus: { mat: 0.02 }, check: s => s.goldEarned >= 10000 },
+  { id: 'gold100k', icon: '🏦', name: '商路大亨', desc: '累積賺取 100,000 金幣', bonusText: '點擊金幣 +2', bonus: { click: 2 }, check: s => s.goldEarned >= 100000 },
+  { id: 'build15',  icon: '🏗️', name: '村莊成形', desc: '建築總等級達 15', bonusText: '素材產出 +2%', bonus: { mat: 0.02 }, check: (s, g) => g.totalBuildingLevels >= 15 },
+  { id: 'build30',  icon: '🏰', name: '獵魔重鎮', desc: '建築總等級達 30', bonusText: '素材產出 +3%', bonus: { mat: 0.03 }, check: (s, g) => g.totalBuildingLevels >= 30 },
+  { id: 'click100', icon: '👆', name: '勤勉村長', desc: '點擊公會 100 次', bonusText: '點擊金幣 +1', bonus: { click: 1 }, check: s => s.clicks >= 100 },
+  { id: 'click1k',  icon: '🌟', name: '號召群眾', desc: '點擊公會 1,000 次', bonusText: '點擊金幣 +3', bonus: { click: 3 }, check: s => s.clicks >= 1000 },
+  { id: 'daily7',   icon: '📅', name: '七日駐守', desc: '連續登入 7 天', bonusText: '經驗獲取 +5%', bonus: { xp: 0.05 }, check: (s, g) => g.dailyBestStreak >= 7 },
+  { id: 'prestige1', icon: '🌀', name: '村莊再興', desc: '完成 1 次重建', bonusText: '素材產出 +5%', bonus: { mat: 0.05 }, check: s => s.prestiges >= 1 },
 ];
 
 // ─── RUNTIME STATE ──────────────────────────────────────────────────
@@ -960,9 +949,9 @@ function buildingEffectText(id) {
   switch (id) {
     case 'monument': return '⚡ 各材料 +' + lvl + '~' + (3 * lvl) + '/秒';
     case 'goldMine': return lvl > 0 ? '🪙 +' + (lvl * 2) + ' 金幣/秒・點擊 +' + Math.floor(lvl / 2) : '🪙 建造後每秒產出金幣';
-    case 'tavern': return '🛏 英雄空位 ' + BuildingSystem_getTerritoryHeroSlots() + '・訪客上限 ' + BuildingSystem_getMaxWanderingHeroes();
-    case 'weaponShop': return '🗡 全英雄攻擊 +' + lvl + '・可製作 Lv.' + lvl + ' 級武器';
-    case 'armorShop': return '🛡 全英雄防禦 +' + lvl + '・可製作 Lv.' + lvl + ' 級防具';
+    case 'tavern': return '🛏 獵人空位 ' + BuildingSystem_getTerritoryHeroSlots() + '・訪客上限 ' + BuildingSystem_getMaxWanderingHeroes();
+    case 'weaponShop': return '🗡 全獵人攻擊 +' + lvl + '・可製作 Lv.' + lvl + ' 級武器';
+    case 'armorShop': return '🛡 全獵人防禦 +' + lvl + '・可製作 Lv.' + lvl + ' 級防具';
     case 'potionShop': { const p = BuildingSystem_getPotionProduction(); return '💊 每' + p.ticks + '秒生產 ' + p.amount + ' 瓶藥水'; }
     case 'altar': return lvl > 0 ? '🔯 戰鬥金幣/經驗 +' + (lvl * 4) + '%' : '🔯 建造後提升戰鬥收益';
     default: return '';
@@ -990,6 +979,7 @@ function getEquipBonuses(eq) {
   if (def?.type === 'armor') { out.def += plus * 2; out.hp += plus * 10; }
   return out;
 }
+function getHeroTrait(hero) { return TRAITS.find(t => t.id === hero?.trait) || null; }
 function getHeroStats(hero) {
   const cls = HERO_CLASSES[hero.class] || HERO_CLASSES.warrior;
   const lvl = hero.level || 1;
@@ -1005,7 +995,20 @@ function getHeroStats(hero) {
     const b = getEquipBonuses(hero.equipment?.[slot]);
     atk += b.atk; def += b.def; maxHp += b.hp; crit += b.crit; msFind += b.msFind;
   }
-  return { atk, def, maxHp, crit, msFind, goldMult: getCombatGoldMultiplier(), xpMult: getXpMultiplier() };
+  const st = { atk, def, maxHp, crit, msFind, goldMult: getCombatGoldMultiplier(), xpMult: getXpMultiplier() };
+  // Star rank: 1~5 stars adjust the whole combat body (3 stars = baseline).
+  const starMult = 1 + (((hero.stars || 3) - 3) * 0.08);
+  st.atk = Math.max(1, Math.round(st.atk * starMult));
+  st.def = Math.max(0, Math.round(st.def * starMult));
+  st.maxHp = Math.max(1, Math.round(st.maxHp * starMult));
+  // One innate hunter trait.
+  const trait = getHeroTrait(hero);
+  if (trait) trait.apply(st);
+  // Fatigue: long hunts without rest lower combat performance.
+  const fatigue = hero.fatigue || 0;
+  if (fatigue >= 90) { st.atk = Math.max(1, Math.round(st.atk * 0.7)); st.def = Math.round(st.def * 0.7); }
+  else if (fatigue >= 70) { st.atk = Math.max(1, Math.round(st.atk * 0.85)); st.def = Math.round(st.def * 0.85); }
+  return st;
 }
 // ═══════════════════════════════════════════════════════════════════
 // SMALL UTILITIES
@@ -1029,11 +1032,23 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 // HERO SYSTEM
 // ═══════════════════════════════════════════════════════════════════
 function xpNeed(level) { return 80 + (level - 1) * 60; }
+function rollStars() {
+  const r = Math.random();
+  if (r < 0.05) return 1;
+  if (r < 0.25) return 2;
+  if (r < 0.70) return 3;
+  if (r < 0.92) return 4;
+  return 5;
+}
+function randomTrait() { return choice(TRAITS).id; }
 function normalizeHero(h) {
   const cls = HERO_CLASSES[h.class] || HERO_CLASSES.warrior;
   h.id = h.id || uid();
   h.level = h.level || 1;
   h.xp = h.xp || 0;
+  h.stars = clamp(h.stars || rollStars(), 1, 5);
+  h.trait = h.trait || randomTrait();
+  h.fatigue = clamp(h.fatigue || 0, 0, 100);
   h.maxHp = h.maxHp || (cls.baseHp + (h.level - 1) * 10);
   h.hp = h.hp == null ? h.maxHp : h.hp;
   h.atk = h.atk || (cls.baseAtk + (h.level - 1) * 3);
@@ -1052,7 +1067,7 @@ function normalizeHero(h) {
 }
 function generateHero(classKey, level = 1, customName) {
   const cls = HERO_CLASSES[classKey] || HERO_CLASSES.warrior;
-  const name = customName || choice(ENGLISH_NAMES);
+  const name = customName || choice(HUNTER_NAMES);
   return normalizeHero({
     id: uid(), name, class: classKey in HERO_CLASSES ? classKey : 'warrior', level,
     xp: 0, status: 'idle', equipment: { weapon: null, armor: null }, inventory: {},
@@ -1066,13 +1081,16 @@ function grantXp(hero, amount) {
   while (hero.xp >= xpNeed(hero.level)) {
     hero.xp -= xpNeed(hero.level);
     hero.level += 1; ups += 1;
-    hero.maxHp += 10; hero.atk += 3; hero.def += 2;
+    const growth = 1 + (((hero.stars || 3) - 1) * 0.12);
+    hero.maxHp += Math.round(10 * growth);
+    hero.atk += Math.round(3 * growth);
+    hero.def += Math.round(2 * growth);
     hero.hp = getHeroStats(hero).maxHp;
   }
   if (ups > 0) { sfx('level'); showToast(`${hero.name} 升到了 Lv.${hero.level}！`, 'success'); }
   return ups;
 }
-function trainCost(hero) { return { gold: 80 + hero.level * 60 }; }
+function trainCost(hero) { return { gold: Math.round((80 + hero.level * 60) * (1 + (((hero.stars || 3) - 1) * 0.25))) }; }
 function HeroSystem_trainHero(heroId) {
   const hero = territoryHeroes.find(h => h.id === heroId); if (!hero) return false;
   if (!ResourceSystem_spend(trainCost(hero))) return false;
@@ -1099,18 +1117,18 @@ function restHero(heroId) {
   hero.exploreZoneId = null; hero.exploreDifficulty = null; hero.explorationProgress = 0;
   syncActiveExplorations(); renderAll();
 }
-function recallHero(heroId) { restHero(heroId); showToast('英雄已返回王國休整。', 'info'); }
+function recallHero(heroId) { restHero(heroId); showToast('獵人已返回獵魔村休整。', 'info'); }
 
 function recruitCost(w) { return { gold: 60 + (w.level || 1) * 45 }; }
 function recruitWanderingHero(heroId) {
   const idx = wanderingHeroes.findIndex(h => h.id === heroId); if (idx < 0) return;
-  if (territoryHeroes.length >= BuildingSystem_getTerritoryHeroSlots()) { showToast('英雄空位不足，請升級酒館。', 'error'); return; }
+  if (territoryHeroes.length >= BuildingSystem_getTerritoryHeroSlots()) { showToast('獵人空位不足，請升級酒館。', 'error'); return; }
   const w = wanderingHeroes[idx];
   if (!ResourceSystem_spend(recruitCost(w))) { showToast('金幣不足，無法招募。', 'error'); return; }
   wanderingHeroes.splice(idx, 1);
   const hero = normalizeHero({ ...w, id: uid(), status: 'idle', equipment: { weapon: null, armor: null }, inventory: {}, exploreZoneId: null, exploreDifficulty: null, explorationProgress: 0 });
   territoryHeroes.push(hero);
-  sfx('recruit'); showToast(`${hero.name} 加入了王國！`, 'success'); renderAll();
+  sfx('recruit'); showToast(`${hero.name} 加入了獵魔村！`, 'success'); renderAll();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1136,7 +1154,7 @@ function itemStatsText(def) {
   if (def.def) parts.push(`防+${def.def}`);
   if (def.hp) parts.push(`HP+${def.hp}`);
   if (def.crit) parts.push(`暴擊+${Math.round(def.crit * 100)}%`);
-  if (def.msFind) parts.push(`魔石+${Math.round(def.msFind * 100)}%`);
+  if (def.msFind) parts.push(`魔核+${Math.round(def.msFind * 100)}%`);
   if (def.healPct) parts.push(`恢復${Math.round(def.healPct * 100)}%HP`);
   return parts.join('・');
 }
@@ -1242,10 +1260,10 @@ function runCombat(hero, enemyTemplate, ctx) {
     for (const dropId of (ctx.drops || [])) {
       if (Math.random() < 0.28 && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
     }
-    lines.push(`🏆 勝利！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、1💎' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
+    lines.push(`🏆 勝利！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、1💠' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
   } else {
     hero.hp = Math.max(1, Math.round(st.maxHp * 0.2));
-    lines.push(`💀 ${hero.name} 戰敗撤退，返回王國休整。`);
+    lines.push(`💀 ${hero.name} 戰敗撤退，返回獵魔村休整。`);
   }
   return { won, rounds, lines, rewards };
 }
@@ -1273,9 +1291,10 @@ function syncActiveExplorations() {
 function dispatchHero(heroId, zoneId, difficulty) {
   const hero = territoryHeroes.find(h => h.id === heroId); const zone = getZone(zoneId);
   if (!hero || !zone || !isZoneUnlocked(zoneId)) { showToast('無法派遣到該區域。', 'error'); return; }
-  if (hero.status === 'exploring') { showToast('英雄正在探索中。', 'error'); return; }
-  if (hero.status === 'resting') { showToast('英雄休整中，稍後再出征。', 'error'); return; }
-  if (difficulty === 'boss' && !isBossReady(zoneId)) { showToast('需先通關簡單/普通/困難。', 'error'); return; }
+  if (hero.status === 'exploring') { showToast('獵人正在狩獵中。', 'error'); return; }
+  if (hero.status === 'resting') { showToast('獵人休整中，稍後再出征。', 'error'); return; }
+  if ((hero.fatigue || 0) >= 90) { showToast('疲勞過高，請先讓獵人休整。', 'error'); return; }
+  if (difficulty === 'boss' && !isBossReady(zoneId)) { showToast('需先通關驅逐/討伐/獵殺。', 'error'); return; }
   const carry = Math.min(2, invCount('healthPotion'));
   if (carry > 0) { removeItem('healthPotion', carry); hero.inventory.healthPotion = (hero.inventory.healthPotion || 0) + carry; }
   hero.status = 'exploring'; hero.exploreZoneId = zone.id; hero.exploreDifficulty = difficulty; hero.explorationProgress = 0;
@@ -1288,7 +1307,7 @@ function resolveExploration(hero) {
   const cfg = isBoss ? zone.boss : zone.difficulties[diff];
   const enemy = isBoss ? zone.boss : choice(cfg.enemies);
   const result = runCombat(hero, enemy, { boss: isBoss, goldRange: cfg.goldRange, magicStoneChance: cfg.magicStoneChance, xp: cfg.xp, drops: cfg.drops });
-  addBattleReport('zone', `${zone.icon} ${zone.name}・${DIFF_LABELS[diff]}`, result.won ? (isBoss ? 'BOSS擊破' : '勝利') : '撤退', result.lines, result.rewards);
+  addBattleReport('zone', `${zone.icon} ${zone.name}・${DIFF_LABELS[diff]}`, result.won ? (isBoss ? '頭目擊破' : '勝利') : '撤退', result.lines, result.rewards);
   if (result.won) {
     if (isBoss) {
       mapProgress.zoneProgress[zone.id].bossDefeated = true;
@@ -1296,8 +1315,8 @@ function resolveExploration(hero) {
       const next = getZone(zone.id + 1);
       if (next && !mapProgress.unlockedZones.includes(next.id)) { mapProgress.unlockedZones.push(next.id); mapProgress.currentZone = next.id; }
       hero.status = 'idle'; hero.explorationProgress = 0; hero.exploreZoneId = null; hero.exploreDifficulty = null;
-      sfx('boss'); showToast(`👑 擊敗 ${zone.boss.name}！${next ? '解鎖 ' + next.name : '五境全通，可進行轉生！'}`, 'success');
-      if (!next) showToast('🌀 前往「成就」面板進行轉生，獲得永久傳承碎片。', 'info');
+      sfx('boss'); showToast(`👑 擊敗 ${zone.boss.name}！${next ? '解鎖 ' + next.name : '五域全通，可進行重建！'}`, 'success');
+      if (!next) showToast('🌀 前往「成就」面板進行重建，獲得永久傳承碎片。', 'info');
     } else {
       const first = !mapProgress.zoneProgress[zone.id][diff];
       mapProgress.zoneProgress[zone.id][diff] = true;
@@ -1315,13 +1334,16 @@ function processHeroTick() {
     const st = getHeroStats(hero);
     if (hero.status === 'resting') {
       hero.restTicks = Math.max(0, (hero.restTicks || 0) - 1);
+      hero.fatigue = clamp((hero.fatigue || 0) - 14, 0, 100);
       hero.hp = Math.min(st.maxHp, hero.hp + Math.ceil(st.maxHp * 0.18));
-      if (hero.restTicks <= 0 && hero.hp >= st.maxHp * 0.6) hero.status = 'idle';
+      if (hero.restTicks <= 0 && hero.hp >= st.maxHp * 0.6 && hero.fatigue < 70) hero.status = 'idle';
     } else if (hero.status === 'exploring') {
       if (hero.hp < st.maxHp * 0.35) usePotion(hero, true);
+      hero.fatigue = clamp((hero.fatigue || 0) + (hero.exploreDifficulty === 'boss' ? 4 : 3), 0, 100);
       hero.explorationProgress += hero.exploreDifficulty === 'boss' ? 7 : 11;
       if (hero.explorationProgress >= 100) resolveExploration(hero);
     } else {
+      hero.fatigue = clamp((hero.fatigue || 0) - 4, 0, 100);
       hero.hp = Math.min(st.maxHp, hero.hp + Math.ceil(st.maxHp * 0.04));
     }
   }
@@ -1337,10 +1359,10 @@ function openDifficultyModal(zoneId, diff) {
     ${enemies.map(e => `<div class="hero-pick-row"><span style="font-size:22px">${isBossIcon(diff)}</span><div class="hp-info"><div class="hp-name">${e.name}</div><div class="hp-stats">HP ${e.hp}・攻 ${e.atk}・防 ${e.def}</div></div></div>`).join('')}
     <div class="section-label">獎勵</div>
     <div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">${cfg.goldRange[0]}~${cfg.goldRange[1]}</span></div>
-    <div class="offline-item"><span class="offline-label">💎 魔石機率</span><span class="offline-val">${Math.round(cfg.magicStoneChance * 100)}%</span></div>
+    <div class="offline-item"><span class="offline-label">💠 魔核機率</span><span class="offline-val">${Math.round(cfg.magicStoneChance * 100)}%</span></div>
     <div class="offline-item"><span class="offline-label">✨ 經驗</span><span class="offline-val">${cfg.xp}</span></div>
-    <div class="section-label">派遣英雄</div>
-    ${idleHeroes.length ? idleHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-pick-row"><span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span><div class="hp-info"><div class="hp-name">${h.name} Lv.${h.level}</div><div class="hp-stats">攻${st.atk} 防${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div></div><button class="btn btn-blue btn-sm" onclick="dispatchHero('${h.id}',${zone.id},'${diff}')">派遣</button></div>`; }).join('') : '<div class="empty-state">沒有閒置英雄，請先招募或召回</div>'}
+    <div class="section-label">派遣獵人</div>
+    ${idleHeroes.length ? idleHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-pick-row"><span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span><div class="hp-info"><div class="hp-name">${h.name} Lv.${h.level}</div><div class="hp-stats">攻${st.atk} 防${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div></div><button class="btn btn-blue btn-sm" onclick="dispatchHero('${h.id}',${zone.id},'${diff}')">派遣</button></div>`; }).join('') : '<div class="empty-state">沒有閒置獵人，請先招募或召回</div>'}
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button></div>`;
   showModal('modal-detail');
 }
@@ -1352,7 +1374,7 @@ function openDispatch(heroId) {
   $('dispatch-zone-grid').innerHTML = ZONES.map(z => {
     const unlocked = isZoneUnlocked(z.id); const p = mapProgress.zoneProgress[z.id];
     const diffs = ['easy', 'normal', 'hard'].map(d => `<button class="btn btn-sm ${p[d] ? 'btn-outline' : 'btn-blue'}" ${unlocked ? '' : 'disabled'} onclick="dispatchHero('${heroId}',${z.id},'${d}')">${DIFF_LABELS[d]}${p[d] ? '✓' : ''}</button>`).join('');
-    const boss = `<button class="btn btn-sm btn-purple" ${unlocked && isBossReady(z.id) ? '' : 'disabled'} onclick="dispatchHero('${heroId}',${z.id},'boss')">👑BOSS</button>`;
+    const boss = `<button class="btn btn-sm btn-purple" ${unlocked && isBossReady(z.id) ? '' : 'disabled'} onclick="dispatchHero('${heroId}',${z.id},'boss')">👑頭目</button>`;
     return `<div class="dispatch-zone ${unlocked ? '' : 'locked'}"><div class="dz-name">${z.icon} ${z.name}</div><div style="display:flex;flex-direction:column;gap:4px">${diffs}${boss}</div></div>`;
   }).join('');
   showModal('modal-dispatch');
@@ -1365,7 +1387,7 @@ function closeDispatch() { dispatchHeroId = null; hideModal('modal-dispatch'); }
 function spawnWanderingHero() {
   if (wanderingHeroes.length >= BuildingSystem_getMaxWanderingHeroes()) return;
   const t = choice(WANDERING_HERO_TYPES);
-  const hero = normalizeHero({ id: uid(), name: choice(ENGLISH_NAMES), class: t.class, level: Math.max(1, t.level + rand(-1, 1)), status: 'wandering', wallet: t.dropGold, diamonds: 0, dropMagicStoneChance: t.dropMagicStoneChance });
+  const hero = normalizeHero({ id: uid(), name: choice(HUNTER_NAMES), class: t.class, level: Math.max(1, t.level + rand(-1, 1)), status: 'wandering', wallet: t.dropGold, diamonds: 0, dropMagicStoneChance: t.dropMagicStoneChance });
   wanderingHeroes.push(hero);
 }
 function processWanderingTick() {
@@ -1421,7 +1443,7 @@ function offlineModalHtml(gains, seconds) {
     const conf = k === 'healthPotion' ? ITEMS.healthPotion : RESOURCES[k];
     return `<div class="offline-item"><span class="offline-label">${conf.icon} ${conf.name}</span><span class="offline-val">+${fmt(v)}</span></div>`;
   }).join('');
-  return `<div style="text-align:center;font-size:13px;color:var(--text-dim);">離線約 ${mins} 分鐘，王國以 50% 效率持續運作</div>${rows || '<div class="empty-state">沒有可收取資源</div>'}`;
+  return `<div style="text-align:center;font-size:13px;color:var(--text-dim);">離線約 ${mins} 分鐘，獵魔村以 50% 效率持續運作</div>${rows || '<div class="empty-state">沒有可收取資源</div>'}`;
 }
 function collectOffline() {
   if (pendingOfflineSummary) {
@@ -1441,7 +1463,7 @@ function checkDaily() {
   if (daily.lastClaim === today) return;
   const nextStreak = daily.lastClaim === yesterdayKey() ? daily.streak + 1 : 1;
   pendingDailyReward = { streak: nextStreak, gold: 150 + nextStreak * 60, magicStones: nextStreak % 3 === 0 ? 1 : 0, potion: 1 + Math.floor(nextStreak / 2) };
-  $('modal-daily-body').innerHTML = `<div style="text-align:center;font-size:13px;color:var(--text-dim);">連續登入第 ${nextStreak} 天</div><div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">+${pendingDailyReward.gold}</span></div><div class="offline-item"><span class="offline-label">💎 魔法石</span><span class="offline-val">+${pendingDailyReward.magicStones}</span></div><div class="offline-item"><span class="offline-label">🧪 藥水</span><span class="offline-val">+${pendingDailyReward.potion}</span></div>`;
+  $('modal-daily-body').innerHTML = `<div style="text-align:center;font-size:13px;color:var(--text-dim);">連續登入第 ${nextStreak} 天</div><div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">+${pendingDailyReward.gold}</span></div><div class="offline-item"><span class="offline-label">💠 魔核</span><span class="offline-val">+${pendingDailyReward.magicStones}</span></div><div class="offline-item"><span class="offline-label">🧪 藥水</span><span class="offline-val">+${pendingDailyReward.potion}</span></div>`;
   showModal('modal-daily');
 }
 function claimDaily() {
@@ -1467,14 +1489,14 @@ function getPrestigeGain() {
   return Math.max(1, 1 + Math.floor(heroLevels / 30) + Math.floor(unlockedAchCount() / 6));
 }
 function doPrestige() {
-  if (!finalBossDefeated()) { showToast('需先擊敗龍族廢墟的龍王。', 'error'); return; }
+  if (!finalBossDefeated()) { showToast('需先擊敗魔域王座的魔域大君。', 'error'); return; }
   const gain = getPrestigeGain();
-  if (!confirm(`轉生將重置資源、建築、英雄與地圖，但保留成就/統計/每日，並獲得 ${gain} 傳承碎片（每片全產出+10%）。確定？`)) return;
+  if (!confirm(`重建將重置資源、建築、獵人與地圖，但保留成就/統計/每日，並獲得 ${gain} 傳承碎片（每片全產出+10%）。確定？`)) return;
   const keep = { stats, achievements: achievementsUnlocked, prestige: { shards: prestige.shards + gain, count: prestige.count + 1 }, daily, settings };
   keep.stats.prestiges += 1;
   gameState = getDefaultGameState();
   gameState.stats = keep.stats; gameState.achievements = keep.achievements; gameState.prestige = keep.prestige; gameState.daily = keep.daily; gameState.settings = keep.settings;
-  applyStateToRuntime(); sfx('prestige'); showToast(`🌀 轉生完成！傳承碎片 +${gain}`, 'success'); renderAll(); saveGame();
+  applyStateToRuntime(); sfx('prestige'); showToast(`🌀 重建完成！傳承碎片 +${gain}`, 'success'); renderAll(); saveGame();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1660,7 +1682,7 @@ function renderHUD() {
   $('hc-wood').textContent = fmt(ResourceSystem_get('woodRotten'));
   $('hc-iron').textContent = fmt(ResourceSystem_get('ironRusty'));
   $('hc-herb').textContent = fmt(ResourceSystem_get('herbLow'));
-  $('castle-level').textContent = `王國傳承 ${prestige.count}・碎片 ${prestige.shards}`;
+  $('castle-level').textContent = `獵魔村傳承 ${prestige.count}・碎片 ${prestige.shards}`;
 }
 function renderBadges() {
   const idle = territoryHeroes.filter(h => h.status === 'idle').length;
@@ -1680,24 +1702,24 @@ function renderResourcesPanel() {
 }
 function heroCardHtml(h) {
   const st = getHeroStats(h), cls = HERO_CLASSES[h.class];
-  const statusBadge = h.status === 'exploring' ? '<span class="hero-badge badge-exploring">探索中</span>' : h.status === 'resting' ? '<span class="hero-badge badge-resting">休整中</span>' : '<span class="hero-badge badge-idle">閒置</span>';
+  const statusBadge = h.status === 'exploring' ? '<span class="hero-badge badge-exploring">狩獵中</span>' : h.status === 'resting' ? '<span class="hero-badge badge-resting">休整中</span>' : '<span class="hero-badge badge-idle">閒置</span>';
   const eq = (slot, label) => {
     const e = h.equipment?.[slot];
     return e ? `<span class="equip-slot rar-${ITEMS[e.id]?.rarity || 'common'}" title="點擊卸下，右鍵/長按強化" onclick="unequipItem('${h.id}','${slot}')" oncontextmenu="event.preventDefault();enhanceEquip('${h.id}','${slot}')">${e.icon}${e.name}+${e.plus || 0}</span>` : `<span class="equip-slot" onclick="openEquipModal('${h.id}','${slot}')">＋${label}</span>`;
   };
   const canAct = h.status === 'idle';
-  return `<div class="hero-card"><div class="hero-top"><div class="hero-portrait">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・🧪${h.inventory.healthPotion || 0}</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" ${(h.inventory.healthPotion || 0) > 0 ? '' : 'disabled'} onclick="usePotion(territoryHeroes.find(x=>x.id==='${h.id}'));renderAll()">用藥</button></div></div>`;
+  return `<div class="hero-card"><div class="hero-top"><div class="hero-portrait">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span></div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" ${(h.inventory.healthPotion || 0) > 0 ? '' : 'disabled'} onclick="usePotion(territoryHeroes.find(x=>x.id==='${h.id}'));renderAll()">用藥</button></div></div>`;
 }
 function renderHeroesPanel() {
-  $('hero-tab-bar').innerHTML = [['territory', '王國英雄'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`]].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
+  $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`]].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
   for (const k of ['territory', 'wander', 'reports']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
   if (heroSubTab === 'territory') {
-    $('hero-territory').innerHTML = `<div class="section-label">英雄空位 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（升級酒館可增加）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">尚未招募英雄，到「流浪者」分頁招募</div>');
+    $('hero-territory').innerHTML = `<div class="section-label">獵人空位 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（升級酒館可增加）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">尚未招募獵人，到「流浪者」分頁招募</div>');
   } else if (heroSubTab === 'wander') {
-    $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-card"><div class="hero-top"><div class="hero-portrait">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="hero-badge badge-wandering">流浪</span></div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💎${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪英雄</div>';
+    $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-card"><div class="hero-top"><div class="hero-portrait">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="hero-badge badge-wandering">流浪</span></div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・😪${h.fatigue || 0}%</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💠${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪獵人</div>';
   } else {
     const filtered = battleReports.filter(r => heroReportSubTab === 'all' || r.kind === heroReportSubTab);
-    $('hero-reports').innerHTML = `<div class="report-sub-tabs">${[['all', '全部'], ['zone', '探索'], ['wander', '流浪']].map(([k, label]) => `<button class="report-sub-btn ${heroReportSubTab === k ? 'active' : ''}" onclick="heroReportSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('')}<button class="report-sub-btn" onclick="clearReports()">清空</button></div>` + (filtered.length ? filtered.map(r => `<div class="report-entry"><div class="report-head" onclick="toggleReport('${r.id}')"><span class="report-result" style="color:${r.result.includes('敗') || r.result.includes('撤退') ? 'var(--red)' : 'var(--green)'}">${r.result}</span><div class="report-info"><div class="report-title">${r.title}</div><div class="report-time">${timeAgo(r.time)}</div></div><span class="report-expand ${expandedReports.has(r.id) ? 'open' : ''}">▼</span></div><div class="report-body ${expandedReports.has(r.id) ? 'open' : ''}"><div class="combat-log">${r.lines.map(line => `<div class="log-line ${line.includes('勝利') ? 'log-victory' : line.includes('戰敗') ? 'log-defeat' : line.includes('藥水') ? 'log-heal' : line.includes('掉落') ? 'log-drop' : 'log-round'}">${line}</div>`).join('')}</div></div></div>`).join('') : '<div class="empty-state">尚無戰報</div>');
+    $('hero-reports').innerHTML = `<div class="report-sub-tabs">${[['all', '全部'], ['zone', '狩獵'], ['wander', '流浪']].map(([k, label]) => `<button class="report-sub-btn ${heroReportSubTab === k ? 'active' : ''}" onclick="heroReportSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('')}<button class="report-sub-btn" onclick="clearReports()">清空</button></div>` + (filtered.length ? filtered.map(r => `<div class="report-entry"><div class="report-head" onclick="toggleReport('${r.id}')"><span class="report-result" style="color:${r.result.includes('敗') || r.result.includes('撤退') ? 'var(--red)' : 'var(--green)'}">${r.result}</span><div class="report-info"><div class="report-title">${r.title}</div><div class="report-time">${timeAgo(r.time)}</div></div><span class="report-expand ${expandedReports.has(r.id) ? 'open' : ''}">▼</span></div><div class="report-body ${expandedReports.has(r.id) ? 'open' : ''}"><div class="combat-log">${r.lines.map(line => `<div class="log-line ${line.includes('勝利') ? 'log-victory' : line.includes('戰敗') ? 'log-defeat' : line.includes('藥水') ? 'log-heal' : line.includes('掉落') ? 'log-drop' : 'log-round'}">${line}</div>`).join('')}</div></div></div>`).join('') : '<div class="empty-state">尚無戰報</div>');
   }
 }
 function renderBuildingsPanel() {
@@ -1715,12 +1737,12 @@ function upgradeBuilding(id) {
 }
 function renderMapPanel() {
   syncActiveExplorations();
-  $('active-explore').innerHTML = activeExplorations.length ? `<div class="section-label">進行中探索</div>` + activeExplorations.map(e => { const z = getZone(e.zoneId); return `<div class="explore-item"><div class="explore-top"><span class="explore-name">${z.icon} ${z.name}・${DIFF_LABELS[e.difficulty]}</span><span class="explore-hero">${esc(e.heroName)}</span><span class="explore-pct">${Math.floor(e.progress)}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${e.progress}%"></div></div></div>`; }).join('') : '<div class="empty-state">目前沒有探索隊伍</div>';
+  $('active-explore').innerHTML = activeExplorations.length ? `<div class="section-label">進行中狩獵</div>` + activeExplorations.map(e => { const z = getZone(e.zoneId); return `<div class="explore-item"><div class="explore-top"><span class="explore-name">${z.icon} ${z.name}・${DIFF_LABELS[e.difficulty]}</span><span class="explore-hero">${esc(e.heroName)}</span><span class="explore-pct">${Math.floor(e.progress)}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${e.progress}%"></div></div></div>`; }).join('') : '<div class="empty-state">目前沒有狩獵隊伍</div>';
   $('zone-list').innerHTML = ZONES.map(z => {
     const unlocked = isZoneUnlocked(z.id), p = mapProgress.zoneProgress[z.id];
     const rec = z.difficulties.easy.recommendedLevel;
-    const status = p.bossDefeated ? '✅ 已征服' : unlocked ? (isBossReady(z.id) ? '👑 Boss 已現身' : '⚔ 可探索') : '🔒 未解鎖';
-    return `<div class="zone-card ${unlocked ? '' : 'locked'} ${p.bossDefeated ? 'cleared' : ''}"><div class="zone-head"><div class="zone-ico">${z.icon}</div><div class="zone-name">${z.name}</div><div class="zone-rec">建議 Lv.${rec}+</div></div><div class="zone-status" style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${status}</div><div class="diff-row">${['easy', 'normal', 'hard'].map(d => `<button class="btn btn-sm ${p[d] ? 'btn-outline' : 'btn-blue'} diff-btn" ${unlocked ? '' : 'disabled'} onclick="openDifficultyModal(${z.id},'${d}')">${DIFF_LABELS[d]}${p[d] ? '<span class="diff-clear">✓</span>' : ''}</button>`).join('')}<button class="btn btn-sm btn-purple" ${unlocked && (isBossReady(z.id) || p.bossDefeated) ? '' : 'disabled'} onclick="openDifficultyModal(${z.id},'boss')">👑BOSS</button></div></div>`;
+    const status = p.bossDefeated ? '✅ 已征服' : unlocked ? (isBossReady(z.id) ? '👑 Boss 已現身' : '⚔ 可狩獵') : '🔒 未解鎖';
+    return `<div class="zone-card ${unlocked ? '' : 'locked'} ${p.bossDefeated ? 'cleared' : ''}"><div class="zone-head"><div class="zone-ico">${z.icon}</div><div class="zone-name">${z.name}</div><div class="zone-rec">建議 Lv.${rec}+</div></div><div class="zone-status" style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${status}</div><div class="diff-row">${['easy', 'normal', 'hard'].map(d => `<button class="btn btn-sm ${p[d] ? 'btn-outline' : 'btn-blue'} diff-btn" ${unlocked ? '' : 'disabled'} onclick="openDifficultyModal(${z.id},'${d}')">${DIFF_LABELS[d]}${p[d] ? '<span class="diff-clear">✓</span>' : ''}</button>`).join('')}<button class="btn btn-sm btn-purple" ${unlocked && (isBossReady(z.id) || p.bossDefeated) ? '' : 'disabled'} onclick="openDifficultyModal(${z.id},'boss')">👑頭目</button></div></div>`;
   }).join('');
 }
 function renderShopPanel() {
@@ -1733,7 +1755,7 @@ function renderShopPanel() {
 }
 function renderAchPanel() {
   const canPrestige = finalBossDefeated();
-  $('ach-special').innerHTML = `<div class="ach-card special"><div class="ach-head"><span class="ach-ico">🌀</span><div><div class="ach-name">傳承轉生</div><div class="ach-desc">擊敗龍王後重置王國，換取永久傳承碎片。目前碎片 ${prestige.shards}（全產出 +${prestige.shards * 10}%），已轉生 ${prestige.count} 次。</div><div class="ach-bonus">本次可獲得：${canPrestige ? getPrestigeGain() : '—'} 碎片</div></div><span class="ach-state ${canPrestige ? 'done' : ''}">${canPrestige ? '可轉生' : '未解鎖'}</span></div><div class="modal-actions"><button class="btn btn-purple btn-sm" ${canPrestige ? '' : 'disabled'} onclick="doPrestige()">🌀 轉生</button><button class="btn btn-gold btn-sm" onclick="checkDaily()">📅 每日獎勵</button></div></div>`;
+  $('ach-special').innerHTML = `<div class="ach-card special"><div class="ach-head"><span class="ach-ico">🌀</span><div><div class="ach-name">傳承重建</div><div class="ach-desc">擊敗魔域大君後重置獵魔村，換取永久傳承碎片。目前碎片 ${prestige.shards}（全產出 +${prestige.shards * 10}%），已重建 ${prestige.count} 次。</div><div class="ach-bonus">本次可獲得：${canPrestige ? getPrestigeGain() : '—'} 碎片</div></div><span class="ach-state ${canPrestige ? 'done' : ''}">${canPrestige ? '可重建' : '未解鎖'}</span></div><div class="modal-actions"><button class="btn btn-purple btn-sm" ${canPrestige ? '' : 'disabled'} onclick="doPrestige()">🌀 重建</button><button class="btn btn-gold btn-sm" onclick="checkDaily()">📅 每日獎勵</button></div></div>`;
   $('ach-list').innerHTML = ACHIEVEMENTS.map(a => { const done = !!achievementsUnlocked[a.id]; return `<div class="ach-card"><div class="ach-head"><span class="ach-ico">${a.icon}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div><div class="ach-bonus">${a.bonusText}</div></div><span class="ach-state ${done ? 'done' : ''}">${done ? '已完成' : '未完成'}</span></div></div>`; }).join('');
 }
 

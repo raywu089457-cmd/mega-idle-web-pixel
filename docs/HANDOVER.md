@@ -1,6 +1,6 @@
 # Handover Document — mega-idle-web-pixel
 
-> 瀏覽器閒置王國建設遊戲。純 HTML + Canvas + JavaScript，無需建構工具。
+> 瀏覽器獵魔村經營遊戲（原創致敬版）。純 HTML + Canvas + JavaScript，無需建構工具。
 > 部署：https://raywu089457-cmd.github.io/mega-idle-web-pixel/
 
 ---
@@ -8,7 +8,7 @@
 ## 專案架構
 
 ### 單一 entry point
-所有遊戲邏輯在 `index.html`（2026-07-18 版約 1822 行），雙擊即可運行，無需建構。目前包含資源/建築/英雄/地圖/商店/裝備強化/成就/每日/轉生/離線收益/Canvas 場景與 WebAudio。
+所有遊戲邏輯在 `index.html`（2026-07-18 獵魔村版約 1849 行），雙擊即可運行，無需建構。目前包含資源/建築/獵人星級與特質/疲勞/狩獵地圖/商店/裝備強化/成就/每日/重建/離線收益/Canvas 場景與 WebAudio。
 
 ```
 mega-idle-web-pixel/

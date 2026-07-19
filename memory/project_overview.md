@@ -8,7 +8,7 @@ type: project
 
 ## 專案性質
 
-瀏覽器閒置王國建設遊戲（Idle Kingdom Builder Web — 手機優化版）。
+瀏覽器獵魔村經營遊戲（Hunter Village Tycoon 原創致敬版 — 手機優化版）。
 
 ## 技術棧
 
@@ -30,17 +30,17 @@ type: project
 ## 核心循環
 
 ```
-每秒 tick → 材料產出(1-3/秒/material) + 英雄戰鬥結算 + 商店自動生產 → 存檔
+每秒 tick → 公會素材產出 + 市集金幣 + 煉金藥水 → 流浪獵人/招募/派遣狩獵 → 戰鬥結算 → 存檔
 ```
 
 ## 系統模組
 
-- Monument System — 每秒隨機產生 1-3 個每種材料
-- Hero System — 領土英雄（7槽）+ 漫遊英雄（10槽）+ 戰鬥/休息/喝藥水
-- Shop System — 材料製造、購買、藥水鋪自動生產
-- Map System — 地圖探索、難度選擇、Boss 戰
-- Offline System — 8小時離線計算
-- Save System — localStorage + background save（`pagehide` / `visibilitychange` 觸發）
+- Guild System — 每秒隨機產生素材（獸肉/清泉/木材/鐵礦/藥草）
+- Hunter System — 村莊獵人 + 流浪獵人，含星級、特質、疲勞、戰鬥/休息/喝藥水
+- Craft System — 鐵匠鋪/皮甲工坊製作裝備，煉金工房自動產藥水
+- Hunt System — 五個獵場、驅逐/討伐/獵殺/頭目、Boss 解鎖下一獵場
+- Legacy System — 成就永久加成、每日登入、魔域大君後村莊重建
+- Offline/Save System — 8小時離線收益；localStorage + `pagehide`/`visibilitychange` 存檔
 
 ## GitHub Pages
 
