@@ -4,16 +4,16 @@
 > 狀態：⬜ 未做 / 🚧 進行中 / ✅ 完成（標註 wave 與 commit）
 > 接手規則：每 wave 完成 → `node --check` + vm 沙盒測試 + commit + 更新本檔 + 更新 `memory/dev_progress.md`。
 
-## Wave 4 — QoL（小項批次）
+## Wave 4 — QoL（小項批次）✅ commit: wave 4
 
-- ⬜ #2 疲勞自動召回：疲勞 ≥90 自動召回休整（settings 開關 `autoRecall`，預設開）。接 `processHeroTick()`
-- ⬜ #4 一鍵全隊召回/再出發：地圖面板按鈕；`hero.lastZoneId/lastDifficulty` 記住上次派遣
-- ⬜ #5 戰鬥加速 1x/2x/4x：`settings.combatSpeed`，`advanceLiveCombat` 每 tick 跑 N 回合
-- ⬜ #6 批量販售：背包「一鍵賣出所有普通裝」按鈕
-- ⬜ #7 裝備數值比較：裝備 modal 背包物品顯示與目前穿著的差值（▲▼）
-- ⬜ #8 新手三步引導：首局引導 modal（派遣→製作→升級），`settings.onboarded` 標記
-- ⬜ #15 技能洗點：技能分頁「重置」按鈕，花魔核返還全部 AP
-- ⬜ #30 存檔匯出/匯入：設定面板 base64 存檔碼複製/貼上
+- ✅ #2 疲勞自動召回：疲勞 ≥90 自動召回休整（settings 開關 `autoRecall`，預設開）。接 `processHeroTick()`
+- ✅ #4 一鍵全隊召回/再出發：地圖面板按鈕；`hero.lastZoneId/lastDifficulty` 記住上次派遣
+- ✅ #5 戰鬥加速 1x/2x/4x：`settings.combatSpeed`，`advanceLiveCombat` 每 tick 跑 N 回合
+- ✅ #6 批量販售：背包「一鍵賣出所有普通裝」按鈕（藥水不賣）
+- ✅ #7 裝備數值比較：裝備 modal 背包物品顯示與目前穿著的差值（▲▼）
+- ✅ #8 新手三步引導：首局引導 modal（派遣→製作→升級），`settings.onboarded` 標記
+- ✅ #15 技能洗點：技能分頁「重置」按鈕，花 5💠 返還全部 AP
+- ✅ #30 存檔匯出/匯入：設定面板 base64 存檔碼複製/貼上
 
 ## Wave 5 — 戰鬥深化
 

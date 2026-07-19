@@ -725,49 +725,49 @@ function rollRarity() {
 
 const ZONES = [
   {
-    id: 1, name: '迷霧森林', icon: '🌲',
+    id: 1, name: '迷霧森林', icon: '🌲', element: 'nature',
     difficulties: {
       easy:   { recommendedLevel: 1, enemies: [{ name: '腐牙野狼', hp: 20, atk: 5, def: 2 }, { name: '迷霧哥布林', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10, drops: ['healthPotion'] },
       normal: { recommendedLevel: 2, enemies: [{ name: '荊棘魔', hp: 35, atk: 8, def: 4 }, { name: '霧狼頭目', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20, drops: ['healthPotion', 'woodenSword'] },
       hard:   { recommendedLevel: 3, enemies: [{ name: '枯木妖', hp: 50, atk: 12, def: 6 }, { name: '掠食藤', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35, drops: ['woodenSword', 'healthPotion'] },
     },
-    boss: { name: '迷霧樹心', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: ['woodenSword', 'leatherArmor'], xp: 50 },
+    boss: { name: '迷霧樹心', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: ['woodenSword', 'leatherArmor'], xp: 50, mechanic: 'regen' },
   },
   {
-    id: 2, name: '腐化沼澤', icon: '🪷',
+    id: 2, name: '腐化沼澤', icon: '🪷', element: 'poison',
     difficulties: {
       easy:   { recommendedLevel: 3, enemies: [{ name: '泥沼殭屍', hp: 40, atk: 10, def: 5 }, { name: '毒霧蛙', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15, drops: ['healthPotion', 'leatherArmor'] },
       normal: { recommendedLevel: 5, enemies: [{ name: '沼澤巫婆', hp: 60, atk: 14, def: 8 }, { name: '腐鱗鱷', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30, drops: ['huntersBow', 'ironDagger'] },
       hard:   { recommendedLevel: 6, enemies: [{ name: '疫病使徒', hp: 85, atk: 18, def: 10 }, { name: '深泥巨怪', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50, drops: ['ironDagger', 'huntersBow'] },
     },
-    boss: { name: '腐化母巢', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80 },
+    boss: { name: '腐化母巢', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80, mechanic: 'poison' },
   },
   {
-    id: 3, name: '荒廢礦坑', icon: '⛏️',
+    id: 3, name: '荒廢礦坑', icon: '⛏️', element: 'earth',
     difficulties: {
       easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑骷髏', hp: 55, atk: 14, def: 8 }, { name: '穴居魔', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20, drops: ['ironDagger', 'healthPotion'] },
       normal: { recommendedLevel: 7, enemies: [{ name: '鏽甲監工', hp: 80, atk: 18, def: 12 }, { name: '暗影爆破者', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
       hard:   { recommendedLevel: 9, enemies: [{ name: '礦心魔像', hp: 110, atk: 24, def: 14 }, { name: '深坑爬行者', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65, drops: ['mysticStaff', 'ironArmor'] },
     },
-    boss: { name: '礦坑魔像王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120 },
+    boss: { name: '礦坑魔像王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120, mechanic: 'shield' },
   },
   {
-    id: 4, name: '熔岩裂谷', icon: '🌋',
+    id: 4, name: '熔岩裂谷', icon: '🌋', element: 'fire',
     difficulties: {
       easy:   { recommendedLevel: 7, enemies: [{ name: '熔岩蜥', hp: 70, atk: 18, def: 10 }, { name: '灰燼蝠', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25, drops: ['ironArmor', 'healthPotion'] },
       normal: { recommendedLevel: 9, enemies: [{ name: '焰角魔', hp: 100, atk: 22, def: 14 }, { name: '熔核祭司', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50, drops: ['holyMace', 'ironArmor'] },
       hard:   { recommendedLevel: 11, enemies: [{ name: '裂谷督軍', hp: 140, atk: 30, def: 18 }, { name: '黑曜巨兵', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80, drops: ['holyMace', 'mysticStaff'] },
     },
-    boss: { name: '熔岩暴君', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: ['holyMace', 'knightArmor', 'mysticStaff'], xp: 160 },
+    boss: { name: '熔岩暴君', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: ['holyMace', 'knightArmor', 'mysticStaff'], xp: 160, mechanic: 'lifesteal' },
   },
   {
-    id: 5, name: '魔域王座', icon: '👹',
+    id: 5, name: '魔域王座', icon: '👹', element: 'dark',
     difficulties: {
       easy:   { recommendedLevel: 10, enemies: [{ name: '魔域犬魔', hp: 100, atk: 24, def: 15 }, { name: '血咒騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
       normal: { recommendedLevel: 12, enemies: [{ name: '虛空掠奪者', hp: 150, atk: 30, def: 20 }, { name: '王座守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: ['holyMace', 'huntersBow'] },
       hard:   { recommendedLevel: 14, enemies: [{ name: '深淵執政官', hp: 200, atk: 38, def: 26 }, { name: '破滅領主', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: ['holyMace', 'knightArmor', 'mysticStaff'] },
     },
-    boss: { name: '魔域大君', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200 },
+    boss: { name: '魔域大君', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200, mechanic: 'aoe' },
   },
 ];
 
@@ -775,11 +775,11 @@ const ZONES = [
 // atk/def/hp: flat bonuses; crit: extra crit chance; msFind: bonus magic-core find
 // req: { b: buildingId, lv } — minimum building level to craft
 const ITEMS = {
-  woodenSword: { id: 'woodenSword', name: '獵人短刃', type: 'weapon', rarity: 'common', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior', atk: 5, req: { b: 'weaponShop', lv: 1 } },
-  ironDagger: { id: 'ironDagger', name: '毒牙匕首', type: 'weapon', rarity: 'rare', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪', forClass: 'rogue', atk: 9, crit: 0.08, req: { b: 'weaponShop', lv: 2 } },
-  huntersBow: { id: 'huntersBow', name: '穿甲長弓', type: 'weapon', rarity: 'rare', price: 90, cost: { woodRotten: 50, ironRusty: 30 }, icon: '🏹', forClass: 'archer', atk: 13, req: { b: 'weaponShop', lv: 3 } },
-  holyMace: { id: 'holyMace', name: '聖印戰錘', type: 'weapon', rarity: 'rare', price: 95, cost: { ironRusty: 35, herbLow: 40 }, icon: '✝️', forClass: 'priest', atk: 12, def: 4, req: { b: 'weaponShop', lv: 4 } },
-  mysticStaff: { id: 'mysticStaff', name: '咒核法杖', type: 'weapon', rarity: 'epic', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮', forClass: 'mage', atk: 17, msFind: 0.15, req: { b: 'weaponShop', lv: 5 } },
+  woodenSword: { id: 'woodenSword', name: '獵人短刃', type: 'weapon', rarity: 'common', price: 30, cost: { woodRotten: 30, ironRusty: 10 }, icon: '🗡️', forClass: 'warrior', atk: 5, element: 'thunder', req: { b: 'weaponShop', lv: 1 } },
+  ironDagger: { id: 'ironDagger', name: '毒牙匕首', type: 'weapon', rarity: 'rare', price: 80, cost: { ironRusty: 40, gold: 200 }, icon: '🔪', forClass: 'rogue', atk: 9, crit: 0.08, element: 'poison', req: { b: 'weaponShop', lv: 2 } },
+  huntersBow: { id: 'huntersBow', name: '穿甲長弓', type: 'weapon', rarity: 'rare', price: 90, cost: { woodRotten: 50, ironRusty: 30 }, icon: '🏹', forClass: 'archer', atk: 13, element: 'nature', req: { b: 'weaponShop', lv: 3 } },
+  holyMace: { id: 'holyMace', name: '聖印戰錘', type: 'weapon', rarity: 'rare', price: 95, cost: { ironRusty: 35, herbLow: 40 }, icon: '✝️', forClass: 'priest', atk: 12, def: 4, element: 'holy', req: { b: 'weaponShop', lv: 4 } },
+  mysticStaff: { id: 'mysticStaff', name: '咒核法杖', type: 'weapon', rarity: 'epic', price: 150, cost: { magicStones: 5, herbLow: 50 }, icon: '🔮', forClass: 'mage', atk: 17, msFind: 0.15, element: 'ice', req: { b: 'weaponShop', lv: 5 } },
   leatherArmor: { id: 'leatherArmor', name: '獸皮輕甲', type: 'armor', rarity: 'common', price: 40, cost: { woodRotten: 20, fruitPoor: 20 }, icon: '🥋', def: 5, hp: 20, req: { b: 'armorShop', lv: 1 } },
   ironArmor: { id: 'ironArmor', name: '獵魔鎧甲', type: 'armor', rarity: 'rare', price: 120, cost: { ironRusty: 80, gold: 600 }, icon: '🛡️', def: 10, hp: 40, req: { b: 'armorShop', lv: 2 } },
   knightArmor: { id: 'knightArmor', name: '屠魔重甲', type: 'armor', rarity: 'epic', price: 300, cost: { ironRusty: 120, magicStones: 3, gold: 1000 }, icon: '⚜️', def: 16, hp: 80, req: { b: 'armorShop', lv: 4 } },
@@ -791,6 +791,19 @@ const ITEMS = {
 const RARITY_NAMES = { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' };
 const DIFF_LABELS = { easy: '驅逐', normal: '討伐', hard: '獵殺', boss: '頭目' };
 const DIFF_COLORS = { easy: '#27ae60', normal: '#f39c12', hard: '#c0392b', boss: '#8e44ad' };
+// 元素相剋：武器 element 剋制對應 zone element（傷害 +25%）
+const ELEMENT_NAMES = { thunder: '雷', poison: '毒', nature: '自然', ice: '冰', holy: '聖', earth: '土', fire: '火', dark: '暗' };
+const ELEMENT_BEATS = { thunder: 'earth', poison: 'nature', nature: 'poison', ice: 'fire', holy: 'dark' };
+const BOSS_MECH_TEXT = {
+  regen: '🌱 頭目每 5 回合再生 HP！',
+  poison: '☠️ 頭目的毒素每 3 回合侵蝕 HP！',
+  shield: '🛡️ 頭目前 10 回合有堅固護盾，受到傷害 -40%！',
+  lifesteal: '🩸 頭目會吸取反擊傷害回血！',
+  aoe: '💥 頭目每 6 回合釋放無視防禦的毀滅衝擊！',
+};
+function weaponElement(hero) { const eq = hero.equipment?.weapon; return eq ? (ITEMS[eq.id]?.element || null) : null; }
+function elementCounterMult(hero, zone) { const w = weaponElement(hero); return (w && ELEMENT_BEATS[w] === zone?.element) ? 1.25 : 1; }
+function zoneWeaknessText(zone) { const w = Object.keys(ELEMENT_BEATS).find(k => ELEMENT_BEATS[k] === zone?.element); return w ? `${ELEMENT_NAMES[zone.element]}・弱${ELEMENT_NAMES[w]}` : (ELEMENT_NAMES[zone?.element] || ''); }
 const ENHANCE_MAX = 10;
 
 const TRAITS = [
@@ -1544,14 +1557,16 @@ function calcDamage(atk, def, crit) {
 function runCombat(hero, enemyTemplate, ctx) {
   const st = getHeroStats(hero);
   const enemy = { ...enemyTemplate, hp: enemyTemplate.hp };
+  const counterMult = (() => { const w = weaponElement(hero); return (w && ELEMENT_BEATS[w] === ctx.element) ? 1.25 : 1; })();
   const lines = [`⚔ ${hero.name} 遭遇 ${enemy.name}！`];
+  if (counterMult > 1) lines.push(`⚡ ${ELEMENT_NAMES[weaponElement(hero)]}屬性武器剋制此地魔物，傷害 +25%！`);
   let rounds = 0, won = false;
   while (rounds < 24 && hero.hp > 0 && enemy.hp > 0) {
     rounds += 1;
     if (hero.autoPotion && hero.hp < st.maxHp * 0.35) {
       if (usePotion(hero, true)) lines.push(`🧪 ${hero.name} 喝下藥水，HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
     }
-    const hit = calcDamage(st.atk, enemy.def || 0, st.crit);
+    const hit = calcDamage(Math.round(st.atk * counterMult), enemy.def || 0, st.crit);
     enemy.hp -= hit.dmg;
     lines.push(`第${rounds}回合：${hero.name} 造成 ${hit.dmg} 傷害${hit.isCrit ? '（暴擊！）' : ''}，${enemy.name} HP ${Math.max(0, enemy.hp)}`);
     if (enemy.hp <= 0) { won = true; break; }
@@ -1572,8 +1587,9 @@ function runCombat(hero, enemyTemplate, ctx) {
     grantXp(hero, rewards.xp);
     const msChance = (ctx.magicStoneChance || 0) + st.msFind;
     if (Math.random() < msChance) { rewards.magicStones = 1; ResourceSystem_add('magicStones', 1); }
+    const dropChance = sceneNight > 0.5 ? 0.38 : 0.28;
     for (const dropId of (ctx.drops || [])) {
-      if (Math.random() < 0.28 && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
+      if (Math.random() < dropChance && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
     }
     lines.push(`🏆 勝利！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、1💠' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
   } else {
@@ -1633,7 +1649,10 @@ function startLiveCombat(hero) {
   liveCombats[hero.id] = {
     heroId: hero.id, zoneId: zone.id, diff, isBoss, cfg, enemy,
     round: 0, lines: [`⚔ ${hero.name} 遭遇 ${enemy.name}！`], phase2: false, enraged: false,
+    dmgDealt: 0, dmgTaken: 0, crits: 0, bossMech: isBoss ? (zone.boss.mechanic || null) : null, lastCounterDmg: 0,
   };
+  if (elementCounterMult(hero, zone) > 1) liveCombats[hero.id].lines.push(`⚡ ${ELEMENT_NAMES[weaponElement(hero)]}屬性武器剋制此地魔物，傷害 +25%！`);
+  if (isBoss && zone.boss.mechanic && BOSS_MECH_TEXT[zone.boss.mechanic]) liveCombats[hero.id].lines.push(BOSS_MECH_TEXT[zone.boss.mechanic]);
 }
 function partyInfoFor(hero) {
   const allies = territoryHeroes.filter(o => o !== hero && o.status === 'exploring' && o.exploreZoneId === hero.exploreZoneId && o.exploreDifficulty === hero.exploreDifficulty);
@@ -1655,16 +1674,21 @@ function advanceLiveCombat(hero, lc) {
   // Try trigger active skill
   tryTriggerActiveSkill(hero, st, lc);
   // Consume active skill effects set on st this round
+  const zone = getZone(lc.zoneId);
   const skillAtkMult = 1 + (st.atkBonus || 0) + (st.skillDmgBonus || 0);
+  const counterMult = elementCounterMult(hero, zone);
+  const shieldMult = (lc.bossMech === 'shield' && lc.round <= 10) ? 0.6 : 1;
   const critEff = (st.crit || 0) + (st.critBonus || 0);
   const defEff = Math.max(0, Math.round((lc.enemy.def || 0) * (1 - Math.min(0.9, st.pierce || 0))));
-  const hit = calcDamage(Math.round(st.atk * party.mult * skillAtkMult), defEff, critEff);
+  const hit = calcDamage(Math.round(st.atk * party.mult * skillAtkMult * counterMult * shieldMult), defEff, critEff);
   lc.enemy.hp -= hit.dmg;
+  lc.dmgDealt += hit.dmg; if (hit.isCrit) lc.crits += 1;
   lc.lines.push(`第${lc.round}回合：${hero.name} 造成 ${hit.dmg} 傷害${hit.isCrit ? '（暴擊！）' : ''}${party.classes > 1 ? `（編隊 +${Math.round((party.mult - 1) * 100)}%）` : ''}，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
   if (st.doubleAttack && lc.enemy.hp > 0) {
     const dblLv = getHeroSkillLevel(hero, 'r_speed');
-    const hit2 = calcDamage(Math.round(st.atk * party.mult * Math.max(0.4, 1 - 0.2 * dblLv)), defEff, critEff);
+    const hit2 = calcDamage(Math.round(st.atk * party.mult * Math.max(0.4, 1 - 0.2 * dblLv) * counterMult * shieldMult), defEff, critEff);
     lc.enemy.hp -= hit2.dmg;
+    lc.dmgDealt += hit2.dmg; if (hit2.isCrit) lc.crits += 1;
     lc.lines.push(`🌪️ 疾風追加攻擊造成 ${hit2.dmg} 傷害，${lc.enemy.name} HP ${Math.max(0, lc.enemy.hp)}`);
   }
   if (st.healPower) {
@@ -1682,6 +1706,7 @@ function advanceLiveCombat(hero, lc) {
     showToast(`⚠️ ${lc.enemy.name} 進入第二階段！`, 'error'); sfx('boss');
   }
   if (lc.enemy.hp <= 0) { finishLiveCombat(hero, lc, true); return; }
+  lc.lastCounterDmg = 0;
   if ((lc.enemySlowRounds || 0) > 0) {
     lc.enemySlowRounds -= 1;
     lc.lines.push(`❄️ ${lc.enemy.name} 凍結中，無法反擊。`);
@@ -1690,7 +1715,29 @@ function advanceLiveCombat(hero, lc) {
   } else {
     const ehit = calcDamage(lc.enemy.atk || 1, st.def, 0.03);
     hero.hp -= ehit.dmg;
+    lc.dmgTaken += ehit.dmg; lc.lastCounterDmg = ehit.dmg;
     lc.lines.push(`${lc.enemy.name} 反擊造成 ${ehit.dmg} 傷害，${hero.name} HP ${Math.max(0, Math.round(hero.hp))}/${st.maxHp}`);
+  }
+  // ══ Boss 專屬機制 ══
+  if (lc.bossMech && lc.enemy.hp > 0 && hero.hp > 0) {
+    if (lc.bossMech === 'regen' && lc.round % 5 === 0) {
+      const heal = Math.round(lc.enemy.maxHp * 0.08);
+      lc.enemy.hp = Math.min(lc.enemy.maxHp, lc.enemy.hp + heal);
+      lc.lines.push(`🌱 ${lc.enemy.name} 再生恢復 ${heal} HP（${Math.round(lc.enemy.hp)}/${lc.enemy.maxHp}）`);
+    } else if (lc.bossMech === 'poison' && lc.round % 3 === 0) {
+      const dot = Math.max(1, Math.round(st.maxHp * 0.05));
+      hero.hp -= dot; lc.dmgTaken += dot;
+      lc.lines.push(`☠️ ${hero.name} 中毒流失 ${dot} HP（${Math.max(0, Math.round(hero.hp))}/${st.maxHp}）`);
+    } else if (lc.bossMech === 'lifesteal' && lc.lastCounterDmg > 0) {
+      const steal = Math.round(lc.lastCounterDmg * 0.5);
+      lc.enemy.hp = Math.min(lc.enemy.maxHp, lc.enemy.hp + steal);
+      lc.lines.push(`🩸 ${lc.enemy.name} 吸取 ${steal} HP（${Math.round(lc.enemy.hp)}/${lc.enemy.maxHp}）`);
+    } else if (lc.bossMech === 'aoe' && lc.round % 6 === 0) {
+      const aoe = Math.max(1, Math.round(st.maxHp * 0.2));
+      hero.hp -= aoe; lc.dmgTaken += aoe;
+      lc.lines.push(`💥 ${lc.enemy.name} 釋放毀滅衝擊，無視防禦造成 ${aoe} 傷害！`);
+      sfx('boss');
+    }
   }
   if (hero.hp <= 0) finishLiveCombat(hero, lc, false);
   else if (lc.round >= 60) { lc.lines.push('⏱ 戰鬥拖太久，獵人體力不支撤退。'); finishLiveCombat(hero, lc, false); }
@@ -1706,14 +1753,17 @@ function finishLiveCombat(hero, lc, won) {
     gainGold(rewards.gold); grantXp(hero, rewards.xp);
     const msChance = (lc.cfg.magicStoneChance || 0) + st.msFind;
     if (Math.random() < msChance) { rewards.magicStones = 1; ResourceSystem_add('magicStones', 1); }
+    const dropChance = sceneNight > 0.5 ? 0.38 : 0.28;
     for (const dropId of (lc.cfg.drops || [])) {
-      if (Math.random() < 0.28 && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
+      if (Math.random() < dropChance && addItem(dropId, 1)) rewards.drops.push(ITEMS[dropId].icon + ITEMS[dropId].name);
     }
     lc.lines.push(`🏆 勝利！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、1💠' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
+    if (sceneNight > 0.5) lc.lines.push('🌙 夜晚狩獵加成：掉落率提升');
   } else {
     hero.hp = Math.max(1, Math.round(st.maxHp * 0.2));
     lc.lines.push(`💀 ${hero.name} 戰敗撤退，返回獵魔村休整。`);
   }
+  lc.lines.push(`📊 輸出 ${Math.round(lc.dmgDealt || 0)}・承傷 ${Math.round(lc.dmgTaken || 0)}・暴擊 ${lc.crits || 0} 次・共 ${lc.round} 回合`);
   addBattleReport('zone', `${zone.icon} ${zone.name}・${DIFF_LABELS[lc.diff]}`, won ? (lc.isBoss ? '頭目擊破' : '勝利') : '撤退', lc.lines, rewards);
   if (won) {
     if (lc.isBoss) {
@@ -1777,6 +1827,7 @@ function openDifficultyModal(zoneId, diff) {
   const idleHeroes = territoryHeroes.filter(h => h.status === 'idle');
   $('modal-detail-body').innerHTML = `
     <div class="section-label">敵人情報</div>
+    <div class="offline-item"><span class="offline-label">🌿 區域元素</span><span class="offline-val">${zoneWeaknessText(zone)}${diff === 'boss' && zone.boss.mechanic ? '・' + BOSS_MECH_TEXT[zone.boss.mechanic] : ''}</span></div>
     ${enemies.map(e => `<div class="hero-pick-row"><span style="font-size:22px">${isBossIcon(diff)}</span><div class="hp-info"><div class="hp-name">${e.name}</div><div class="hp-stats">HP ${e.hp}・攻 ${e.atk}・防 ${e.def}</div></div></div>`).join('')}
     <div class="section-label">獎勵</div>
     <div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">${cfg.goldRange[0]}~${cfg.goldRange[1]}</span></div>
@@ -1984,7 +2035,7 @@ function collectOffline() {
       let g = 0, x = 0, ms = 0, wins = 0, drops = [];
       for (let i = 0; i < battles; i++) {
         const enemyTemplate = isBoss ? zone.boss : choice(cfg.enemies);
-        const res = runCombat(hero, enemyTemplate, { boss: isBoss, goldRange: cfg.goldRange, magicStoneChance: cfg.magicStoneChance, xp: cfg.xp, drops: cfg.drops });
+        const res = runCombat(hero, enemyTemplate, { boss: isBoss, goldRange: cfg.goldRange, magicStoneChance: cfg.magicStoneChance, xp: cfg.xp, drops: cfg.drops, element: zone.element });
         if (res.won) {
           wins += 1; g += res.rewards.gold; x += res.rewards.xp; ms += res.rewards.magicStones;
           if (res.rewards.drops) drops.push(...res.rewards.drops);
