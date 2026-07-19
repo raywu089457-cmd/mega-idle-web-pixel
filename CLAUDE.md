@@ -1,6 +1,6 @@
 # Claude Code — mega-idle-web-pixel
 
-> 瀏覽器 2D 像素風「獵魔村」經營遊戲（原創致敬版，非原作素材）。純 HTML + Canvas + JavaScript，無需建構工具。
+> 瀏覽器 2D 像素風「放置王國 MEGA IDLE」經營遊戲（原創致敬版，非原作素材）。純 HTML + Canvas + JavaScript，無需建構工具。
 > 目前為**單一 HTML 模式**：CSS、DOM、遊戲資料與所有系統都內嵌在 `index.html`。
 
 ## 技術棧

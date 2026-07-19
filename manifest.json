@@ -1,7 +1,7 @@
 {
-  "name": "Idle Kingdom Builder",
-  "short_name": "IdleKingdom",
-  "description": "瀏覽器閒置王國建設遊戲 — 免費、離線可玩",
+  "name": "放置王國 — MEGA IDLE",
+  "short_name": "MEGA IDLE",
+  "description": "像素風放置王國建設遊戲 — 免費、離線可玩",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

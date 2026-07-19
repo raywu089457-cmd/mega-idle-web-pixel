@@ -1,10 +1,10 @@
 /**
- * Service Worker — Offline caching for Hunter Village Tycoon
+ * Service Worker — Offline caching for MEGA IDLE (放置王國)
  * Bump CACHE_NAME on every gameplay release so old Pages clients do not keep
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v16';
+const CACHE_NAME = 'hunter-village-v17';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

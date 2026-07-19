@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="description" content="獵魔村物語 — 像素風閒置獵魔村建設遊戲">
+<meta name="description" content="放置王國 MEGA IDLE — 像素風放置王國建設遊戲">
 <meta name="theme-color" content="#5d4037">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json">
-<title>獵魔村物語 — Hunter Village Tycoon</title>
+<title>放置王國 — MEGA IDLE</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Serif+TC:wght@400;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -410,7 +410,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <!-- ── HUD ── -->
 <header class="hud" id="hud">
   <div class="hud-left">
-    <div class="kingdom-name" id="hud-kingdom-name">⚔ 獵魔村</div>
+    <div class="kingdom-name" id="hud-kingdom-name">⚔ 放置王國</div>
     <div class="hud-resources">
       <div class="hud-res"><span class="icon">🪙</span><span class="val" id="hud-gold">500</span></div>
       <div class="hud-res"><span class="icon">💠</span><span class="val" id="hud-magic">0</span></div>
@@ -434,7 +434,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <main class="main-canvas" id="main-canvas">
   <canvas id="scene-canvas"></canvas>
   <div class="scene-overlay">
-    <div class="castle-label">獵魔村</div>
+    <div class="castle-label">放置王國</div>
     <div class="castle-sub" id="castle-level">獵魔公會 Lv.1</div>
     <div class="click-hint" id="scene-hint">點擊建築互動：公會收金、酒館招募、工坊製作、獵場門派遣</div>
   </div>
@@ -596,7 +596,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <!-- ── ONBOARDING MODAL ── -->
 <div class="modal-overlay" id="modal-onboard">
   <div class="modal">
-    <div class="modal-title">🏹 歡迎來到獵魔村！</div>
+    <div class="modal-title">🏹 歡迎來到放置王國！</div>
     <div class="modal-body">
       <div class="onboard-step"><b>第 1 步 ⚔ 派遣狩獵</b><div>打開「地圖」，派獵人前往迷霧森林驅逐魔物，賺取金幣與經驗。</div></div>
       <div class="onboard-step"><b>第 2 步 🔨 製作裝備</b><div>素材會隨時間自動累積。到「商店」製作武器與防具，讓獵人挑戰更難的獵場。</div></div>
@@ -653,7 +653,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════════
-// 獵魔村物語 — Hunter Village Tycoon (single-file edition)
+// 放置王國 — MEGA IDLE (single-file edition)
 // Sections: DATA → STATE/SAVE → SYSTEMS → SCENE/AUDIO → UI → TICK/INIT
 // ═══════════════════════════════════════════════════════════════════
 
