@@ -424,6 +424,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div class="mat-icon" title="藥草"><div class="ico">🌿</div><div class="amt" id="hc-herb">0</div></div>
   </div>
   <div class="hud-right">
+    <span class="btn-icon" id="hud-weather" title="天氣" style="cursor:default;">☀️</span>
     <button class="btn-icon" id="btn-daily" title="每日登入" onclick="checkDaily()" style="font-size:11px;">🔥<span id="hud-streak" style="font-family:'Press Start 2P',monospace;font-size:7px;"></span></button>
     <button class="btn-icon" id="btn-settings" title="設定">⚙️</button>
   </div>
@@ -492,6 +493,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     </div>
     <div class="section-label">狩獵地圖</div>
     <div class="zone-list" id="zone-list"></div>
+    <div id="abyss-section"></div>
   </div>
 </div>
 
@@ -504,6 +506,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     </div>
     <div class="shop-filter" id="shop-filter"></div>
     <div id="shop-stock"></div>
+    <div id="shop-orders"></div>
     <div class="shop-grid" id="shop-grid"></div>
     <div class="inventory">
       <div class="inv-title">📦 獵魔村倉庫</div>
@@ -1121,6 +1124,7 @@ function migrateSave(parsed) {
   }
   if (!parsed.mapProgress.unlockedZones) parsed.mapProgress.unlockedZones = [1];
   if (!parsed.mapProgress.clearedZones) parsed.mapProgress.clearedZones = [];
+  if (parsed.mapProgress.abyssBest == null) parsed.mapProgress.abyssBest = 0;
   // Heroes: guarantee fields used by newer systems
   for (const h of (parsed.heroes || [])) {
     if (h.xp == null) h.xp = 0;
@@ -1176,6 +1180,8 @@ function saveGame() {
     gameState.prestige = prestige;
     gameState.daily = daily;
     gameState.settings = settings;
+    gameState.weather = weather;
+    gameState.craftOrders = craftOrders;
     localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
   } catch (e) { /* storage full or unavailable — ignore */ }
 }
@@ -1385,6 +1391,9 @@ function getHeroStats(hero) {
   const fatigue = hero.fatigue || 0;
   if (fatigue >= 90) { st.atk = Math.max(1, Math.round(st.atk * 0.7)); st.def = Math.round(st.def * 0.7); }
   else if (fatigue >= 70) { st.atk = Math.max(1, Math.round(st.atk * 0.85)); st.def = Math.round(st.def * 0.85); }
+  // Weather effects
+  if (weather.type === 'fog') st.msFind += 0.1;
+  if (weather.type === 'snow') st.xpMult *= 1.1;
   return st;
 }
 // ═══════════════════════════════════════════════════════════════════
@@ -1519,6 +1528,12 @@ function usePotion(hero, silent) {
 function restHero(heroId) {
   const hero = territoryHeroes.find(h => h.id === heroId); if (!hero) return;
   if (hero.partyId && partyCombats[hero.partyId]) { showToast('組隊戰鬥中，無法單獨召回。', 'info'); return; }
+  if (hero.exploreZoneId === 'abyss') {
+    const reached = (hero.abyssDepth || 1) - 1;
+    if (reached > (mapProgress.abyssBest || 0)) mapProgress.abyssBest = reached;
+    hero.abyssDepth = 1;
+    showToast(`🕳 ${hero.name} 撤離深淵（本次到達第 ${reached + 1} 層）。`, 'info');
+  }
   delete liveCombats[hero.id];
   hero.partyId = null;
   hero.status = 'resting'; hero.restTicks = Math.max(hero.restTicks, 4);
@@ -1794,7 +1809,7 @@ function getZone(zoneId) { return ZONES.find(z => z.id === Number(zoneId)); }
 function isZoneUnlocked(zoneId) { return mapProgress.unlockedZones.includes(Number(zoneId)); }
 function isBossReady(zoneId) { const p = mapProgress.zoneProgress[zoneId]; return p && p.easy && p.normal && p.hard && !p.bossDefeated; }
 function syncActiveExplorations() {
-  activeExplorations = territoryHeroes.filter(h => h.status === 'exploring' && !h.partyId).map(h => ({ heroId: h.id, heroName: h.name, zoneId: h.exploreZoneId, difficulty: h.exploreDifficulty, progress: h.explorationProgress }));
+  activeExplorations = territoryHeroes.filter(h => h.status === 'exploring' && !h.partyId && h.exploreZoneId !== 'abyss').map(h => ({ heroId: h.id, heroName: h.name, zoneId: h.exploreZoneId, difficulty: h.exploreDifficulty, progress: h.explorationProgress }));
 }
 function dispatchHero(heroId, zoneId, difficulty, quiet) {
   const hero = territoryHeroes.find(h => h.id === heroId); const zone = getZone(zoneId);
@@ -1927,6 +1942,7 @@ function advanceLiveCombat(hero, lc) {
   else if (lc.round >= 60) { lc.lines.push('⏱ 戰鬥拖太久，獵人體力不支撤退。'); finishLiveCombat(hero, lc, false); }
 }
 function finishLiveCombat(hero, lc, won) {
+  if (lc.isAbyss) { finishAbyssCombat(hero, lc, won); return; }
   const st = getHeroStats(hero);
   const zone = getZone(lc.zoneId);
   const rewards = { gold: 0, xp: 0, magicStones: 0, drops: [] };
@@ -1998,8 +2014,11 @@ function processHeroTick() {
         const speed = clamp(settings.combatSpeed || 1, 1, 4);
         for (let i = 0; i < speed && liveCombats[hero.id]; i++) advanceLiveCombat(hero, liveCombats[hero.id]);
       } else {
-        hero.explorationProgress += hero.exploreDifficulty === 'boss' ? 7 : 11;
-        if (hero.explorationProgress >= 100) resolveExploration(hero);
+        hero.explorationProgress += hero.exploreDifficulty === 'boss' ? 7 : hero.exploreZoneId === 'abyss' ? 12 : 11;
+        if (hero.explorationProgress >= 100) {
+          if (hero.exploreZoneId === 'abyss') startAbyssCombat(hero);
+          else resolveExploration(hero);
+        }
         else if ((hero.fatigue || 0) >= 90 && settings.autoRecall !== false) {
           // 疲勞過高自動召回（等當前戰鬥打完才走）
           restHero(hero.id);
@@ -2326,6 +2345,73 @@ function processPartyCombats() {
   }
 }
 
+// ══ 無盡深淵（wave 9）：擊敗魔域大君後開放的爬塔模式 ══
+function abyssUnlocked() { return !!(mapProgress && mapProgress.zoneProgress[5] && mapProgress.zoneProgress[5].bossDefeated); }
+function abyssEnemy(depth) {
+  return {
+    name: `深淵魔物・第 ${depth} 層`,
+    hp: Math.round(60 * (1 + 0.35 * depth)),
+    atk: Math.round(12 * (1 + 0.18 * depth)),
+    def: Math.round(6 * (1 + 0.15 * depth)),
+    goldRange: [30 * depth, 50 * depth], magicStoneChance: Math.min(0.5, 0.15 + 0.02 * depth), xp: 15 * depth,
+    drops: depth % 5 === 0 ? ['ironDagger', 'huntersBow', 'mysticStaff', 'holyMace'] : [],
+  };
+}
+function dispatchAbyss(heroId) {
+  const hero = territoryHeroes.find(h => h.id === heroId);
+  if (!hero || !abyssUnlocked()) { showToast('擊敗魔域大君後才能進入深淵。', 'error'); return; }
+  if (hero.status === 'exploring') { showToast('獵人正在狩獵中。', 'error'); return; }
+  if (hero.status === 'resting') { showToast('獵人休整中。', 'error'); return; }
+  if ((hero.fatigue || 0) >= 90) { showToast('疲勞過高，請先休整。', 'error'); return; }
+  const carry = Math.min(2, invCount('healthPotion'));
+  if (carry > 0) { removeItem('healthPotion', carry); hero.inventory.healthPotion = (hero.inventory.healthPotion || 0) + carry; }
+  hero.status = 'exploring'; hero.exploreZoneId = 'abyss'; hero.exploreDifficulty = 'abyss';
+  hero.abyssDepth = hero.abyssDepth || 1;
+  hero.explorationProgress = 0; hero.combatSkillCds = {};
+  sfx('dispatch'); showToast(`🕳 ${hero.name} 踏入無盡深淵，第 ${hero.abyssDepth} 層…`, 'info');
+  syncActiveExplorations(); renderAll();
+}
+function startAbyssCombat(hero) {
+  const depth = hero.abyssDepth || 1;
+  const enemy = abyssEnemy(depth);
+  enemy.maxHp = enemy.hp;
+  liveCombats[hero.id] = {
+    heroId: hero.id, zoneId: 'abyss', diff: 'abyss', isBoss: false, isAbyss: true, depth, cfg: enemy, enemy,
+    round: 0, lines: [`🕳 ${hero.name} 遭遇 ${enemy.name}！`], phase2: false, enraged: false,
+    dmgDealt: 0, dmgTaken: 0, crits: 0, bossMech: null, lastCounterDmg: 0,
+  };
+}
+function finishAbyssCombat(hero, lc, won) {
+  const st = getHeroStats(hero);
+  const rewards = { gold: 0, xp: 0, magicStones: 0, drops: [] };
+  if (won) {
+    stats.kills += 1;
+    rewards.gold = Math.round(rand(lc.cfg.goldRange[0], lc.cfg.goldRange[1]) * st.goldMult);
+    rewards.xp = Math.round(lc.cfg.xp * st.xpMult);
+    gainGold(rewards.gold); grantXp(hero, rewards.xp);
+    if (Math.random() < (lc.cfg.magicStoneChance || 0)) { rewards.magicStones += 1; ResourceSystem_add('magicStones', 1); }
+    for (const dropId of (lc.cfg.drops || [])) { if (Math.random() < 0.35) { const label = addDropItem(dropId); if (label) rewards.drops.push(label); } }
+    if (lc.depth % 5 === 0) { rewards.magicStones += 1; ResourceSystem_add('magicStones', 1); lc.lines.push(`🎁 第 ${lc.depth} 層里程碑獎勵：+1💠`); }
+    lc.lines.push(`🏆 通過第 ${lc.depth} 層！獲得 ${rewards.gold}🪙、${rewards.xp} XP${rewards.magicStones ? '、' + rewards.magicStones + '💠' : ''}${rewards.drops.length ? '、掉落 ' + rewards.drops.join('、') : ''}`);
+    if ((mapProgress.abyssBest || 0) < lc.depth) mapProgress.abyssBest = lc.depth;
+    hero.abyssDepth = lc.depth + 1;
+    hero.explorationProgress = 0;
+    addBattleReport('zone', `🕳 無盡深淵・第 ${lc.depth} 層`, '通過', lc.lines, rewards);
+  } else {
+    hero.hp = Math.max(1, Math.round(st.maxHp * 0.2));
+    const reached = lc.depth - 1;
+    if (reached > (mapProgress.abyssBest || 0)) mapProgress.abyssBest = reached;
+    lc.lines.push(`💀 ${hero.name} 在第 ${lc.depth} 層倒下，深淵之旅結束（歷史最佳 ${mapProgress.abyssBest || 0} 層）。`);
+    addBattleReport('zone', `🕳 無盡深淵・第 ${lc.depth} 層`, '撤退', lc.lines, rewards);
+    hero.status = 'idle'; hero.exploreZoneId = null; hero.exploreDifficulty = null; hero.explorationProgress = 0;
+    hero.abyssDepth = 1;
+    sfx('defeat');
+  }
+  lc.lines.push(`📊 輸出 ${Math.round(lc.dmgDealt || 0)}・承傷 ${Math.round(lc.dmgTaken || 0)}・暴擊 ${lc.crits || 0} 次・共 ${lc.round} 回合`);
+  delete liveCombats[hero.id];
+  syncActiveExplorations(); checkAchievements(); renderAll();
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // WANDERING HEROES
 // ═══════════════════════════════════════════════════════════════════
@@ -2355,15 +2441,37 @@ function processWanderingTick() {
   if (reduceMotion) updateWanderingScene(1);
 }
 
+// ══ 天氣系統（wave 9）：每 10 分鐘輪替，影響全域產出 ══
+const WEATHERS = {
+  sunny: { name: '晴朗', icon: '☀️', weight: 40, desc: '風和日麗' },
+  rain:  { name: '下雨', icon: '🌧️', weight: 25, desc: '藥草產出 +20%' },
+  fog:   { name: '起霧', icon: '🌫️', weight: 20, desc: '魔核發現 +10%' },
+  snow:  { name: '下雪', icon: '❄️', weight: 15, desc: '經驗 +10%、金幣產出 -10%' },
+};
+let weather = { type: 'sunny', ticks: 0 };
+function rollWeather() {
+  const total = Object.values(WEATHERS).reduce((s, w) => s + w.weight, 0);
+  let r = Math.random() * total, next = 'sunny';
+  for (const [k, w] of Object.entries(WEATHERS)) { r -= w.weight; if (r <= 0) { next = k; break; } }
+  if (next !== weather.type) showToast(`${WEATHERS[next].icon} 天氣轉為「${WEATHERS[next].name}」（${WEATHERS[next].desc}）`, 'info');
+  weather.type = next; weather.ticks = 0;
+}
+function weatherTick() {
+  weather.ticks += 1;
+  if (weather.ticks >= 600) rollWeather();
+}
 // ═══════════════════════════════════════════════════════════════════
 // PRODUCTION / OFFLINE / DAILY / ACHIEVEMENTS / PRESTIGE
 // ═══════════════════════════════════════════════════════════════════
 function produceTick() {
   const mon = BuildingSystem_getLevel('monument');
   const mult = getMaterialMultiplier();
-  for (const mat of MATERIAL_TYPES) ResourceSystem_add(mat, Math.max(1, Math.round(rand(1, 3) * mon * mult)));
+  for (const mat of MATERIAL_TYPES) {
+    const wMult = (mat === 'herbLow' && weather.type === 'rain') ? 1.2 : 1;
+    ResourceSystem_add(mat, Math.max(1, Math.round(rand(1, 3) * mon * mult * wMult)));
+  }
   const goldRate = BuildingSystem_getGoldRate();
-  if (goldRate > 0) gainGold(goldRate);
+  if (goldRate > 0) gainGold(Math.max(1, Math.round(goldRate * (weather.type === 'snow' ? 0.9 : 1))));
   if (potionShopAutoProduce && BuildingSystem_getLevel('potionShop') > 0) {
     potionShopTickCounter += 1;
     const p = BuildingSystem_getPotionProduction();
@@ -3260,6 +3368,16 @@ function drawScene(t, dt) {
   }
   // Night wisps near the hunt gate
   if (night > 0.55 && !reduceMotion) { c.fillStyle = 'rgba(225,179,255,0.75)'; for (let i = 0; i < 10; i++) { const x = 90 + ((i * 17 + Math.sin(t + i) * 8 + 40) % 60), y = 300 + ((i * 23) % 46) + Math.cos(t * 1.7 + i) * 4; c.fillRect(Math.round(x), Math.round(y), 2, 2); } }
+  // 天氣粒子（wave 9）
+  if (!reduceMotion && weather.type === 'rain') {
+    c.fillStyle = 'rgba(140,180,255,0.5)';
+    for (let i = 0; i < 26; i++) { const x = (i * 37 + t * 140) % w, y = (i * 53 + t * 260) % h; c.fillRect(Math.round(x), Math.round(y), 1, 5); }
+  } else if (!reduceMotion && weather.type === 'snow') {
+    c.fillStyle = 'rgba(255,255,255,0.75)';
+    for (let i = 0; i < 22; i++) { const x = (i * 41 + Math.sin(t + i) * 12 + t * 18) % w, y = (i * 47 + t * 36) % h; c.fillRect(Math.round(x), Math.round(y), 2, 2); }
+  } else if (weather.type === 'fog') {
+    c.fillStyle = 'rgba(200,200,210,0.18)'; c.fillRect(0, 0, w, h);
+  }
 }
 function mixColor(a, b, k) { return [Math.round(a[0] + (b[0] - a[0]) * k), Math.round(a[1] + (b[1] - a[1]) * k), Math.round(a[2] + (b[2] - a[2]) * k)]; }
 function rgb(arr) { return `rgb(${arr[0]},${arr[1]},${arr[2]})`; }
@@ -3337,6 +3455,8 @@ function renderHUD() {
   const streak = daily.streak || 0;
   const streakEl = $('hud-streak');
   if (streakEl) streakEl.textContent = streak > 0 ? streak + '天' : '';
+  const wEl = $('hud-weather');
+  if (wEl) { wEl.textContent = WEATHERS[weather.type].icon; wEl.title = `天氣：${WEATHERS[weather.type].name}（${WEATHERS[weather.type].desc}）`; }
 }
 function renderBadges() {
   const idle = territoryHeroes.filter(h => h.status === 'idle').length;
@@ -3473,7 +3593,55 @@ function renderMapPanel() {
     const status = p.bossDefeated ? '✅ 已征服' : unlocked ? (isBossReady(z.id) ? '👑 Boss 已現身' : '⚔ 可狩獵') : '🔒 未解鎖';
     return `<div class="zone-card ${unlocked ? '' : 'locked'} ${p.bossDefeated ? 'cleared' : ''}"><div class="zone-head"><div class="zone-ico">${z.icon}</div><div class="zone-name">${z.name}</div><div class="zone-rec">建議 Lv.${rec}+</div></div><div class="zone-status" style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${status}</div><div class="diff-row">${['easy', 'normal', 'hard'].map(d => `<button class="btn btn-sm ${p[d] ? 'btn-outline' : 'btn-blue'} diff-btn" ${unlocked ? '' : 'disabled'} onclick="openDifficultyModal(${z.id},'${d}')">${DIFF_LABELS[d]}${p[d] ? '<span class="diff-clear">✓</span>' : ''}</button>`).join('')}<button class="btn btn-sm btn-purple" ${unlocked && (isBossReady(z.id) || p.bossDefeated) ? '' : 'disabled'} onclick="openDifficultyModal(${z.id},'boss')">👑頭目</button></div></div>`;
   }).join('');
+  // 無盡深淵區塊（擊敗魔域大君後解鎖）
+  let abyssHtml = '';
+  if (abyssUnlocked()) {
+    const abyssHeroes = territoryHeroes.filter(h => h.exploreZoneId === 'abyss' && h.status === 'exploring');
+    const runRows = abyssHeroes.map(h => {
+      const lc = liveCombats[h.id];
+      const status = lc ? `👾 ${esc(lc.enemy.name)} HP ${Math.max(0, Math.round(lc.enemy.hp))}/${lc.enemy.maxHp}・第 ${lc.round} 回合` : `前進中 ${Math.floor(h.explorationProgress)}%`;
+      return `<div class="explore-item"><div class="explore-top"><span class="explore-name">🕳 第 ${h.abyssDepth || 1} 層</span><span class="explore-hero">${esc(h.name)}</span></div><div style="font-size:11px;color:var(--text-dim);">${status}</div><div class="modal-actions" style="margin-top:4px;"><button class="btn btn-outline btn-sm" onclick="recallHero('${h.id}')">撤離</button></div></div>`;
+    }).join('');
+    const idleHeroes = territoryHeroes.filter(h => h.status === 'idle' && (h.fatigue || 0) < 90);
+    const pickRows = idleHeroes.map(h => `<div class="hero-pick-row"><span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span><div class="hp-info"><div class="hp-name">${esc(h.name)} Lv.${h.level}</div></div><button class="btn btn-purple btn-sm" onclick="dispatchAbyss('${h.id}')">進入深淵</button></div>`).join('');
+    abyssHtml = `<div class="section-label" style="margin-top:12px;">🕳 無盡深淵（歷史最佳 ${mapProgress.abyssBest || 0} 層）</div>${runRows}${abyssHeroes.length === 0 ? (pickRows || '<div class="empty-state">沒有可進入深淵的獵人</div>') : ''}`;
+  }
+  $('abyss-section').innerHTML = abyssHtml;
 }
+// ══ 委託訂單（wave 9）：流浪獵人限時高價收購裝備 ══
+let craftOrders = [];
+let orderTickCounter = 0;
+function spawnCraftOrder() {
+  const craftable = Object.values(ITEMS).filter(d => isGear(d.id) && BuildingSystem_getLevel(d.req.b) >= d.req.lv);
+  if (!craftable.length) return;
+  const def = choice(craftable);
+  const price = Math.round(def.price * 1.5);
+  craftOrders.push({ id: 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), itemId: def.id, price, expiresIn: 180 });
+  showToast(`📜 新委託：${price}🪙 收購 ${def.icon}${def.name}（3 分鐘內交付）`, 'info');
+  if (activePanel === 'shop') renderShopPanel();
+}
+function processOrdersTick() {
+  orderTickCounter += 1;
+  if (orderTickCounter >= 300) { orderTickCounter = 0; if (craftOrders.length < 2) spawnCraftOrder(); }
+  let changed = false;
+  for (const o of craftOrders) o.expiresIn -= 1;
+  const before = craftOrders.length;
+  craftOrders = craftOrders.filter(o => o.expiresIn > 0);
+  if (craftOrders.length !== before) { showToast('📜 有委託過期了。', 'info'); changed = true; }
+  if (changed && activePanel === 'shop') renderShopPanel();
+}
+function fulfillOrder(orderId) {
+  const o = craftOrders.find(x => x.id === orderId); if (!o) return;
+  const inst = gearInventory.find(g => g.id === o.itemId);
+  if (!inst) { showToast(`倉庫沒有 ${ITEMS[o.itemId].name}。`, 'error'); return; }
+  const tierBonus = inst.tier === 'legend' ? 1.5 : inst.tier === 'fine' ? 1.2 : 1;
+  const pay = Math.round(o.price * tierBonus);
+  gearInventory.splice(gearInventory.indexOf(inst), 1);
+  craftOrders = craftOrders.filter(x => x.id !== orderId);
+  gainGold(pay); stats.shopRevenue = (stats.shopRevenue || 0) + pay;
+  sfx('gold'); showToast(`📜 交付 ${gearDisplayName(inst)}，+${pay}🪙${tierBonus > 1 ? '（品質加成！）' : ''}`, 'success'); renderAll();
+}
+
 function renderShopPanel() {
   $('shop-filter').innerHTML = [['all', '全部'], ['weapon', '⚔️ 武器'], ['armor', '🛡️ 防具'], ['potion', '🧪 藥水'], ['accessory', '📿 飾品']]
     .map(([k, label]) => `<button class="report-sub-btn ${shopFilter === k ? 'active' : ''}" onclick="shopFilter='${k}';renderShopPanel()">${label}</button>`).join('');
@@ -3487,6 +3655,11 @@ function renderShopPanel() {
     const chk = canCraft(item.id);
     return `<div class="shop-card rar-${item.rarity} ${chk.ok ? '' : 'locked-item'}"><div class="shop-ico">${item.icon}</div><div class="shop-name">${item.name}</div><div class="shop-stats">${itemStatsText(item)}${item.forClass ? '・' + CLASS_NAMES_ZH[item.forClass] : ''}</div><div class="shop-stock">倉庫 ×${invCount(item.id)}・售價 ${item.price}🪙</div><div class="shop-req">${chk.ok ? '' : chk.reason}</div><div class="building-cost">${Object.entries(item.cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn btn-gold btn-sm" ${chk.ok ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作</button></div>`;
   }).join('');
+  $('shop-orders').innerHTML = craftOrders.length ? `<div class="section-label">📜 委託訂單（高價收購・限時）</div>` + craftOrders.map(o => {
+    const d = ITEMS[o.itemId];
+    const have = gearInventory.some(g => g.id === o.itemId);
+    return `<div class="shop-stock-row">${d.icon} ${d.name} → <b style="color:var(--golden-wheat);">${o.price}🪙</b><span style="font-size:11px;color:${o.expiresIn < 30 ? 'var(--red)' : 'var(--text-faint)'};">（剩 ${o.expiresIn} 秒）</span> <button class="btn btn-gold btn-sm" ${have ? '' : 'disabled'} onclick="fulfillOrder('${o.id}')">交付</button></div>`;
+  }).join('') : '';
   const potionInv = Object.entries(shopInventory).filter(([, qty]) => qty > 0);
   const gearGroups = {};
   for (const g of gearInventory) { const k = `${g.id}|${g.tier || 'normal'}|${g.affix || ''}`; gearGroups[k] = (gearGroups[k] || 0) + 1; }
@@ -3569,6 +3742,8 @@ function registerSW() {
 // ═══════════════════════════════════════════════════════════════════
 function gameTick() {
   produceTick();
+  weatherTick();
+  processOrdersTick();
   processHeroTick();
   processPartyCombats();
   processWanderingTick();
@@ -3600,6 +3775,8 @@ function applyStateToRuntime() {
   prestige = gameState.prestige || { shards: 0, count: 0 };
   daily = gameState.daily || { lastClaim: null, streak: 0, bestStreak: 0 };
   settings = gameState.settings || { music: 40, sfx: 80, notif: true };
+  weather = gameState.weather || { type: 'sunny', ticks: 0 };
+  craftOrders = gameState.craftOrders || [];
   syncActiveExplorations();
   if (territoryHeroes.length === 0) territoryHeroes.push(generateHero('warrior', 1, 'Ray'));
 }
