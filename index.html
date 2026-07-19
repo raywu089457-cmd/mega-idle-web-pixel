@@ -464,6 +464,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div class="tab-content" id="hero-wander"></div>
     <div class="tab-content" id="hero-reports"></div>
     <div class="tab-content" id="hero-skills"></div>
+    <div class="tab-content" id="hero-teams"></div>
   </div>
   <div class="hero-tab-bar" id="hero-tab-bar"></div>
 </div>
@@ -1183,6 +1184,7 @@ function saveGame() {
     gameState.settings = settings;
     gameState.weather = weather;
     gameState.craftOrders = craftOrders;
+    gameState.teams = teams;
     localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
   } catch (e) { /* storage full or unavailable — ignore */ }
 }
@@ -2055,7 +2057,8 @@ function openDifficultyModal(zoneId, diff) {
     <div class="offline-item"><span class="offline-label">💠 魔核機率</span><span class="offline-val">${Math.round(cfg.magicStoneChance * 100)}%</span></div>
     <div class="offline-item"><span class="offline-label">✨ 經驗</span><span class="offline-val">${cfg.xp}</span></div>
     <div class="section-label">派遣獵人</div>
-    ${idleHeroes.length ? `<div style="margin-bottom:6px;"><button class="btn btn-purple btn-sm" onclick="partyDispatch(${zone.id},'${diff}')">👥 組隊派遣（最多 4 人）</button></div>` : ''}
+    ${teams.filter(t => teamAvailableMembers(t).length > 0).map(t => `<div style="margin-bottom:6px;"><button class="btn btn-blue btn-sm" onclick="dispatchTeam(${t.id},${zone.id},'${diff}')">⚔ 隊伍 ${t.id + 1} 出擊（${teamAvailableMembers(t).length} 人共同戰鬥）</button></div>`).join('')}
+    ${idleHeroes.length ? `<div style="margin-bottom:6px;"><button class="btn btn-purple btn-sm" onclick="partyDispatch(${zone.id},'${diff}')">👥 自由組隊（最多 4 人）</button></div>` : ''}
     ${idleHeroes.length ? idleHeroes.map(h => { const st = getHeroStats(h); return `<div class="hero-pick-row"><span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span><div class="hp-info"><div class="hp-name">${h.name} Lv.${h.level}</div><div class="hp-stats">攻${st.atk} 防${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div></div><button class="btn btn-blue btn-sm" onclick="dispatchHero('${h.id}',${zone.id},'${diff}')">派遣</button></div>`; }).join('') : '<div class="empty-state">沒有閒置獵人，請先招募或召回</div>'}
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button></div>`;
   showModal('modal-detail');
@@ -2173,8 +2176,72 @@ function partyDispatch(zoneId, diff) {
   openPartyDispatch(zoneId, diff);
 }
 
+// ══ 常駐隊伍 ×4（wave 12）：玩家自由編組，出擊後共同連戰 ══
+let teams = [];
+function defaultTeams() { return [0, 1, 2, 3].map(i => ({ id: i, members: [], formation: {} })); }
+function teamById(id) { return teams.find(t => t.id === Number(id)); }
+function heroTeam(heroId) { return teams.find(t => t.members.includes(heroId)) || null; }
+function teamAvailableMembers(team) { return team.members.map(id => territoryHeroes.find(h => h.id === id)).filter(h => h && h.status === 'idle' && (h.fatigue || 0) < 90); }
+function addToTeam(teamId, heroId) {
+  const team = teamById(teamId); const hero = territoryHeroes.find(h => h.id === heroId);
+  if (!team || !hero) return;
+  if (team.members.length >= 4) { showToast('隊伍最多 4 人。', 'info'); return; }
+  if (heroTeam(heroId)) { showToast('該獵人已在其他隊伍。', 'error'); return; }
+  if (hero.status !== 'idle') { showToast('獵人必須在村莊待命才能加入隊伍。', 'error'); return; }
+  team.members.push(heroId);
+  if (!team.formation[heroId]) team.formation[heroId] = (hero.class === 'warrior' || hero.class === 'priest') ? 'front' : 'back';
+  sfx('click'); renderHeroesPanel(); saveGame();
+}
+function removeFromTeam(teamId, heroId) {
+  const team = teamById(teamId); if (!team) return;
+  const hero = territoryHeroes.find(h => h.id === heroId);
+  if (hero && hero.partyId) { showToast('出擊中無法調整成員。', 'info'); return; }
+  team.members = team.members.filter(id => id !== heroId);
+  delete team.formation[heroId];
+  sfx('click'); renderHeroesPanel(); saveGame();
+}
+function toggleTeamFormation(teamId, heroId) {
+  const team = teamById(teamId); if (!team) return;
+  team.formation[heroId] = team.formation[heroId] === 'back' ? 'front' : 'back';
+  sfx('click'); renderHeroesPanel();
+}
+function dispatchTeam(teamId, zoneId, diff) {
+  const team = teamById(teamId); if (!team) return;
+  const members = teamAvailableMembers(team);
+  if (!members.length) { showToast('隊伍沒有可出擊的成員（需在村待命且疲勞 <90）。', 'error'); return; }
+  if (diff === 'boss' && !isBossReady(zoneId)) { showToast('需先通關驅逐/討伐/獵殺。', 'error'); return; }
+  closeModal();
+  startPartyCombat(members.map(h => h.id), zoneId, diff, team.formation, team.id);
+  showToast(`⚔ 隊伍 ${team.id + 1} 出擊（${members.length} 人）！`, 'success');
+}
+function endTeamRun(pc, reason, skipReport) {
+  if (!pc) return;
+  const members = partyMembers(pc, false);
+  for (const h of members) {
+    h.partyId = null;
+    if (h.hp <= 0) { const st = getHeroStats(h); h.hp = Math.max(1, Math.round(st.maxHp * 0.2)); }
+    h.status = 'idle'; h.explorationProgress = 0; h.exploreZoneId = null; h.exploreDifficulty = null;
+  }
+  pc.lines.push(`🏳 隊伍結束狩獵返回村莊（${reason}）。`);
+  if (!skipReport) {
+    const zone = getZone(pc.zoneId);
+    addBattleReport('zone', `👥 ${zone.icon} ${zone.name}・${DIFF_LABELS[pc.difficulty]}（隊伍 ${pc.teamId + 1}）`, '返回', pc.lines, { gold: 0, xp: 0, magicStones: 0, drops: [] });
+  }
+  delete partyCombats[pc.id];
+  sfx('click'); syncActiveExplorations(); renderAll();
+}
+function startPartyNextRound(pc) {
+  const enemy = { ...choice(pc.cfg.enemies) };
+  enemy.maxHp = enemy.hp;
+  pc.enemy = enemy; pc.round = 0; pc.waiting = false; pc.progress = 0; pc.enemySlowRounds = 0;
+  pc.streak = (pc.streak || 1) + 1;
+  if (pc.lines.length > 60) pc.lines = pc.lines.slice(-30);
+  pc.lines.push(`—— 第 ${pc.streak} 場 —— ⚔ 遭遇 ${enemy.name}！`);
+  syncActiveExplorations();
+}
+
 // ══ 真·團隊戰（wave 7）：全隊共享一隻敵人，輪流出手，敵人鎖定前排 ══
-function startPartyCombat(heroIds, zoneId, difficulty, formation) {
+function startPartyCombat(heroIds, zoneId, difficulty, formation, teamId) {
   const zone = getZone(zoneId); if (!zone) return;
   const isBoss = difficulty === 'boss';
   const cfg = isBoss ? zone.boss : zone.difficulties[difficulty];
@@ -2192,6 +2259,7 @@ function startPartyCombat(heroIds, zoneId, difficulty, formation) {
     round: 0, lines: [`⚔ 編隊遭遇 ${enemy.name}！`], phase2: false, enraged: false,
     dmgDealt: 0, dmgTaken: 0, crits: 0, bossMech: isBoss ? (zone.boss.mechanic || null) : null,
     formation: { ...(formation || {}) }, lastDmgToHero: 0, finished: false,
+    teamId: teamId ?? null, waiting: false, progress: 0, streak: 1,
   };
   if (isBoss && zone.boss.mechanic && BOSS_MECH_TEXT[zone.boss.mechanic]) partyCombats[id].lines.push(BOSS_MECH_TEXT[zone.boss.mechanic]);
   syncActiveExplorations(); renderAll();
@@ -2336,9 +2404,26 @@ function finishPartyCombat(pc, won) {
   }
   pc.lines.push(`📊 輸出 ${Math.round(pc.dmgDealt)}・承傷 ${Math.round(pc.dmgTaken)}・暴擊 ${pc.crits} 次・共 ${pc.round} 回合`);
   addBattleReport('zone', `👥 ${zone.icon} ${zone.name}・${DIFF_LABELS[pc.difficulty]}（${members.length}人編隊）`, won ? (pc.isBoss ? '頭目擊破' : '勝利') : '撤退', pc.lines, rewards);
+  // 常駐隊伍連戰（非頭目勝利）：先固定存活名單，再把倒下成員復位脫隊
+  if (won && !pc.isBoss && pc.teamId != null) {
+    const survivors = partyMembers(pc, true);
+    for (const h of members) {
+      if (h.hp <= 0) {
+        const st = getHeroStats(h); h.hp = Math.max(1, Math.round(st.maxHp * 0.2));
+        h.partyId = null; h.status = 'idle'; h.explorationProgress = 0; h.exploreZoneId = null; h.exploreDifficulty = null;
+        pc.lines.push(`🚑 ${h.name} 負傷脫隊回村休養。`);
+      }
+    }
+    if (!survivors.length) { endTeamRun(pc, '全員負傷', true); return; }
+    pc.heroIds = survivors.map(h => h.id);
+    if (settings.autoRecall !== false && survivors.some(h => (h.fatigue || 0) >= 90)) { endTeamRun(pc, '成員疲勞', true); return; }
+    pc.waiting = true; pc.progress = 0;
+    syncActiveExplorations(); checkAchievements(); renderAll();
+    return;
+  }
   for (const h of members) {
     h.partyId = null;
-    // 非 boss 勝利：編隊解散，成員各自繼續探索；其餘情況回村
+    // 非 boss 勝利：自由編隊解散，成員各自繼續探索；其餘情況回村
     if (won && !pc.isBoss) { h.explorationProgress = 0; }
     else { h.status = 'idle'; h.explorationProgress = 0; h.exploreZoneId = null; h.exploreDifficulty = null; }
   }
@@ -2348,6 +2433,11 @@ function finishPartyCombat(pc, won) {
 function processPartyCombats() {
   const speed = clamp(settings.combatSpeed || 1, 1, 4);
   for (const pc of Object.values(partyCombats)) {
+    if (pc.waiting) {
+      pc.progress = (pc.progress || 0) + 12;
+      if (pc.progress >= 100) startPartyNextRound(pc);
+      continue;
+    }
     for (let i = 0; i < speed && partyCombats[pc.id]; i++) advancePartyCombat(pc);
   }
 }
@@ -3499,21 +3589,38 @@ function heroCardHtml(h) {
     ? getHeroTraits(h).map((t, i) => `${t.name}<span style="cursor:pointer;color:var(--text-faint);" title="重骰（2💠）" onclick="rerollTrait('${h.id}',${i + 1})">🎲</span>`).join('・')
     : '無特質';
   const advBtn = advClassFor(h.class) ? `<button class="btn btn-purple btn-sm" ${canAdvance(h) ? '' : 'disabled'} title="Lv.20 + 20💠 轉職為${ADV_CLASSES[advClassFor(h.class)].name}" onclick="advanceClass('${h.id}')">⬆ 轉職</button>` : '';
-  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${traitsHtml}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span></div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button>${advBtn}</div></div>`;
+  const teamTag = heroTeam(h.id) ? `・🛡隊${heroTeam(h.id).id + 1}` : '';
+  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${traitsHtml}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span>${teamTag}</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button>${advBtn}</div></div>`;
 }
 function renderHeroesPanel() {
-  $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡技能']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
-  for (const k of ['territory', 'wander', 'reports', 'skills']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
+  $('hero-tab-bar').innerHTML = [['territory', '村莊獵人'], ['wander', `流浪(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡 技能'], ['teams', '👥 隊伍']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
+  for (const k of ['territory', 'wander', 'reports', 'skills', 'teams']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
   if (heroSubTab === 'territory') {
-    $('hero-territory').innerHTML = `<div class="section-label">獵人空位 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（升級酒館可增加）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">尚未招募獵人，到「流浪者」分頁招募</div>');
+    $('hero-territory').innerHTML = `<div class="section-label">村莊獵人 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（點「技能」學習技能）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">還沒有獵人。到酒館招募流浪獵人吧！</div>');
   } else if (heroSubTab === 'wander') {
     $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); const rc = RARITIES[h.rarity || 'normal']; const stateBadge = h.aiState === 'dead' ? '<span class="hero-badge badge-resting">陣亡復活中</span>' : '<span class="hero-badge badge-wandering">流浪</span>'; return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${stateBadge}</div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・😪${h.fatigue || 0}%・😊${Math.round(h.mood ?? 70)}</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💠${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪獵人</div>';
   } else if (heroSubTab === 'skills') {
     renderSkillsTab();
+  } else if (heroSubTab === 'teams') {
+    renderTeamsTab();
   } else {
     const filtered = battleReports.filter(r => heroReportSubTab === 'all' || r.kind === heroReportSubTab);
     $('hero-reports').innerHTML = `<div class="report-sub-tabs">${[['all', '全部'], ['zone', '狩獵'], ['wander', '流浪']].map(([k, label]) => `<button class="report-sub-btn ${heroReportSubTab === k ? 'active' : ''}" onclick="heroReportSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('')}<button class="report-sub-btn" onclick="clearReports()">清空</button></div>` + (filtered.length ? filtered.map(r => `<div class="report-entry"><div class="report-head" onclick="toggleReport('${r.id}')"><span class="report-result" style="color:${r.result.includes('敗') || r.result.includes('撤退') ? 'var(--red)' : 'var(--green)'}">${r.result}</span><div class="report-info"><div class="report-title">${r.title}</div><div class="report-time">${timeAgo(r.time)}</div></div><span class="report-expand ${expandedReports.has(r.id) ? 'open' : ''}">▼</span></div><div class="report-body ${expandedReports.has(r.id) ? 'open' : ''}"><div class="combat-log">${r.lines.map(line => `<div class="log-line ${line.includes('勝利') ? 'log-victory' : line.includes('戰敗') ? 'log-defeat' : line.includes('藥水') ? 'log-heal' : line.includes('掉落') ? 'log-drop' : 'log-round'}">${line}</div>`).join('')}</div></div></div>`).join('') : '<div class="empty-state">尚無戰報</div>');
   }
+}
+function renderTeamsTab() {
+  const unassigned = territoryHeroes.filter(h => !heroTeam(h.id) && h.status === 'idle');
+  $('hero-teams').innerHTML = `<div class="section-label">常駐隊伍（最多 4 組 × 4 人）— 到「地圖」選獵場出擊，隊伍會共同戰鬥並連戰</div>` + teams.map(t => {
+    const active = Object.values(partyCombats).find(pc => pc.teamId === t.id);
+    const membersHtml = t.members.length ? t.members.map(id => {
+      const h = territoryHeroes.find(x => x.id === id); if (!h) return '';
+      const st = getHeroStats(h);
+      const pos = (t.formation[id] || 'front') === 'back' ? '後' : '前';
+      return `<div class="party-hero-row"><span style="font-size:22px">${HERO_CLASSES[h.class].icon}</span><div class="ph-info"><div class="ph-name">${esc(h.name)} Lv.${h.level}${h.status === 'exploring' ? ' <span style="color:var(--red);font-size:11px;">出擊中</span>' : ''}</div><div class="ph-stats">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp} 😪${h.fatigue || 0}%</div></div><button class="btn btn-outline btn-sm" title="切換前/後排" onclick="toggleTeamFormation(${t.id},'${id}')">${pos}排</button><button class="btn btn-outline btn-sm" ${h.partyId ? 'disabled' : ''} onclick="removeFromTeam(${t.id},'${id}')">移出</button></div>`;
+    }).join('') : '<div class="empty-state">尚未指派成員</div>';
+    const addHtml = (!active && t.members.length < 4 && unassigned.length) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${unassigned.map(h => `<button class="btn btn-outline btn-sm" onclick="addToTeam(${t.id},'${h.id}')">＋${HERO_CLASSES[h.class].icon}${esc(h.name)}</button>`).join('')}</div>` : '';
+    return `<div class="skill-card"><div class="skill-top"><div class="skill-info"><div class="skill-name">隊伍 ${t.id + 1}（${t.members.length}/4）${active ? '<span style="color:var(--red);">・出擊中</span>' : ''}</div></div></div>${membersHtml}${addHtml}</div>`;
+  }).join('') + `<div style="font-size:12px;color:var(--text-faint);margin-top:8px;line-height:1.5;">📌 使用方式：點「＋」把待命獵人加入隊伍 → 到「地圖」選獵場難度 → 按「隊伍 N 出擊」。隊伍全員共享同一敵人血條共同戰鬥，勝利後自動整裝連戰；成員負傷會脫隊、疲勞滿會自動返村，也可在地圖面板手動撤退。</div>`;
 }
 function renderSkillsTab() {
   const heroes = territoryHeroes;
@@ -3576,11 +3683,14 @@ function renderMapPanel() {
   const partyHtml = Object.values(partyCombats).map(pc => {
     const z = getZone(pc.zoneId);
     const memberBars = partyMembers(pc, false).map(h => { const hst = getHeroStats(h); const dead = h.hp <= 0; return `<div class="stat-hp-bar" style="margin:2px 0;${dead ? 'opacity:0.4;' : ''}"><span style="font-size:11px;">${pc.formation[h.id] === 'back' ? '後' : '前'} ${HERO_CLASSES[h.class].icon} ${esc(h.name)}</span><div class="hp-bar"><div class="hp-fill ${pct(h.hp, hst.maxHp) > 60 ? 'high' : pct(h.hp, hst.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, hst.maxHp)}%"></div></div><span class="hp-text">${Math.max(0, Math.round(h.hp))}/${hst.maxHp}</span></div>`; }).join('');
-    const bossTag = pc.isBoss ? `<span style="color:var(--red);font-size:11px;">👑 ${pc.enraged ? '狂暴中' : pc.phase2 ? '第二階段' : '第一階段'}・第 ${pc.round} 回合</span>` : `<span style="color:var(--text-faint);font-size:11px;">第 ${pc.round} 回合</span>`;
+    const bossTag = pc.waiting
+      ? `<span style="color:var(--green);font-size:11px;">✓ 第 ${pc.streak || 1} 場勝利・整裝中 ${Math.floor(pc.progress || 0)}%</span>`
+      : pc.isBoss ? `<span style="color:var(--red);font-size:11px;">👑 ${pc.enraged ? '狂暴中' : pc.phase2 ? '第二階段' : '第一階段'}・第 ${pc.round} 回合</span>` : `<span style="color:var(--text-faint);font-size:11px;">第 ${pc.round} 回合${pc.teamId != null ? `・第 ${pc.streak || 1} 場` : ''}</span>`;
+    const retreatBtn = pc.teamId != null ? `<div class="modal-actions" style="margin-top:4px;"><button class="btn btn-outline btn-sm" onclick="endTeamRun(partyCombats['${pc.id}'],'手動撤退')">🏳 隊伍撤退</button></div>` : '';
     const lastLines = pc.lines.slice(-2).map(l => `<div style="font-size:11px;color:var(--text-dim);">${esc(l)}</div>`).join('');
     return `<div class="explore-item"><div class="explore-top"><span class="explore-name">👥 ${z.icon} ${z.name}・${DIFF_LABELS[pc.difficulty]}（${pc.heroIds.length}人編隊）</span></div>
       <div class="stat-hp-bar" style="margin:3px 0;"><span style="font-size:11px;">👾 ${esc(pc.enemy.name)}</span><div class="hp-bar"><div class="hp-fill ${pct(pc.enemy.hp, pc.enemy.maxHp) > 60 ? 'high' : pct(pc.enemy.hp, pc.enemy.maxHp) > 30 ? 'med' : ''}" style="width:${pct(pc.enemy.hp, pc.enemy.maxHp)}%"></div></div><span class="hp-text">${Math.max(0, Math.round(pc.enemy.hp))}/${pc.enemy.maxHp}</span></div>
-      ${memberBars}${bossTag}${lastLines}</div>`;
+      ${memberBars}${bossTag}${lastLines}${retreatBtn}</div>`;
   }).join('');
   const soloHtml = activeExplorations.length ? `<div class="section-label">進行中狩獵</div>` + activeExplorations.map(e => {
     const z = getZone(e.zoneId);
@@ -3789,6 +3899,17 @@ function applyStateToRuntime() {
   settings = gameState.settings || { music: 40, sfx: 80, notif: true };
   weather = gameState.weather || { type: 'sunny', ticks: 0 };
   craftOrders = gameState.craftOrders || [];
+  teams = Array.isArray(gameState.teams) ? gameState.teams.slice(0, 4) : defaultTeams();
+  while (teams.length < 4) teams.push({ id: teams.length, members: [], formation: {} });
+  const teamSeen = new Set();
+  for (const t of teams) {
+    t.id = teams.indexOf(t);
+    t.members = (t.members || []).filter(id => {
+      if (teamSeen.has(id) || !territoryHeroes.some(h => h.id === id)) return false;
+      teamSeen.add(id); return true;
+    }).slice(0, 4);
+    t.formation = t.formation || {};
+  }
   syncActiveExplorations();
   if (territoryHeroes.length === 0) territoryHeroes.push(generateHero('warrior', 1, 'Ray'));
 }
