@@ -689,9 +689,37 @@ const HERO_CLASSES = {
   mage:    { name: '咒術師', baseHp: 70,  baseAtk: 25, baseDef: 5,  icon: '🧙' },
   rogue:   { name: '刺客', baseHp: 85,  baseAtk: 18, baseDef: 8,  icon: '🗡️' },
   archer:  { name: '遊俠', baseHp: 80, baseAtk: 20, baseDef: 7, icon: '🏹' },
-  priest:  { name: '神官', baseHp: 90,  baseAtk: 10, baseDef: 15, icon: '✝️' },
+  priest:  { name: '神官', baseHp: 90, baseAtk: 10, baseDef: 15, icon: '✝️' },
+  // 轉職進階職業（wave 8）
+  paladin:     { name: '聖騎士', baseHp: 120, baseAtk: 17, baseDef: 13, icon: '🛡️' },
+  archmage:    { name: '大魔導', baseHp: 80,  baseAtk: 30, baseDef: 6,  icon: '🔯' },
+  shadowblade: { name: '影刃',   baseHp: 95,  baseAtk: 21, baseDef: 9,  icon: '🌑' },
+  sniper:      { name: '神射手', baseHp: 90,  baseAtk: 23, baseDef: 8,  icon: '🎯' },
+  bishop:      { name: '主教',   baseHp: 105, baseAtk: 12, baseDef: 18, icon: '👑' },
 };
-const CLASS_NAMES_ZH = { warrior: '劍士', mage: '咒術師', rogue: '刺客', archer: '遊俠', priest: '神官' };
+const CLASS_NAMES_ZH = { warrior: '劍士', mage: '咒術師', rogue: '刺客', archer: '遊俠', priest: '神官', paladin: '聖騎士', archmage: '大魔導', shadowblade: '影刃', sniper: '神射手', bishop: '主教' };
+// 轉職：Lv.20 + 20💠，進階職業繼承原職技能樹與裝備限制，並獲得屬性加成
+const ADV_CLASSES = {
+  paladin:     { name: '聖騎士', base: 'warrior', bonus: { hp: 0.20, def: 0.15 },        desc: 'HP +20%、防禦 +15%' },
+  archmage:    { name: '大魔導', base: 'mage',    bonus: { atk: 0.20, msFind: 0.10 },    desc: '攻擊 +20%、魔核發現 +10%' },
+  shadowblade: { name: '影刃',   base: 'rogue',   bonus: { atk: 0.10, crit: 0.08 },      desc: '攻擊 +10%、暴擊 +8%' },
+  sniper:      { name: '神射手', base: 'archer',  bonus: { atk: 0.15, crit: 0.05 },      desc: '攻擊 +15%、暴擊 +5%' },
+  bishop:      { name: '主教',   base: 'priest',  bonus: { hp: 0.15, def: 0.10 },        desc: 'HP +15%、防禦 +10%' },
+};
+const CLASS_LINEAGE = Object.fromEntries(Object.entries(ADV_CLASSES).map(([k, v]) => [k, v.base]));
+function baseClassOf(cls) { return CLASS_LINEAGE[cls] || cls; }
+function advClassFor(cls) { return Object.keys(ADV_CLASSES).find(k => ADV_CLASSES[k].base === cls) || null; }
+function canAdvance(hero) { return !!advClassFor(hero.class) && (hero.level || 1) >= 20; }
+function advanceClass(heroId) {
+  const hero = territoryHeroes.find(h => h.id === heroId); if (!hero) return;
+  const advKey = advClassFor(hero.class);
+  if (!advKey) { showToast(CLASS_LINEAGE[hero.class] ? '已是進階職業。' : '無法轉職。', 'info'); return; }
+  if ((hero.level || 1) < 20) { showToast('需要 Lv.20 才能轉職。', 'error'); return; }
+  if (!ResourceSystem_spend({ magicStones: 20 })) { showToast('魔核不足（需 20💠）。', 'error'); return; }
+  hero.class = advKey;
+  hero.hp = Math.min(hero.hp, getHeroStats(hero).maxHp);
+  sfx('level'); showToast(`⬆ ${hero.name} 轉職為 ${ADV_CLASSES[advKey].name}！（${ADV_CLASSES[advKey].desc}）`, 'success'); renderAll();
+}
 
 const HUNTER_NAMES = [
   '阿嵐','艾琳','白洛','班恩','碧翠','布蘭','凱恩','卡菈','塞德里','達尼','德菈','艾登','艾拉','芬恩','菲歐','蓋爾','格溫','哈洛','海莉','伊格','伊蓮','傑斯','喬安','凱爾','凱菈','里昂','莉亞','洛根','露西','瑪格','馬洛','米菈','奈德','妮娜','奧登','奧菈','派克','佩姬','昆恩','蕾娜','雷恩','羅莎','盧恩','山姆','瑟菈','索恩','塔莉','烏爾','薇拉','維克','溫蒂','桑德','雅菈','約恩','札克','佐伊','阿諾','貝拉','柯林','朵拉','埃蒙','芙拉','戈登','荷莉','伊凡','潔西','凱文','蘿拉','墨林','諾拉','奧利','寶拉','雷伊','芮塔','西蒙','蒂娜','尤金','薇薇','沃特','仙菈','阿祁','布蕾','卡洛','迪恩','艾茉','法羅','葛蕾','漢娜','伊索','賈桂','凱特','路德','梅茵','納特','歐琳','帕特','琪拉','羅倫','素娜','坦恩','尤娜','凡斯','温妮','希恩','雪莉','亞德','茵娜','傑洛','葵拉','雷德','米雅','諾恩','佩恩','珂菈','達洛','瑟恩','艾諾','斑','琴','嵐','霧','霜','焰','隼','狼','燕','熊','狐','貓','鴉','鹿','獅','藤','石','泉','星','月','嵐'
@@ -922,7 +950,7 @@ function getHeroSkillPoints(hero) { return hero.skillPoints || 0; }
 function grantSkillPoints(hero, amount) { hero.skillPoints = (hero.skillPoints || 0) + amount; }
 function getHeroSkills(hero) { return hero.skills || []; }
 function getHeroSkillLevel(hero, skillId) { const s = (hero.skills || []).find(s => s.id === skillId); return s ? s.level : 0; }
-function getSkillDef(classKey, skillId) { const tree = SKILL_TREE[classKey] || []; return tree.find(s => s.id === skillId) || null; }
+function getSkillDef(classKey, skillId) { const tree = SKILL_TREE[baseClassOf(classKey)] || []; return tree.find(s => s.id === skillId) || null; }
 function canLearnSkill(hero, skillId) {
   const def = getSkillDef(hero.class, skillId); if (!def) return false;
   const cur = getHeroSkillLevel(hero, skillId); if (cur >= def.maxLevel) return false;
@@ -953,7 +981,7 @@ function applyPassiveSkills(hero, st) {
     def.effect(st, sk.level);
   }
 }
-function getActiveSkills(hero) { return (SKILL_TREE[hero.class] || []).filter(s => s.type === 'active'); }
+function getActiveSkills(hero) { return (SKILL_TREE[baseClassOf(hero.class)] || []).filter(s => s.type === 'active'); }
 function tickSkillCds(hero) {
   const cds = hero.combatSkillCds; if (!cds) return;
   for (const k of Object.keys(cds)) { if (cds[k] > 0) cds[k] -= 1; }
@@ -1300,7 +1328,20 @@ function getEquipBonuses(eq) {
   if (eq.affix) out.affix = AFFIXES.find(a => a.id === eq.affix) || null;
   return out;
 }
-function getHeroTrait(hero) { return TRAITS.find(t => t.id === hero?.trait) || null; }
+function getHeroTraits(hero) { return [hero?.trait, hero?.trait2].map(id => TRAITS.find(t => t.id === id)).filter(Boolean); }
+function getHeroTrait(hero) { return getHeroTraits(hero)[0] || null; }
+function randomTraitExcluding(...ids) {
+  const pool = TRAITS.filter(t => !ids.includes(t.id));
+  return (pool.length ? choice(pool) : choice(TRAITS)).id;
+}
+function rerollTrait(heroId, slot) {
+  const hero = territoryHeroes.find(h => h.id === heroId); if (!hero) return;
+  if (slot === 2 && !hero.trait2) { showToast('Lv.15 解鎖第二特質。', 'info'); return; }
+  if (!ResourceSystem_spend({ magicStones: 2 })) { showToast('魔核不足（需 2💠）。', 'error'); return; }
+  const next = randomTraitExcluding(hero.trait, hero.trait2);
+  if (slot === 2) hero.trait2 = next; else hero.trait = next;
+  sfx('click'); showToast(`特質重骰為「${TRAITS.find(t => t.id === next)?.name}」`, 'success'); renderAll();
+}
 function getHeroStats(hero) {
   const cls = HERO_CLASSES[hero.class] || HERO_CLASSES.warrior;
   const lvl = hero.level || 1;
@@ -1324,9 +1365,17 @@ function getHeroStats(hero) {
   st.atk = Math.max(1, Math.round(st.atk * starMult));
   st.def = Math.max(0, Math.round(st.def * starMult));
   st.maxHp = Math.max(1, Math.round(st.maxHp * starMult));
-  // One innate hunter trait.
-  const trait = getHeroTrait(hero);
-  if (trait) trait.apply(st);
+  // Innate hunter traits (second slot unlocks at Lv.15).
+  for (const tr of getHeroTraits(hero)) tr.apply(st);
+  // Advanced class bonus (轉職)
+  const advB = ADV_CLASSES[hero.class]?.bonus;
+  if (advB) {
+    if (advB.atk) st.atk = Math.round(st.atk * (1 + advB.atk));
+    if (advB.def) st.def = Math.round(st.def * (1 + advB.def));
+    if (advB.hp) st.maxHp = Math.round(st.maxHp * (1 + advB.hp));
+    if (advB.crit) st.crit += advB.crit;
+    if (advB.msFind) st.msFind += advB.msFind;
+  }
   // Gear affixes & set bonuses
   for (const af of affixes) af.effect(st);
   applySetBonuses(hero, st);
@@ -1427,6 +1476,7 @@ function grantXp(hero, amount) {
   const gain = Math.max(1, Math.round(amount * getXpMultiplier()));
   hero.xp += gain;
   let ups = 0;
+  let trait2Gained = false;
   while (hero.xp >= xpNeed(hero.level)) {
     hero.xp -= xpNeed(hero.level);
     hero.level += 1; ups += 1;
@@ -1436,8 +1486,13 @@ function grantXp(hero, amount) {
     hero.def += Math.round(2 * growth);
     hero.hp = getHeroStats(hero).maxHp;
     grantSkillPoints(hero, getSkillApGain(hero));
+    if (hero.level >= 15 && !hero.trait2) {
+      hero.trait2 = randomTraitExcluding(hero.trait);
+      trait2Gained = true;
+    }
   }
   if (ups > 0) { sfx('level'); showToast(`${hero.name} 升到了 Lv.${hero.level}！`, 'success'); }
+  if (trait2Gained) showToast(`✨ ${hero.name} 覺醒了第二特質「${TRAITS.find(t => t.id === hero.trait2)?.name}」！`, 'success');
   return ups;
 }
 function trainCost(hero) { return { gold: Math.round((80 + hero.level * 60) * (1 + (((hero.stars || 3) - 1) * 0.25))) }; }
@@ -1612,7 +1667,7 @@ function equipItem(heroId, iid) {
   const inst = idx >= 0 ? gearInventory[idx] : null;
   const def = inst ? ITEMS[inst.id] : null;
   if (!hero || !def) return;
-  if (def.forClass && def.forClass !== hero.class) { showToast(`${def.name} 限定 ${CLASS_NAMES_ZH[def.forClass]} 使用`, 'error'); return; }
+  if (def.forClass && def.forClass !== baseClassOf(hero.class)) { showToast(`${def.name} 限定 ${CLASS_NAMES_ZH[def.forClass]} 使用`, 'error'); return; }
   const slot = def.type;
   gearInventory.splice(idx, 1);
   if (hero.equipment[slot]) addGearInstance(hero.equipment[slot]);
@@ -3313,7 +3368,11 @@ function heroCardHtml(h) {
   const setBadge = (h.activeSets || []).length ? `<span style="color:var(--golden-wheat);font-size:11px;">⚜ ${h.activeSets.map(s => s.name).join('・')}</span>` : '';
   const canAct = h.status === 'idle';
   const ap = h.skillPoints || 0;
-  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span></div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button></div></div>`;
+  const traitsHtml = getHeroTraits(h).length
+    ? getHeroTraits(h).map((t, i) => `${t.name}<span style="cursor:pointer;color:var(--text-faint);" title="重骰（2💠）" onclick="rerollTrait('${h.id}',${i + 1})">🎲</span>`).join('・')
+    : '無特質';
+  const advBtn = advClassFor(h.class) ? `<button class="btn btn-purple btn-sm" ${canAdvance(h) ? '' : 'disabled'} title="Lv.20 + 20💠 轉職為${ADV_CLASSES[advClassFor(h.class)].name}" onclick="advanceClass('${h.id}')">⬆ 轉職</button>` : '';
+  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${traitsHtml}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span></div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button>${advBtn}</div></div>`;
 }
 function renderHeroesPanel() {
   $('hero-tab-bar').innerHTML = [['territory', '獵魔村獵人'], ['wander', `流浪者(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡技能']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
@@ -3337,7 +3396,7 @@ function renderSkillsTab() {
     skillTabHeroId = heroes[0].id;
   }
   const hero = heroes.find(h => h.id === skillTabHeroId);
-  const tree = SKILL_TREE[hero.class] || [];
+  const tree = SKILL_TREE[baseClassOf(hero.class)] || [];
   const ap = hero.skillPoints || 0;
   const heroSelHtml = heroes.map(h => `<button class="report-sub-btn ${h.id === skillTabHeroId ? 'active' : ''}" onclick="skillTabHeroId='${h.id}';renderSkillsTab()">${HERO_CLASSES[h.class].icon} ${esc(h.name)}</button>`).join('');
   const skillsHtml = tree.map(def => {
