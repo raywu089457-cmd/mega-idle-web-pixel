@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v18';
+const CACHE_NAME = 'hunter-village-v19';   // bump to v19 — split into ES modules; index.html script block removed
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -1,0 +1,160 @@
+// src/expeditions.js — L2 深淵 + 流浪獵人 + 天氣
+// 從 index.html L2446-2562 搬出
+// 設計:startAbyssCombat / finishAbyssCombat 透過 state.impls 反向注入到 combat.js
+//      spawnWanderingHero / processWanderingTick / rollWeather / weatherTick 透過 state.impls 提供給 meta.js
+// 不 import ui.js
+
+import { ZONES, HERO_CLASSES, WANDERING_HERO_TYPES, RARITIES, WEATHERS, choice as dataChoice } from './data.js';
+import { wanderingHeroes, territoryHeroes, weather, settings, impls, incWeatherTicks, setWeather, sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, setSceneNight } from './state.js';
+import { rand, randf, clamp, choice, $, showToast, sfx, esc } from './util.js';
+import { sfx as audioSfx } from './audio.js';
+import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js';
+import { getHeroStats, normalizeHero, getHeroStats as getHeroStatsFn } from './heroes-stats.js';
+import { startLiveCombat } from './combat.js';
+
+// ═══════════════════════════════════════════════════════════════════
+// 深淵 (abyss)
+// ═══════════════════════════════════════════════════════════════════
+export function abyssUnlocked() { return !!(mapProgress && mapProgress.zoneProgress[5] && mapProgress.zoneProgress[5].bossDefeated); }
+import { mapProgress } from './state.js';
+export function abyssEnemy(depth) {
+  const baseAtk = 30 + depth * 6;
+  const baseHp = 200 + depth * 80;
+  return { name: `深淵魔物 Lv.${depth}`, hp: baseHp + rand(-20, 20), atk: baseAtk + rand(-3, 3), def: 10 + Math.floor(depth / 3) };
+}
+export function dispatchAbyss(heroId) {
+  const hero = territoryHeroes.find(h => h.id === heroId); if (!hero) return;
+  if (!abyssUnlocked()) { showToast('需先擊敗魔域王座的魔域大君。', 'error'); return; }
+  if (hero.status === 'exploring') { showToast('獵人正在狩獵中。', 'error'); return; }
+  if (hero.status === 'resting') { showToast('獵人休整中。', 'error'); return; }
+  if ((hero.fatigue || 0) >= 90) { showToast('疲勞過高。', 'error'); return; }
+  hero.status = 'exploring'; hero.exploreZoneId = 'abyss'; hero.exploreDifficulty = 'hard'; hero.explorationProgress = 0;
+  hero.abyssDepth = 1; hero.combatSkillCds = {};
+  audioSfx('dispatch'); showToast(`🕳 ${hero.name} 進入深淵第 1 層`, 'info');
+}
+export function startAbyssCombat(hero) {
+  const depth = hero.abyssDepth || 1;
+  const enemy = { ...abyssEnemy(depth) };
+  enemy.maxHp = enemy.hp; enemy.isBoss = false; enemy.zoneId = 'abyss';
+  const lc = {
+    heroId: hero.id, zoneId: 'abyss', diff: 'hard', isBoss: false, isAbyss: true,
+    cfg: { goldRange: [50 + depth * 20, 100 + depth * 40], magicStoneChance: 0.05 + depth * 0.02, xp: 30 + depth * 20, drops: ['healthPotion'] },
+    enemy,
+    round: 0, lines: [`🕳 第 ${depth} 層：遭遇 ${enemy.name}！`], phase2: false, enraged: false,
+    dmgDealt: 0, dmgTaken: 0, crits: 0, bossMech: null, lastCounterDmg: 0,
+  };
+  // 利用 combat.js 的 startLiveCombat 機制:但因為 abyss 是合約不同的 enemy,
+  // 直接呼叫 startLiveCombat + 改寫其結果
+  startLiveCombat(hero);
+  const real = liveCombats[hero.id];
+  if (real) {
+    real.isAbyss = true;
+    real.zoneId = 'abyss';
+    real.cfg = lc.cfg;
+    real.lines.unshift(lc.lines[0]);
+  } else {
+    // fallback:手動建立
+    liveCombats[hero.id] = lc;
+  }
+}
+import { liveCombats } from './state.js';
+import { stats } from './state.js';
+export function finishAbyssCombat(hero, lc, won) {
+  if (won) {
+    const depth = hero.abyssDepth || 1;
+    hero.abyssDepth = depth + 1;
+    if (depth > (mapProgress.abyssBest || 0)) mapProgress.abyssBest = depth;
+    stats.kills += 1;
+    showToast(`🕳 第 ${depth} 層已清,前往第 ${depth + 1} 層。`, 'success');
+    hero.status = 'exploring'; hero.explorationProgress = 0;
+  } else {
+    const reached = (hero.abyssDepth || 1) - 1;
+    if (reached > (mapProgress.abyssBest || 0)) mapProgress.abyssBest = reached;
+    hero.abyssDepth = 1;
+    hero.status = 'resting'; hero.restTicks = 6; hero.explorationProgress = 0;
+    showToast(`🕳 ${hero.name} 從深淵撤退（到達第 ${reached + 1} 層）`, 'info');
+  }
+  delete liveCombats[hero.id];
+  audioSfx(won ? 'gold' : 'defeat');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 流浪獵人
+// ═══════════════════════════════════════════════════════════════════
+export function spawnWanderingHero() {
+  if (wanderingHeroes.length >= BuildingSystem_getMaxWanderingHeroes()) return;
+  const tpl = choice(WANDERING_HERO_TYPES);
+  const rarity = pickRarity();
+  const rDef = RARITIES[rarity];
+  const wallet = Math.round((40 + tpl.level * 30) * rDef.walletMult);
+  const id = 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const h = normalizeHero({
+    id, name: choice(['阿嵐','艾琳','白洛','班恩','碧翠','布蘭','凱恩','卡菈']),
+    class: tpl.class, level: tpl.level,
+    xp: 0, stars: 3, rarity,
+    status: 'idle',
+    equipment: { weapon: null, armor: null },
+    inventory: {},
+    wallet, diamonds: 0,
+    mood: rand(50, 80),
+    dropMagicStoneChance: tpl.dropMagicStoneChance,
+  });
+  h.huntZoneId = null;
+  h.targetBuilding = null;
+  h.wandering = true;
+  h.arrivedAt = Date.now();
+  wanderingHeroes.push(h);
+}
+function pickRarity() {
+  const total = Object.values(RARITIES).reduce((s, r) => s + r.weight, 0);
+  let r = Math.random() * total;
+  for (const k of Object.keys(RARITIES)) { r -= RARITIES[k].weight; if (r <= 0) return k; }
+  return 'normal';
+}
+export function processWanderingTick() {
+  // 觸發刷新排程
+  if (nextWanderingSpawnIn === undefined) {
+    impls.bumpNextWanderingSpawn?.(BuildingSystem_getWanderingSpawnInterval());
+  }
+  if (impls.consumeNextWanderingSpawn?.()) {
+    spawnWanderingHero();
+  }
+  // 推進每個 wandering hero 的 AI(簡化:留 hook 給 scene.js 處理座標移動)
+  for (const h of wanderingHeroes) {
+    h.actionTicks = Math.max(0, (h.actionTicks || 0) - 0.05);
+    if (h.mood !== undefined) h.mood = clamp(h.mood - 0.1, 0, 100);
+  }
+}
+import { nextWanderingSpawnIn } from './state.js';
+import { setNextWanderingSpawnIn } from './state.js';
+
+// ═══════════════════════════════════════════════════════════════════
+// 天氣
+// ═══════════════════════════════════════════════════════════════════
+export function rollWeather() {
+  const total = Object.values(WEATHERS).reduce((s, w) => s + w.weight, 0);
+  let r = Math.random() * total;
+  for (const k of Object.keys(WEATHERS)) { r -= WEATHERS[k].weight; if (r <= 0) return k; }
+  return 'sunny';
+}
+export function weatherTick() {
+  incWeatherTicks();
+  if (weather.ticks >= 600) {   // 10 分鐘 @ 1 tick/sec
+    setWeather({ ...weather, type: rollWeather(), ticks: 0 });
+    showToast(`${WEATHERS[weather.type].icon} 天氣變為：${WEATHERS[weather.type].name}`, 'info');
+  }
+  // 場景日夜(0=白天, 1=黑夜)
+  const sec = (Date.now() - sceneStart) / 1000;
+  const phase = (sec % 600) / 600;
+  setSceneNight(phase < 0.4 || phase > 0.85 ? 1 : 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 註冊到 state.impls(讓其他模組透過 impls 呼叫)
+// ═══════════════════════════════════════════════════════════════════
+impls.startAbyssCombat = startAbyssCombat;
+impls.finishAbyssCombat = finishAbyssCombat;
+impls.spawnWanderingHero = spawnWanderingHero;
+impls.processWanderingTick = processWanderingTick;
+impls.rollWeather = rollWeather;
+impls.weatherTick = weatherTick;
