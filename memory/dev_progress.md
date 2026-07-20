@@ -53,7 +53,7 @@ type: project
 1. `node extract-js.js`（Temp\opencode）抽出 inline script → `node --check`
 2. `node game-smoke-test.js`（Temp\opencode）— vm 沙盒斷言（最終 147 項全過）
 3. Playwright 真實瀏覽器 smoke（Temp\opencode\waveN-browser-smoke.js）— 零 console/page error
-4. 玩法 release 必 bump `sw.js` CACHE_NAME（目前 `hunter-village-v16`）
+4. 玩法 release 必 bump `sw.js` CACHE_NAME（目前值以 sw.js 為準，勿在文件記版本號）
 5. commit + 更新 DESIGN-BACKLOG.md
 
 ## 架構備註（wave 9 後）

@@ -16,7 +16,7 @@ type: project
 - **UI**: DOM + CSS（響應式、手機觸控優先）
 - **狀態**: Plain JS objects
 - **存檔**: localStorage（key=`kingdomBuilderSave`，v2 遷移）
-- **PWA**: manifest.json + Service Worker（hunter-village-v10）
+- **PWA**: manifest.json + Service Worker（CACHE_NAME 每次玩法 release 必 bump，現值以 `sw.js` 為準）
 - **部署**: GitHub Pages
 - **無建構步驟**: 單一 `index.html`（約 3050 行），雙擊直接運行
 
