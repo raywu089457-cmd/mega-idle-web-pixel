@@ -3,7 +3,7 @@
 // 不 import ui.js;render 函式會被 ui.js 觸發;scene 本身的 hotspot 處理會呼叫 ui.js 的 openPanel(透過 import 注入)
 
 import { RESOURCES, MATERIAL_TYPES, RARITIES, HERO_CLASSES, CLASS_NAMES_ZH, WEATHERS } from './data.js'
-import { sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, hoverHotspot, placementPick, buildingPlots, floatState, villagerNPCs, wildMonsters, tombstones, wanderingHeroes, mapProgress, weather, activeExplorations, stats, shopStock, setBuildingPlots, setPlacementPick, setSceneCtx, setSceneStart, setSceneNight, setHoverHotspot, setPendingDailyReward, impls, nextWanderingSpawnIn, setNextWanderingSpawnIn } from './state.js'
+import { sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, hoverHotspot, placementPick, buildingPlots, floatState, villagerNPCs, wildMonsters, tombstones, wanderingHeroes, mapProgress, weather, activeExplorations, stats, shopStock, setBuildingPlots, setPlacementPick, setSceneCtx, setSceneStart, setSceneNight, setHoverHotspot, setPendingDailyReward, impls, nextWanderingSpawnIn, setNextWanderingSpawnIn, BW_LEAVE_CHANCE } from './state.js'
 import { $, esc, showToast, showModal, hideModal, rand, randf, clamp, choice, uid, fmt, timeAgo } from './util.js'
 import { sfx } from './audio.js'
 import { gainGold, ResourceSystem_add, BuildingSystem_getLevel, BuildingSystem_getGoldRate, BuildingSystem_getWanderingSpawnInterval } from './resources-buildings.js'
