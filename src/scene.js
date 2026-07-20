@@ -798,7 +798,19 @@ export function drawScene(t, dt) {
 export function initScene() {
   const canvas = $('scene-canvas'); if (!canvas) return;
   setSceneCtx(canvas.getContext('2d'), canvas, 240, 360);
-  canvas.width = sceneW; canvas.height = sceneH; sceneCtx.imageSmoothingEnabled = false;
+  sceneCtx.imageSmoothingEnabled = false;
+  // 動態 canvas:internal 解析度 = display × DPR(高 DPI 螢幕銳利),ctx 縮放讓 240×360 邏輯座標正確
+  function fitCanvas() {
+    const wrap = canvas.parentElement; if (!wrap) return;
+    const dpr = window.devicePixelRatio || 1;
+    const dw = wrap.clientWidth, dh = wrap.clientHeight;
+    canvas.width = Math.max(1, Math.round(dw * dpr));
+    canvas.height = Math.max(1, Math.round(dh * dpr));
+    sceneCtx.setTransform((dw / sceneW) * dpr, 0, 0, (dh / sceneH) * dpr, 0, 0);
+    sceneCtx.imageSmoothingEnabled = false;
+  }
+  fitCanvas();
+  window.addEventListener('resize', fitCanvas);
   canvas.addEventListener('pointermove', (e) => {
     const p = scenePoint(e);
     const wh = wanderingHeroAt(p.x, p.y);
