@@ -1,0 +1,91 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-cycles-onclick:
+    name: Syntax + Import Cycles + Onclick Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm install
+      - name: node --check (18 modules)
+        run: |
+          for f in src/*.js; do
+            node --check "$f" || { echo "FAIL: $f"; exit 1; }
+          done
+          echo "OK: all 18 modules pass syntax"
+      - name: Import cycle check
+        run: node scripts/check-imports.mjs src/
+      - name: Onclick ↔ window-bridge coverage
+        run: node scripts/check-onclick.mjs
+
+  smoke:
+    name: Browser Smoke Test (Playwright headless)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm install
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run smoke test
+        run: node scripts/smoke-test.mjs
+      - name: Upload smoke screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-failure
+          path: smoke-test.png
+
+  screenshot-compare:
+    name: Visual Regression (3 viewports)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm install
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Pixelmatch vs baseline
+        run: node scripts/screenshot.mjs --compare
+
+  verify-all:
+    name: All-in-one Verify
+    runs-on: ubuntu-latest
+    needs: [syntax-cycles-onclick, smoke]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm install
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - run: node scripts/verify-all.mjs
+
+  deploy-gate:
+    name: Deploy Gate (only on master)
+    needs: [verify-all, screenshot-compare]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - run: echo "All checks passed — deploy proceeds via redeploy.yml"

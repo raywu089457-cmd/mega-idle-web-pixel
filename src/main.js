@@ -19,6 +19,7 @@ import './scene.js';                // L2
 import './ui.js';                   // L2
 import './settings-and-init.js';    // L2 (含 init)
 import './window-bridge.js';        // 觸發 window 掛載
+import './selftest.js';             // 內建 console.MegaIdleSelftest
 
 import { init } from './settings-and-init.js'
 

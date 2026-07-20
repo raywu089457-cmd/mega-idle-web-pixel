@@ -653,25 +653,44 @@ function rgb(arr) { return `rgb(${arr[0]},${arr[1]},${arr[2]})`; }
 function getClickGold() { return 2 + Math.floor(BuildingSystem_getLevel('goldMine') / 2) + (stats.clicks ? 0 : 0); }
 import { getClickGold as _getClickGold } from './bonuses.js'
 
-export function drawScene(t, dt) {
-  updateWanderingScene(dt || 0);
-  const c = sceneCtx, w = sceneW, h = sceneH;
-  if (!c) return;
+// ═══════════════════════════════════════════════════════════════════
+// Layer batching — 靜態背景畫到 offscreen canvas,只在 dirty 時 redraw
+// 動態層(actor / hotspot / particles)每幀從 offscreen 複製 + 疊加
+// ═══════════════════════════════════════════════════════════════════
+const _staticCache = { canvas: null, ctx: null, signature: '' };
+
+function ensureStaticCache() {
+  if (!_staticCache.canvas) {
+    _staticCache.canvas = document.createElement('canvas');
+    _staticCache.canvas.width = sceneW; _staticCache.canvas.height = sceneH;
+    _staticCache.ctx = _staticCache.canvas.getContext('2d');
+  }
+  return _staticCache;
+}
+function staticCacheKey(t) {
+  // 把「影響靜態層」的變數 hash 出來(天氣日夜相位 4 等級 / 建築等級 / 建築擺位)
+  // 變動才 redraw,其他時間純粹 blit → 省 ~50% draw call
+  const dayBucket = Math.floor((Math.sin(t / 18) + 1) / 2 * 4);
+  const levels = ['monument','goldMine','weaponShop','armorShop','potionShop','altar','restaurant','drinkShop']
+    .map(id => BuildingSystem_getLevel(id)).join(',');
+  const plots = JSON.stringify(buildingPlots);
+  return `${dayBucket}|${weather.type}|${levels}|${plots}`;
+}
+function drawStaticLayer(t) {
+  const { canvas, ctx } = ensureStaticCache();
+  const c = ctx, w = sceneW, h = sceneH;
   const day = (Math.sin(t / 18) + 1) / 2;
   const night = 1 - day;
-  setSceneNight(night);
+  // 天空 + 道路 + 森林 + 雲
   const skyTop = mixColor([10, 14, 34], [92, 154, 214], day), skyBot = mixColor([38, 24, 54], [230, 176, 126], day);
   const grad = c.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, rgb(skyTop)); grad.addColorStop(0.60, rgb(skyBot)); grad.addColorStop(0.61, '#4c7042'); grad.addColorStop(1, '#263b2b');
   c.fillStyle = grad; c.fillRect(0, 0, w, h);
-  const orbX = w * (0.18 + 0.64 * ((t / 36) % 1)), orbY = 48 + Math.sin(t / 18) * 16;
-  c.fillStyle = day > 0.35 ? '#ffd76a' : '#dfe7ff'; c.fillRect(Math.round(orbX), Math.round(orbY), 13, 13);
-  c.fillStyle = day > 0.35 ? 'rgba(255,255,255,0.82)' : 'rgba(188,202,255,0.28)';
-  for (let i = 0; i < 4; i++) { const x = ((t * (5 + i * 2) + i * 70) % (w + 60)) - 30, y = 30 + i * 22; c.fillRect(Math.round(x), y, 22, 7); c.fillRect(Math.round(x) + 5, y - 5, 12, 6); c.fillRect(Math.round(x) + 16, y + 3, 16, 6); }
   c.fillStyle = day > 0.35 ? '#3f6b45' : '#13202a';
   for (let x = -8; x < w; x += 18) { const hh = 34 + ((x * 13) % 23); c.fillRect(x, 132 - hh, 12, hh); c.fillRect(x - 4, 132 - hh + 8, 20, 8); }
   c.fillStyle = day > 0.35 ? '#6f9f52' : '#20351f'; c.fillRect(0, 132, w, h - 132);
   c.fillStyle = '#7a5a3c'; c.fillRect(0, 206, w, 14); c.fillRect(112, 120, 16, 236); c.fillRect(0, 292, w, 12);
   c.fillStyle = 'rgba(244,208,63,0.12)'; for (let x = 6; x < w; x += 24) { c.fillRect(x, 211, 8, 3); c.fillRect(x, 297, 8, 3); }
+  // 9 棟建築(每幀重畫若 plot 變動)
   const label = (txt, x, y, color = '#fff8dc') => { c.font = '8px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
   const house = (x, y, ww, hh, roof, wall) => { c.fillStyle = wall; c.fillRect(x, y, ww, hh); c.fillStyle = roof; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + ww / 2, y - 18); c.lineTo(x + ww + 4, y); c.closePath(); c.fill(); c.fillStyle = '#2c2c2c'; c.fillRect(x + ww / 2 - 5, y + hh - 18, 10, 18); };
   const blv = (id) => BuildingSystem_getLevel(id);
@@ -688,45 +707,79 @@ export function drawScene(t, dt) {
   c.save(); { const d = plotDelta('market'); c.translate(d.dx, d.dy); }
   c.fillStyle = bwall('goldMine', '#8b5a2b', '#8a8a96'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); label('市集', 188, 150); bpips('goldMine', 184, 204);
   c.restore();
-  if (blv('restaurant') > 0) {
-    c.save(); { const d = plotDelta('restaurant'); c.translate(d.dx, d.dy); }
+  if (blv('restaurant') > 0) { c.save(); { const d = plotDelta('restaurant'); c.translate(d.dx, d.dy); }
     c.fillStyle = bwall('restaurant', '#a94f3c', '#9a8a86'); c.fillRect(62, 188, 22, 14);
     c.fillStyle = '#f4d03f'; c.fillRect(64, 182, 18, 6); c.fillStyle = '#2c2c2c'; c.fillRect(64, 202, 3, 4); c.fillRect(79, 202, 3, 4);
-    label('餐廳', 60, 176, '#ffb84d'); bpips('restaurant', 62, 206);
-    c.restore();
-  }
-  if (blv('drinkShop') > 0) {
-    c.save(); { const d = plotDelta('drinkShop'); c.translate(d.dx, d.dy); }
+    label('餐廳', 60, 176, '#ffb84d'); bpips('restaurant', 62, 206); c.restore(); }
+  if (blv('drinkShop') > 0) { c.save(); { const d = plotDelta('drinkShop'); c.translate(d.dx, d.dy); }
     c.fillStyle = bwall('drinkShop', '#3c6ea9', '#8296a8'); c.fillRect(158, 194, 16, 12);
     c.fillStyle = '#7dd6ff'; c.fillRect(160, 189, 12, 5); c.fillStyle = '#2c2c2c'; c.fillRect(160, 206, 2, 4); c.fillRect(170, 206, 2, 4);
-    label('飲料', 154, 184, '#7dd6ff'); bpips('drinkShop', 158, 210);
-    c.restore();
-  }
+    label('飲料', 154, 184, '#7dd6ff'); bpips('drinkShop', 158, 210); c.restore(); }
   c.save(); { const d = plotDelta('forge'); c.translate(d.dx, d.dy); }
   house(22, 252, 44, 40, '#3c3c46', bwall('weaponShop', '#8f8f9d', '#787882')); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
-  if (!reduceMotion) for (let i = 0; i < 4; i++) { const sy = 238 - ((t * 10 + i * 9) % 34); c.fillStyle = `rgba(220,220,220,${0.35 - i * 0.06})`; c.fillRect(50 + Math.sin(t + i) * 4, sy, 6 + i, 5); }
   c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); label('鐵匠', 24, 238); bpips('weaponShop', 22, 296);
   c.restore();
   c.save(); { const d = plotDelta('alchemy'); c.translate(d.dx, d.dy); }
   house(100, 258, 40, 36, '#4b3a63', bwall('potionShop', '#9b7bb8', '#9890a8')); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
-  if (!reduceMotion) for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(190,255,210,0.8)'; c.fillRect(116 + i * 5, 272 - ((t * 8 + i * 4) % 10), 2, 2); }
   label('煉金', 104, 244); bpips('potionShop', 100, 298);
   c.restore();
   c.save(); { const d = plotDelta('research'); c.translate(d.dx, d.dy); }
   house(178, 252, 40, 42, '#2d3d63', bwall('altar', '#7890c9', '#8890b0')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); label('研究', 182, 238); bpips('altar', 178, 298);
   c.restore();
   c.save(); { const d = plotDelta('gate'); c.translate(d.dx, d.dy); }
-  c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26); c.fillStyle = `rgba(155,89,182,${0.35 + Math.sin(t * 4) * 0.12})`; c.fillRect(107, 325, 26, 20);
-  c.fillStyle = '#ff5252'; const blink = reduceMotion || Math.sin(t * 3) > -0.2; if (blink) { c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); }
+  c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26);
+  c.fillStyle = '#ff5252'; c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); // 眼睛不閃(畫在 static 層)
   label('獵場', 106, 310, '#e1b3ff');
   c.restore();
+}
+
+export function drawScene(t, dt) {
+  updateWanderingScene(dt || 0);
+  const c = sceneCtx, w = sceneW, h = sceneH;
+  if (!c) return;
+  const day = (Math.sin(t / 18) + 1) / 2;
+  const night = 1 - day;
+  setSceneNight(night);
+
+  // 1. 靜態層:若 cache 過期就重畫,否則 blit
+  const cache = ensureStaticCache();
+  const sig = staticCacheKey(t);
+  if (_staticCache.signature !== sig) {
+    drawStaticLayer(t);
+    _staticCache.signature = sig;
+  }
+  c.drawImage(cache.canvas, 0, 0);
+
+  // 2. 動態層:每天都要畫的東西(太陽/月亮 + 雲 + 煙囪煙 + 鍋爐泡)
+  // 太陽/月亮位置
+  const orbX = w * (0.18 + 0.64 * ((t / 36) % 1)), orbY = 48 + Math.sin(t / 18) * 16;
+  c.fillStyle = day > 0.35 ? '#ffd76a' : '#dfe7ff'; c.fillRect(Math.round(orbX), Math.round(orbY), 13, 13);
+  // 飄雲
+  c.fillStyle = day > 0.35 ? 'rgba(255,255,255,0.82)' : 'rgba(188,202,255,0.28)';
+  for (let i = 0; i < 4; i++) { const x = ((t * (5 + i * 2) + i * 70) % (w + 60)) - 30, y = 30 + i * 22; c.fillRect(Math.round(x), y, 22, 7); c.fillRect(Math.round(x) + 5, y - 5, 12, 6); c.fillRect(Math.round(x) + 16, y + 3, 16, 6); }
+  // 鐵匠煙囪煙(只在沒 reduceMotion 時畫)
+  if (!reduceMotion) { const d = plotDelta('forge'); c.save(); c.translate(d.dx, d.dy);
+    for (let i = 0; i < 4; i++) { const sy = 238 - ((t * 10 + i * 9) % 34); c.fillStyle = `rgba(220,220,220,${0.35 - i * 0.06})`; c.fillRect(50 + Math.sin(t + i) * 4, sy, 6 + i, 5); } c.restore(); }
+  // 煉金鍋爐泡
+  if (!reduceMotion) { const d = plotDelta('alchemy'); c.save(); c.translate(d.dx, d.dy);
+    for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(190,255,210,0.8)'; c.fillRect(116 + i * 5, 272 - ((t * 8 + i * 4) % 10), 2, 2); } c.restore(); }
+  // 獵場門 portal glow(會動,放動態)
+  if (!reduceMotion) { const d = plotDelta('gate'); c.save(); c.translate(d.dx, d.dy);
+    c.fillStyle = `rgba(155,89,182,${0.35 + Math.sin(t * 4) * 0.12})`; c.fillRect(107, 325, 26, 20);
+    c.fillStyle = '#ff5252'; if (Math.sin(t * 3) > -0.2) { c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); } c.restore(); }
+
+  // 3. Actor 層(每幀重畫 — 流浪 NPC / 怪 / 墓碑 / 對話泡泡)
   drawWanderingActors(c, t);
+
+  // 4. Hotspot 高亮(hover feedback)
   for (const hs of SCENE_HOTSPOTS) {
     const active = hoverHotspot && hoverHotspot.id === hs.id;
     const d = plotDelta(hs.id);
     c.fillStyle = active ? 'rgba(244,208,63,0.20)' : 'rgba(255,248,220,0.035)'; c.fillRect(hs.x + d.dx, hs.y + d.dy, hs.w, hs.h);
     c.strokeStyle = active ? '#f4d03f' : 'rgba(255,248,220,0.10)'; c.lineWidth = active ? 2 : 1; c.strokeRect(hs.x + 0.5, hs.y + 0.5, hs.w - 1, hs.h - 1);
   }
+
+  // 5. Weather particles / 夜晚靈火
   if (night > 0.55 && !reduceMotion) { c.fillStyle = 'rgba(225,179,255,0.75)'; for (let i = 0; i < 10; i++) { const x = 90 + ((i * 17 + Math.sin(t + i) * 8 + 40) % 60), y = 300 + ((i * 23) % 46) + Math.cos(t * 1.7 + i) * 4; c.fillRect(Math.round(x), Math.round(y), 2, 2); } }
   if (!reduceMotion && weather.type === 'rain') {
     c.fillStyle = 'rgba(140,180,255,0.5)';

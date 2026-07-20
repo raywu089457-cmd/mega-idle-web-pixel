@@ -71,6 +71,14 @@ try {
   const heroOpen = await page.evaluate(() => {
     return document.getElementById('panel-hero')?.classList.contains('open') || false;
   });
+  // 跑內建 selftest
+  const selftest = await page.evaluate(async () => {
+    if (typeof window.MegaIdleSelftest !== 'object') return { available: false };
+    try {
+      const report = await window.MegaIdleSelftest.run();
+      return { available: true, ...report };
+    } catch (e) { return { available: false, error: e.message }; }
+  });
   console.log('=== SMOKE TEST RESULT ===');
   console.log('URL:', URL);
   console.log('HUD:', `gold=${hud.hudGold} magic=${hud.hudMagic} fruit=${hud.hcFruit} streak=${hud.hudStreak}`);
@@ -79,6 +87,14 @@ try {
   console.log('window bridge: dispatchHero=' + hud.onDispatchHero + ' closePanel=' + hud.onClosePanel + ' toggleReport=' + hud.onToggleReport);
   console.log('localStorage[kingdomBuilderSave]:', hud.localStorage);
   console.log('hero panel opens on click:', heroOpen);
+  if (selftest.available !== false) {
+    console.log(`selftest: ${selftest.pass}/${selftest.total} ${selftest.healthy ? 'PASS' : 'FAIL'}`);
+    for (const c of (selftest.checks || [])) {
+      console.log(`  ${c.ok ? '✓' : '✗'} ${c.name}: ${c.detail}`);
+    }
+  } else {
+    console.log('selftest: NOT AVAILABLE (window.MegaIdleSelftest missing)');
+  }
   console.log('errors:', errors.length, '/ warnings:', warnings.length);
   if (errors.length) {
     console.log('--- ERRORS ---');
