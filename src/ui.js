@@ -340,3 +340,31 @@ export function renderAchPanel() {
   $('ach-list').innerHTML = ACHIEVEMENTS.map(a => { const done = !!achievementsUnlocked[a.id]; return `<div class="ach-card"><div class="ach-head"><span class="ach-ico">${a.icon}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div><div class="ach-bonus">${a.bonusText}</div></div><span class="ach-state ${done ? 'done' : ''}">${done ? '已完成' : '未完成'}</span></div></div>`; }).join('');
 }
 import { checkDaily } from './meta.js'
+
+// ═══════════════════════════════════════════════════════════════════
+// 鍵盤導航:Esc 關閉當前 panel 或最上層 modal
+// (Tab/Enter 由原生 <button> 行為處理,nav-btn 已可鍵盤 focus + Space/Enter 觸發)
+// ═══════════════════════════════════════════════════════════════════
+function setupKeyboardNav() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    // 不要搶 input/textarea 的 Esc
+    const t = e.target;
+    if (t && (t.matches?.('input, textarea, select') || t.isContentEditable)) return;
+    // 先關最上層 modal
+    const openModals = document.querySelectorAll('.modal-overlay.open');
+    if (openModals.length > 0) {
+      openModals[openModals.length - 1].classList.remove('open');
+      e.preventDefault();
+      return;
+    }
+    // 再關 panel,把焦點還給觸發它的 nav-btn
+    if (activePanel) {
+      const navBtn = document.getElementById('nav-' + activePanel);
+      closePanel();
+      if (navBtn) navBtn.focus();
+      e.preventDefault();
+    }
+  });
+}
+setupKeyboardNav();
