@@ -2,7 +2,7 @@
 // 從 index.html L2692-2742 搬出
 // 內部持有 audioCtx 與 musicTimer(不對外暴露)
 
-import { settings } from './state.js';
+import { settings } from './state.js'
 
 let audioCtx = null;
 let musicTimer = null;

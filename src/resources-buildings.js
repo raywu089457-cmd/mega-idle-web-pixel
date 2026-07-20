@@ -2,11 +2,8 @@
 // 從 index.html L1203-1236 (ResourceSystem) + L1262-1303 (BuildingSystem) 搬出
 // 設計:不 import 其他 L2 業務模組;buildingEffectText 移到 ui.js(避免與 inventory 循環)
 
-import { RESOURCES, BUILDINGS, BUILDING_ORDER } from './data.js';
-import {
-  resources, buildingStates, stats,
-  setResources, setBuildingStates,
-} from './state.js';
+import { RESOURCES, BUILDINGS, BUILDING_ORDER } from './data.js'
+import { resources, buildingStates, stats, setResources, setBuildingStates } from './state.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // RESOURCE SYSTEM

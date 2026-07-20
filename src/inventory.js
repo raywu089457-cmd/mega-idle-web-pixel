@@ -2,15 +2,11 @@
 // 從 index.html L1578-1745 搬出
 // 設計:不 import audio.js / ui.js;UI 副作用(sfx/showToast/renderAll)由 caller 負責
 
-import {
-  ITEMS, BUILDINGS, GEAR_TIERS, AFFIXES, CLASS_NAMES_ZH, RESOURCES, ENHANCE_MAX,
-  isGear, makeGearInstance, gearTierMult, gearDisplayName, gearSellPrice,
-  baseClassOf,
-} from './data.js';
-import { gearInventory, shopInventory, MAX_INV, setEquipPick } from './state.js';
-import { $, showToast, hideModal, showModal, esc, uid } from './util.js';
-import { ResourceSystem_spend, ResourceSystem_canAfford, ResourceSystem_add, gainGold, BuildingSystem_getLevel } from './resources-buildings.js';
-import { getHeroStats, getEquipBonuses } from './heroes-stats.js';
+import { ITEMS, BUILDINGS, GEAR_TIERS, AFFIXES, CLASS_NAMES_ZH, RESOURCES, ENHANCE_MAX, isGear, makeGearInstance, gearTierMult, gearDisplayName, gearSellPrice, baseClassOf } from './data.js'
+import { gearInventory, shopInventory, MAX_INV, setEquipPick } from './state.js'
+import { $, showToast, hideModal, showModal, esc, uid } from './util.js'
+import { ResourceSystem_spend, ResourceSystem_canAfford, ResourceSystem_add, gainGold, BuildingSystem_getLevel } from './resources-buildings.js'
+import { getHeroStats, getEquipBonuses } from './heroes-stats.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // INVENTORY
@@ -75,10 +71,10 @@ export function itemStatsText(def) {
 export function potionStockCap() { return 8 + BuildingSystem_getLevel('potionShop') * 2; }
 export function gearStockCap() { return 3 + BuildingSystem_getLevel('weaponShop') + BuildingSystem_getLevel('armorShop'); }
 export function salePrice(base, kind) { return Math.max(1, Math.round(base * priceMult[kind] * 1.2)); }
-import { priceMult } from './state.js';
+import { priceMult } from './state.js'
 export function setPriceTier(kind, mult) { priceMult[kind] = mult; }
 export function getShopStock() { return shopStock; }
-import { shopStock } from './state.js';
+import { shopStock } from './state.js'
 export function getPriceMult() { return priceMult; }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -99,8 +95,8 @@ export function craftItem(itemId) {
   addItem(itemId, 1); stats.crafted += 1;
   sfx('craft'); showToast(`製作完成：${def.icon} ${def.name}`, 'success');
 }
-import { stats } from './state.js';
-import { sfx } from './audio.js';
+import { stats } from './state.js'
+import { sfx } from './audio.js'
 
 export function sellItem(itemId) {
   const def = ITEMS[itemId]; if (!def || !removeItem(itemId, 1)) return;
@@ -144,7 +140,7 @@ export function sellAllCommons() {
 // ═══════════════════════════════════════════════════════════════════
 // EQUIP / UNEQUIP / ENHANCE
 // ═══════════════════════════════════════════════════════════════════
-import { territoryHeroes } from './state.js';
+import { territoryHeroes } from './state.js'
 export function equipItem(heroId, iid) {
   const hero = territoryHeroes.find(h => h.id === heroId);
   const idx = gearInventory.findIndex(g => g.iid === iid);

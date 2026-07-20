@@ -2,9 +2,9 @@
 // 從 index.html L1238-1260 抽出(獨立成檔以打破 heroes-stats → meta → combat 循環)
 // 業務模組(combat / heroes-stats / scene)只 import 此處的純函式;不需要 meta.js 的其他邏輯
 
-import { ACHIEVEMENTS, BUILDINGS } from './data.js';
-import { achievementsUnlocked, prestige } from './state.js';
-import { BuildingSystem_getLevel } from './resources-buildings.js';
+import { ACHIEVEMENTS, BUILDINGS } from './data.js'
+import { achievementsUnlocked, prestige } from './state.js'
+import { BuildingSystem_getLevel } from './resources-buildings.js'
 
 export function getAchievementBonuses() {
   const agg = { mat: 0, gold: 0, xp: 0, click: 0, atk: 0, def: 0 };

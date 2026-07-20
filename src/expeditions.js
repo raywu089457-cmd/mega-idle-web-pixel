@@ -4,19 +4,19 @@
 //      spawnWanderingHero / processWanderingTick / rollWeather / weatherTick 透過 state.impls 提供給 meta.js
 // 不 import ui.js
 
-import { ZONES, HERO_CLASSES, WANDERING_HERO_TYPES, RARITIES, WEATHERS, choice as dataChoice } from './data.js';
-import { wanderingHeroes, territoryHeroes, weather, settings, impls, incWeatherTicks, setWeather, sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, setSceneNight } from './state.js';
-import { rand, randf, clamp, choice, $, showToast, sfx, esc } from './util.js';
-import { sfx as audioSfx } from './audio.js';
-import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js';
-import { getHeroStats, normalizeHero, getHeroStats as getHeroStatsFn } from './heroes-stats.js';
-import { startLiveCombat } from './combat.js';
+import { ZONES, HERO_CLASSES, WANDERING_HERO_TYPES, RARITIES, WEATHERS } from './data.js'
+import { wanderingHeroes, territoryHeroes, weather, settings, impls, incWeatherTicks, setWeather, sceneCtx, sceneW, sceneH, sceneStart, sceneNight, setSceneNight } from './state.js'
+import { rand, randf, clamp, choice, $, showToast, esc } from './util.js'
+import { sfx as audioSfx } from './audio.js'
+import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js'
+import { getHeroStats, normalizeHero, getHeroStats as getHeroStatsFn } from './heroes-stats.js'
+import { startLiveCombat } from './combat.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // 深淵 (abyss)
 // ═══════════════════════════════════════════════════════════════════
 export function abyssUnlocked() { return !!(mapProgress && mapProgress.zoneProgress[5] && mapProgress.zoneProgress[5].bossDefeated); }
-import { mapProgress } from './state.js';
+import { mapProgress } from './state.js'
 export function abyssEnemy(depth) {
   const baseAtk = 30 + depth * 6;
   const baseHp = 200 + depth * 80;
@@ -57,8 +57,8 @@ export function startAbyssCombat(hero) {
     liveCombats[hero.id] = lc;
   }
 }
-import { liveCombats } from './state.js';
-import { stats } from './state.js';
+import { liveCombats } from './state.js'
+import { stats } from './state.js'
 export function finishAbyssCombat(hero, lc, won) {
   if (won) {
     const depth = hero.abyssDepth || 1;
@@ -125,8 +125,8 @@ export function processWanderingTick() {
     if (h.mood !== undefined) h.mood = clamp(h.mood - 0.1, 0, 100);
   }
 }
-import { nextWanderingSpawnIn } from './state.js';
-import { setNextWanderingSpawnIn } from './state.js';
+import { nextWanderingSpawnIn } from './state.js'
+import { setNextWanderingSpawnIn } from './state.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // 天氣

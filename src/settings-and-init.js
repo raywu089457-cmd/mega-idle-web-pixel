@@ -2,20 +2,21 @@
 // 從 index.html L3871-4007 搬出
 // 注意:applyStateToRuntime 原本在 state.js,但需 import 太多 L2,在這裡組合
 
-import { $, esc, showModal, hideModal, showToast, setActivePanel as _setActivePanel, fmt, todayKey } from './util.js';
-import { sfx } from './audio.js';
-import { saveGame, loadGame, migrateSave, getDefaultGameState, defaultMapProgress, SETTINGS, gameState, setGameState as _setGameState, setResources, setBuildingStates, setMapProgress, setShopStock, setPriceMult, setActiveExplorations, setBattleReports, setStats, setAchievementsUnlocked, setPrestige, setDaily, setSettings, setWeather, setCraftOrders, setTeams, setBuildingPlots, setShopInventory, setGearInventory, setNextWanderingSpawnIn, setPotionShopAutoProduce, setTerritoryHeroes, setWanderingHeroes, setResetting, setPendingOfflineSummary, getStateResetting, territoryCombatTickCounter, incTerritoryCombatTickCounter, buildingPlots as _buildingPlots, defaultBuildings } from './state.js';
-import { syncActiveExplorations, normalizeHero, generateHero, finalBossDefeated, getPrestigeGain } from './heroes-stats.js';
-import { defaultTeams } from './combat-party.js';
-import { renderAll, renderHUD, renderBadges, renderPanel, openPanel, closePanel, renderBuildingsPanel, renderSpeedBtns, setCombatSpeed, exportSaveCode, importSaveCode, doPrestige, checkDaily, upgradeBuilding, renderResourcesPanel, renderHeroesPanel, renderMapPanel, renderShopPanel, renderAchPanel, bindSettings } from './ui.js';
-import { SAVE_KEY, getDefaultGameState as _getDefaultGameState, setGameState } from './state.js';
-import { checkAchievements, collectOffline, computeOffline, offlineModalHtml, claimDaily, produceTick, checkDaily as _checkDaily, finalBossDefeated as _finalBossDefeated, getPrestigeGain as _getPrestigeGain } from './meta.js';
-import { processHeroTick, openDispatch, openDifficultyModal, dispatchHero, processPartyCombats } from './combat.js';
-import { startAbyssCombat, finishAbyssCombat, spawnWanderingHero, processWanderingTick, weatherTick } from './expeditions.js';
-import { initScene, drawScene, initFloatCanvas } from './scene.js';
-import { gameState as _gs } from './state.js';
-import { DEFAULT_PLOT_OF } from './data.js';
-import { ensureAudio } from './audio.js';
+import { $, esc, showModal, hideModal, showToast, fmt, todayKey } from './util.js'
+import { sfx } from './audio.js'
+import { saveGame, loadGame, migrateSave, getDefaultGameState, defaultMapProgress, gameState, setResources, setBuildingStates, setMapProgress, setShopStock, setPriceMult, setActiveExplorations, setBattleReports, setStats, setAchievementsUnlocked, setPrestige, setDaily, setSettings, setWeather, setCraftOrders, setTeams, setBuildingPlots, setShopInventory, setGearInventory, setNextWanderingSpawnIn, setPotionShopAutoProduce, setTerritoryHeroes, setWanderingHeroes, setResetting, setPendingOfflineSummary, territoryCombatTickCounter, incTerritoryCombatTickCounter, buildingPlots as _buildingPlots, defaultBuildings } from './state.js'
+import { syncActiveExplorations, normalizeHero, generateHero } from './heroes-stats.js'
+import { defaultTeams } from './combat-party.js'
+import { renderAll, renderHUD, renderBadges, renderPanel, openPanel, closePanel, renderBuildingsPanel, upgradeBuilding, renderResourcesPanel, renderHeroesPanel, renderMapPanel, renderShopPanel, renderAchPanel } from './ui.js'
+import { SAVE_KEY, getDefaultGameState as _getDefaultGameState } from './state.js'
+import { checkAchievements, collectOffline, computeOffline, offlineModalHtml, claimDaily, produceTick, checkDaily as _checkDaily, finalBossDefeated as _finalBossDefeated, getPrestigeGain as _getPrestigeGain } from './meta.js'
+import { processHeroTick, openDispatch, openDifficultyModal, dispatchHero } from './combat.js';
+import { processPartyCombats } from './combat-party.js';
+import { processOrdersTick } from './ui.js';
+import { startAbyssCombat, finishAbyssCombat, spawnWanderingHero, processWanderingTick, weatherTick } from './expeditions.js'
+import { initScene, drawScene, initFloatCanvas } from './scene.js'
+import { gameState as _gs } from './state.js'
+import { ensureAudio } from './audio.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // SETTINGS
@@ -27,7 +28,7 @@ export function openSettings() {
   renderSpeedBtns();
   showModal('modal-settings');
 }
-import { settings } from './state.js';
+import { settings } from './state.js'
 export function closeSettings() { saveGame(); hideModal('modal-settings'); }
 export function setCombatSpeed(n) { settings.combatSpeed = n; sfx('click'); renderSpeedBtns(); saveGame(); }
 export function closeOnboard() { settings.onboarded = true; saveGame(); hideModal('modal-onboard'); sfx('click'); }
@@ -45,6 +46,20 @@ export function doReset() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
   location.reload();
 }
+export function doPrestige() {
+  if (!finalBossDefeated()) { showToast('需先擊敗魔域王座的魔域大君。', 'error'); return; }
+  const gain = getPrestigeGain();
+  if (!confirm(`重建將重置資源、建築、獵人與地圖,但保留成就/統計/每日,並獲得 ${gain} 傳承碎片(每片全產出+10%)。確定?`)) return;
+  const keep = { stats, achievements: achievementsUnlocked, prestige: { shards: prestige.shards + gain, count: prestige.count + 1 }, daily, settings };
+  keep.stats.prestiges = (keep.stats.prestiges || 0) + 1;
+  const newState = getDefaultGameState();
+  newState.stats = keep.stats; newState.achievements = keep.achievements; newState.prestige = keep.prestige; newState.daily = keep.daily; newState.settings = keep.settings;
+  localStorage.setItem(SAVE_KEY, JSON.stringify(newState));
+  location.reload();
+}
+import { finalBossDefeated, getPrestigeGain } from './meta.js';
+import { achievementsUnlocked, prestige } from './state.js';
+import { DEFAULT_PLOT_OF } from './data.js';
 export function registerSW() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('./sw.js').catch(() => { });
@@ -75,9 +90,7 @@ export function importSaveCode() {
 // applyStateToRuntime — 從存檔載入 runtime
 // ═══════════════════════════════════════════════════════════════════
 export function applyStateToRuntime() {
-  const { ResourceSystem_init } = require_resources_buildings();
   ResourceSystem_init(gameState);
-  const { BuildingSystem_init } = require_resources_buildings();
   BuildingSystem_init(gameState);
   setTerritoryHeroes((gameState.heroes || []).map(normalizeHero));
   setWanderingHeroes((gameState.wanderingHeroes || []).map(normalizeHero));
@@ -103,7 +116,7 @@ export function applyStateToRuntime() {
   for (const t of teams) {
     t.id = teams.indexOf(t);
     t.members = (t.members || []).filter(id => {
-      if (teamSeen.has(id) || !territoryHeroesRef().some(h => h.id === id)) return false;
+      if (teamSeen.has(id) || !territoryHeroes.some(h => h.id === id)) return false;
       teamSeen.add(id); return true;
     }).slice(0, 4);
     t.formation = t.formation || {};
@@ -111,11 +124,10 @@ export function applyStateToRuntime() {
   setTeams(teams);
   setBuildingPlots({ ...DEFAULT_PLOT_OF, ...(gameState.buildingPlots || {}) });
   syncActiveExplorations();
-  if (territoryHeroesRef().length === 0) territoryHeroesRef().push(generateHero('warrior', 1, 'Ray'));
+  if (territoryHeroes.length === 0) territoryHeroes.push(generateHero('warrior', 1, 'Ray'));
 }
-import { ResourceSystem_init, BuildingSystem_init } from './resources-buildings.js';
-import { territoryHeroes as territoryHeroesRef, teams as teamsRef, setTeams as setTeamsRef, setTerritoryHeroes as setTerritoryHeroesRef } from './state.js';
-function require_resources_buildings() { return { ResourceSystem_init, BuildingSystem_init }; }
+import { ResourceSystem_init, BuildingSystem_init } from './resources-buildings.js'
+import { territoryHeroes } from './state.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // gameTick — 主循環
@@ -134,8 +146,7 @@ export function gameTick() {
     renderPanel(activePanel);
   }
 }
-import { activePanel } from './state.js';
-import { processOrdersTick } from './ui.js';
+import { activePanel } from './state.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // init — 啟動入口
@@ -165,4 +176,4 @@ export function init() {
   window.addEventListener('pointerdown', ensureAudio, { once: true });
   registerSW();
 }
-import { setPendingOfflineSummary, getPendingOfflineSummary } from './state.js';
+

@@ -20,6 +20,6 @@ import './ui.js';                   // L2
 import './settings-and-init.js';    // L2 (含 init)
 import './window-bridge.js';        // 觸發 window 掛載
 
-import { init } from './settings-and-init.js';
+import { init } from './settings-and-init.js'
 
 init();

@@ -2,18 +2,18 @@
 // 從 index.html L2089-2443 搬出
 // 設計:不 import ui.js;sfx + showToast inline;renderAll 由 caller 負責
 
-import { ZONES, DIFF_LABELS, BOSS_MECH_TEXT, elementCounterMult } from './data.js';
-import { partyCombats, mapProgress, sceneNight, settings, partyDispatchState, teams, setTeams, setPartyDispatchState } from './state.js';
-import { getHeroStats, usePotion, grantXp, syncActiveExplorations } from './heroes-stats.js';
-import { getHeroSkillLevel, tickSkillCds, applySkillBuffs, tryTriggerActiveSkill } from './skills.js';
-import { getZone, calcDamage, addBattleReport, isBossReady, teamAvailableMembers } from './combat.js';
-import { rand, clamp, choice, uid, $, showModal, hideModal, showToast, esc, closeModal } from './util.js';
-import { sfx } from './audio.js';
-import { gainGold, ResourceSystem_add } from './resources-buildings.js';
-import { addDropItem } from './inventory.js';
-import { territoryHeroes, stats } from './state.js';
-import { checkAchievements } from './meta.js';
-import { renderAll, saveGame } from './ui.js'; // late-bind(避免循環;init 順序保證)
+import { ZONES, DIFF_LABELS, BOSS_MECH_TEXT, elementCounterMult } from './data.js'
+import { partyCombats, mapProgress, sceneNight, settings, partyDispatchState, teams, setTeams, setPartyDispatchState } from './state.js'
+import { getHeroStats, usePotion, grantXp, syncActiveExplorations } from './heroes-stats.js'
+import { getHeroSkillLevel, tickSkillCds, applySkillBuffs, tryTriggerActiveSkill } from './skills.js'
+import { getZone, calcDamage, addBattleReport, isBossReady } from './combat.js'
+import { rand, clamp, choice, uid, $, showModal, hideModal, showToast, esc, closeModal } from './util.js'
+import { sfx } from './audio.js'
+import { gainGold, ResourceSystem_add } from './resources-buildings.js'
+import { addDropItem } from './inventory.js'
+import { territoryHeroes, stats } from './state.js'
+import { checkAchievements } from './meta.js'
+import { renderAll } from './ui.js' // late-bind(避免循環;init 順序保證)
 
 function setRenderAllRef(fn) { /* no-op; window-bridge will rebind */ }
 

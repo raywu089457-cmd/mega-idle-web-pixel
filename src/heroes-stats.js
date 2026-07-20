@@ -3,19 +3,13 @@
 // 設計:不 import combat.js / inventory.js / ui.js;sfx + showToast 副作用 inline(音訊+toast 不形成循環)
 // renderAll 由 caller 負責
 
-import {
-  HERO_CLASSES, ADV_CLASSES, HUNTER_NAMES, RARITIES, TRAITS, AFFIXES, GEAR_SETS, ITEMS, CLASS_NAMES_ZH,
-  gearTierMult, baseClassOf, advClassFor,
-} from './data.js';
-import {
-  territoryHeroes, wanderingHeroes, liveCombats, partyCombats, mapProgress, weather, activeExplorations,
-  setActiveExplorations,
-} from './state.js';
-import { applyPassiveSkills, grantSkillPoints, getSkillApGain } from './skills.js';
-import { getAchievementBonuses, getCombatGoldMultiplier, getXpMultiplier } from './bonuses.js';
-import { ResourceSystem_spend, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js';
-import { rand, choice, clamp, uid, showToast, fmt } from './util.js';
-import { sfx } from './audio.js';
+import { HERO_CLASSES, ADV_CLASSES, HUNTER_NAMES, RARITIES, TRAITS, AFFIXES, GEAR_SETS, ITEMS, CLASS_NAMES_ZH, gearTierMult, baseClassOf, advClassFor } from './data.js'
+import { territoryHeroes, wanderingHeroes, liveCombats, partyCombats, mapProgress, weather, activeExplorations, setActiveExplorations } from './state.js'
+import { applyPassiveSkills, grantSkillPoints, getSkillApGain } from './skills.js'
+import { getAchievementBonuses, getCombatGoldMultiplier, getXpMultiplier } from './bonuses.js'
+import { ResourceSystem_spend, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js'
+import { rand, choice, clamp, uid, showToast, fmt } from './util.js'
+import { sfx } from './audio.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // STATS
@@ -269,7 +263,7 @@ export function advanceClass(heroId) {
   hero.hp = Math.min(hero.hp, getHeroStats(hero).maxHp);
   sfx('level'); showToast(`⬆ ${hero.name} 轉職為 ${ADV_CLASSES[advKey].name}！（${ADV_CLASSES[advKey].desc}）`, 'success');
 }
-import { CLASS_LINEAGE } from './data.js';
+import { CLASS_LINEAGE } from './data.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // 探索清單同步(只 filter heroes,無外部依賴;從 combat.js 搬入以避免循環)

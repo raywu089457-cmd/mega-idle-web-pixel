@@ -3,38 +3,22 @@
 // 設計:不 import meta.js / settings-and-init.js(它們會呼叫 ui.js)
 // 收 renderAll / openPanel / togglePanel / closePanel / renderPanel / saveGame 等供其他模組呼叫
 
-import {
-  RESOURCES, MATERIAL_TYPES, BUILDINGS, BUILDING_ORDER, HERO_CLASSES, CLASS_NAMES_ZH,
-  RARITIES, ZONES, DIFF_LABELS, ITEMS, GEAR_TIERS, AFFIXES, ACHIEVEMENTS, WEATHERS, SKILL_TREE,
-  baseClassOf, advClassFor, isGear, gearDisplayName, ADV_CLASSES, DIFF_COLORS, ENHANCE_MAX,
-} from './data.js';
-import {
-  activePanel, heroSubTab, heroReportSubTab, skillTabHeroId, expandedReports, dispatchHeroId,
-  equipPick, craftOrders, stats, achievementsUnlocked, prestige, daily, settings, shopFilter,
-  priceMult, shopStock, weather, territoryHeroes, wanderingHeroes, battleReports, activeExplorations,
-  mapProgress, liveCombats, partyCombats, teams, partyDispatchState, setShopFilter, setHeroSubTab,
-  setSkillTabHeroId, setHeroReportSubTab, setActivePanel, setDispatchHeroId, setEquipPick,
-  setCraftOrders, territoryCombatTickCounter, incTerritoryCombatTickCounter,
-  setDispatchHeroId as _setDispatchHeroId,
-} from './state.js';
-import { $, esc, pct, fmt, timeAgo, showModal, hideModal, showToast, closeModal } from './util.js';
-import { sfx } from './audio.js';
-import {
-  ResourceSystem_get, ResourceSystem_getFillPercent, ResourceSystem_canAfford, ResourceSystem_spend,
-  BuildingSystem_getLevel, BuildingSystem_getTotalLevels, BuildingSystem_getPotionProduction,
-  BuildingSystem_upgrade, getBuildingCost, buildingMaxLevel,
-} from './resources-buildings.js';
-import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, heroTeam, recruitCost } from './heroes-stats.js';
-import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js';
-import { getAchievementBonuses, getMaterialMultiplier, getClickGold } from './bonuses.js';
-import { finalBossDefeated, getPrestigeGain, checkAchievements } from './meta.js';
-import { getZone, isZoneUnlocked, isBossReady } from './combat.js';
-import { partyMembers } from './combat-party.js';
-import { invCount, salePrice, potionStockCap, gearStockCap, canCraft, craftItem, setPriceTier, sellItem, sellGear, salvageGear, sellAllCommons, fulfillOrder, spawnCraftOrder, setCombatSpeed, getClickGold as getClickGoldFn } from './inventory.js';
-import { territoryHeroes as _territoryHeroes } from './state.js';
-import { addToTeam, removeFromTeam, toggleTeamFormation } from './combat-party.js';
-import { xpNeed } from './heroes-stats.js';
-import { saveGame, applyStateToRuntime } from './settings-and-init.js'; // late-bind
+import { RESOURCES, MATERIAL_TYPES, BUILDINGS, BUILDING_ORDER, HERO_CLASSES, CLASS_NAMES_ZH, RARITIES, ZONES, DIFF_LABELS, ITEMS, GEAR_TIERS, AFFIXES, ACHIEVEMENTS, WEATHERS, SKILL_TREE, baseClassOf, advClassFor, isGear, gearDisplayName, ADV_CLASSES, DIFF_COLORS, ENHANCE_MAX } from './data.js'
+import { activePanel, heroSubTab, heroReportSubTab, skillTabHeroId, expandedReports, dispatchHeroId, equipPick, craftOrders, stats, achievementsUnlocked, prestige, daily, settings, shopFilter, priceMult, shopStock, weather, territoryHeroes, wanderingHeroes, battleReports, activeExplorations, mapProgress, liveCombats, partyCombats, teams, partyDispatchState, setShopFilter, setHeroSubTab, setSkillTabHeroId, setHeroReportSubTab, setActivePanel, setDispatchHeroId, setEquipPick, setCraftOrders, territoryCombatTickCounter, incTerritoryCombatTickCounter, setDispatchHeroId as _setDispatchHeroId } from './state.js'
+import { $, esc, pct, fmt, timeAgo, showModal, hideModal, showToast, closeModal } from './util.js'
+import { sfx } from './audio.js'
+import { ResourceSystem_get, ResourceSystem_getFillPercent, ResourceSystem_canAfford, ResourceSystem_spend, BuildingSystem_getLevel, BuildingSystem_getTotalLevels, BuildingSystem_getPotionProduction, BuildingSystem_upgrade, getBuildingCost, buildingMaxLevel } from './resources-buildings.js'
+import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
+import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
+import { getAchievementBonuses, getMaterialMultiplier, getClickGold } from './bonuses.js'
+import { finalBossDefeated, getPrestigeGain, checkAchievements } from './meta.js'
+import { getZone, isZoneUnlocked, isBossReady } from './combat.js'
+import { partyMembers, heroTeam } from './combat-party.js'
+import { invCount, salePrice, potionStockCap, gearStockCap, canCraft, craftItem, setPriceTier, sellItem, sellGear, salvageGear, sellAllCommons } from './inventory.js'
+import { territoryHeroes as _territoryHeroes } from './state.js'
+import { addToTeam, removeFromTeam, toggleTeamFormation } from './combat-party.js'
+import { xpNeed } from './heroes-stats.js'
+import { applyStateToRuntime } from './settings-and-init.js' // late-bind
 
 // ═══════════════════════════════════════════════════════════════════
 // 建築效果文字(從 resources-buildings 搬入以避免循環:依賴 inventory 的 salePrice)
@@ -57,7 +41,7 @@ export function buildingEffectText(id) {
     default: return '';
   }
 }
-import { BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js';
+import { BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // Panel / modal 控制
@@ -119,7 +103,7 @@ export function renderResourcesPanel() {
     return `<div class="res-card"><div class="res-top"><div class="res-info"><div class="res-ico">${conf.icon}</div><div><div class="res-name">${conf.name}</div><div class="res-val">${fmt(val)}<span class="res-max"> / ${fmt(conf.capacity)}</span></div></div></div>${rate}</div><div class="progress-bar"><div class="progress-fill ${fill > 85 ? 'crit' : fill > 65 ? 'warn' : ''}" style="width:${fill}%"></div></div>${id === 'magicStones' ? '<div class="bonus-line">用途：神秘法杖、騎士鎧甲、祭壇與裝備強化</div>' : ''}</div>`;
   }).join('');
 }
-import { BuildingSystem_getGoldRate } from './resources-buildings.js';
+import { BuildingSystem_getGoldRate } from './resources-buildings.js'
 
 function heroCardHtml(h) {
   const st = getHeroStats(h), cls = HERO_CLASSES[h.class];
@@ -142,7 +126,7 @@ function heroCardHtml(h) {
   const teamTag = heroTeam(h.id) ? `・🛡隊${heroTeam(h.id).id + 1}` : '';
   return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${traitsHtml}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span>${teamTag}</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button>${advBtn}</div></div>`;
 }
-import { unequipItem, enhanceEquip } from './inventory.js';
+import { unequipItem, enhanceEquip } from './inventory.js'
 export function renderHeroesPanel() {
   $('hero-tab-bar').innerHTML = [['territory', '村莊獵人'], ['wander', `流浪(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡 技能'], ['teams', '👥 隊伍']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
   for (const k of ['territory', 'wander', 'reports', 'skills', 'teams']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
@@ -159,7 +143,7 @@ export function renderHeroesPanel() {
     $('hero-reports').innerHTML = `<div class="report-sub-tabs">${[['all', '全部'], ['zone', '狩獵'], ['wander', '流浪']].map(([k, label]) => `<button class="report-sub-btn ${heroReportSubTab === k ? 'active' : ''}" onclick="heroReportSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('')}<button class="report-sub-btn" onclick="clearReports()">清空</button></div>` + (filtered.length ? filtered.map(r => `<div class="report-entry"><div class="report-head" onclick="toggleReport('${r.id}')"><span class="report-result" style="color:${r.result.includes('敗') || r.result.includes('撤退') ? 'var(--red)' : 'var(--green)'}">${r.result}</span><div class="report-info"><div class="report-title">${r.title}</div><div class="report-time">${timeAgo(r.time)}</div></div><span class="report-expand ${expandedReports.has(r.id) ? 'open' : ''}">▼</span></div><div class="report-body ${expandedReports.has(r.id) ? 'open' : ''}"><div class="combat-log">${r.lines.map(line => `<div class="log-line ${line.includes('勝利') ? 'log-victory' : line.includes('戰敗') ? 'log-defeat' : line.includes('藥水') ? 'log-heal' : line.includes('掉落') ? 'log-drop' : 'log-round'}">${line}</div>`).join('')}</div></div></div>`).join('') : '<div class="empty-state">尚無戰報</div>');
   }
 }
-import { clearReports, toggleReport } from './combat.js';
+import { clearReports, toggleReport } from './combat.js'
 export function renderTeamsTab() {
   const unassigned = territoryHeroes.filter(h => !heroTeam(h.id) && h.status === 'idle');
   $('hero-teams').innerHTML = `<div class="section-label">常駐隊伍（最多 4 組 × 4 人）— 到「地圖」選獵場出擊，隊伍會共同戰鬥並連戰</div>` + teams.map(t => {
@@ -212,9 +196,8 @@ export function renderSkillsTab() {
     <div class="skill-grid">${skillsHtml}</div>
   `;
 }
-import { BUILDING_TO_SCENE, plotNameOf, PLOT_COORDS } from './data.js';
-import { setBuildingPlots, buildingPlots, DEFAULT_PLOT_OF } from './state.js';
-import { resetBuildingPlots, pickPlacement, placementPick, setPlacementPick } from './scene.js';
+import { setBuildingPlots, buildingPlots } from './state.js'
+import { resetBuildingPlots, pickPlacement } from './scene.js'
 export function renderBuildingsPanel() {
   const castleLv = BuildingSystem_getLevel('monument');
   const placeHint = placementPick ? `⇄ 擺設模式：選擇要與「${plotNameOf(placementPick)}」交換的建築` : '⇄ 點「換位」可兩兩交換建築位置（場景即時生效）';
@@ -284,7 +267,7 @@ export function renderMapPanel() {
   }
   $('abyss-section').innerHTML = abyssHtml;
 }
-import { abyssUnlocked, dispatchAbyss } from './expeditions.js';
+import { abyssUnlocked, dispatchAbyss } from './expeditions.js'
 export function spawnCraftOrder() {
   const craftable = Object.values(ITEMS).filter(d => isGear(d.id) && BuildingSystem_getLevel(d.req.b) >= d.req.lv);
   if (!craftable.length) return;
@@ -294,8 +277,29 @@ export function spawnCraftOrder() {
   showToast(`📜 新委託：${price}🪙 收購 ${def.icon}${def.name}（3 分鐘內交付）`, 'info');
   if (activePanel === 'shop') renderShopPanel();
 }
-import { choice as import_choice } from './util.js';
-import { gearInventory } from './state.js';
+export function fulfillOrder(orderId) {
+  const o = craftOrders.find(x => x.id === orderId); if (!o) return;
+  const inst = gearInventory.find(g => g.id === o.itemId);
+  if (!inst) { showToast(`倉庫沒有 ${ITEMS[o.itemId].name}。`, 'error'); return; }
+  const tierBonus = inst.tier === 'legend' ? 1.5 : inst.tier === 'fine' ? 1.2 : 1;
+  const pay = Math.round(o.price * tierBonus);
+  gearInventory.splice(gearInventory.indexOf(inst), 1);
+  setCraftOrders(craftOrders.filter(x => x.id !== orderId));
+  gainGold(pay); stats.shopRevenue = (stats.shopRevenue || 0) + pay;
+  sfx('gold'); showToast(`📜 交付 ${gearDisplayName(inst)}，+${pay}🪙${tierBonus > 1 ? '（品質加成！）' : ''}`, 'success');
+}
+export function processOrdersTick() {
+  if (!craftOrders.length) return;
+  for (let i = craftOrders.length - 1; i >= 0; i--) {
+    craftOrders[i].expiresIn -= 1;
+    if (craftOrders[i].expiresIn <= 0) {
+      showToast('📜 有委託過期了。', 'info');
+      craftOrders.splice(i, 1);
+    }
+  }
+}
+import { choice as import_choice } from './util.js'
+import { gearInventory } from './state.js'
 export function renderShopPanel() {
   $('shop-filter').innerHTML = [['all', '全部'], ['weapon', '⚔️ 武器'], ['armor', '🛡 防具'], ['potion', '🧪 藥水'], ['accessory', '📿 飾品']]
     .map(([k, label]) => `<button class="report-sub-btn ${shopFilter === k ? 'active' : ''}" onclick="shopFilter='${k}';renderShopPanel()">${label}</button>`).join('');
@@ -329,10 +333,10 @@ export function renderShopPanel() {
   const allRows = potionRows.concat(gearRows).join('');
   $('inv-list').innerHTML = (commonCount ? `<button class="btn btn-outline btn-sm" onclick="sellAllCommons()">🪙 一鍵賣出普通裝（${commonCount} 件）</button>` : '') + (allRows || '<div class="empty-state">倉庫是空的</div>');
 }
-import { itemStatsText, shopInventory } from './state.js';
+import { shopInventory } from './state.js'
 export function renderAchPanel() {
   const canPrestige = finalBossDefeated();
   $('ach-special').innerHTML = `<div class="ach-card special"><div class="ach-head"><span class="ach-ico">🌀</span><div><div class="ach-name">傳承重建</div><div class="ach-desc">擊敗魔域大君後重置獵魔村，換取永久傳承碎片。目前碎片 ${prestige.shards}（全產出 +${prestige.shards * 10}%），已重建 ${prestige.count} 次。</div><div class="ach-bonus">本次可獲得：${canPrestige ? getPrestigeGain() : '—'} 碎片</div></div><span class="ach-state ${canPrestige ? 'done' : ''}">${canPrestige ? '可重建' : '未解鎖'}</span></div><div class="modal-actions"><button class="btn btn-purple btn-sm" ${canPrestige ? '' : 'disabled'} onclick="doPrestige()">🌀 重建</button><button class="btn btn-gold btn-sm" onclick="checkDaily()">📅 每日獎勵</button></div></div>`;
   $('ach-list').innerHTML = ACHIEVEMENTS.map(a => { const done = !!achievementsUnlocked[a.id]; return `<div class="ach-card"><div class="ach-head"><span class="ach-ico">${a.icon}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div><div class="ach-bonus">${a.bonusText}</div></div><span class="ach-state ${done ? 'done' : ''}">${done ? '已完成' : '未完成'}</span></div></div>`; }).join('');
 }
-import { doPrestige, checkDaily } from './meta.js';
+import { checkDaily } from './meta.js'

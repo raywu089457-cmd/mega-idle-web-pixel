@@ -7,3 +7,8 @@ superpowers/
 # OS
 .DS_Store
 Thumbs.db
+
+# Node / smoke test
+node_modules/
+smoke-test.png
+package-lock.json

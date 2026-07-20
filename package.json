@@ -1,0 +1,24 @@
+{
+  "name": "mega-idle-web-pixel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raywu089457-cmd/mega-idle-web-pixel.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/raywu089457-cmd/mega-idle-web-pixel/issues"
+  },
+  "homepage": "https://github.com/raywu089457-cmd/mega-idle-web-pixel#readme"
+}

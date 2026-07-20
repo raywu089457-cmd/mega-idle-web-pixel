@@ -3,9 +3,9 @@
 // 設計:純函式 + 資料副作用;showToast/sfx/renderAll 等 UI 副作用由 caller (ui.js) 負責
 // 避免與 ui.js 形成循環
 
-import { SKILL_TREE, baseClassOf } from './data.js';
-import { territoryHeroes } from './state.js';
-import { showToast } from './util.js';
+import { SKILL_TREE, baseClassOf } from './data.js'
+import { territoryHeroes } from './state.js'
+import { showToast } from './util.js'
 
 // ─── 查詢類 (純函式) ─────────────────────────────────────────────────
 export function getSkillApGain(_hero) { return 1; }

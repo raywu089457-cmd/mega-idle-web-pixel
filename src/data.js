@@ -57,6 +57,35 @@ export const CLASS_LINEAGE = Object.fromEntries(Object.entries(ADV_CLASSES).map(
 export function baseClassOf(cls) { return CLASS_LINEAGE[cls] || cls; }
 export function advClassFor(cls) { return Object.keys(ADV_CLASSES).find(k => ADV_CLASSES[k].base === cls) || null; }
 
+export function isGear(id) { const t = ITEMS[id]?.type; return t === 'weapon' || t === 'armor' || t === 'accessory'; }
+export function rollGearTier() { const r = Math.random(); return r < 0.6 ? 'normal' : r < 0.9 ? 'fine' : 'legend'; }
+export function makeGearInstance(id, opts = {}) {
+  const def = ITEMS[id] || {};
+  const tier = opts.tier || (opts.roll ? rollGearTier() : 'normal');
+  let affix = opts.affix || null;
+  if (!affix && tier === 'legend') affix = choice(AFFIXES).id;
+  else if (!affix && tier === 'fine' && opts.roll && Math.random() < 0.4) affix = choice(AFFIXES).id;
+  return { iid: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), id, tier, affix, plus: 0, name: def.name, icon: def.icon };
+}
+export function gearTierMult(tier) { return GEAR_TIERS[tier]?.mult || 1; }
+export function gearDisplayName(inst) {
+  const def = ITEMS[inst.id]; if (!def) return inst.id;
+  const t = inst.tier === 'legend' ? '傳說・' : inst.tier === 'fine' ? '精良・' : '';
+  const a = inst.affix ? '・' + (AFFIXES.find(x => x.id === inst.affix)?.name || '') : '';
+  return t + def.name + a;
+}
+export function gearSellPrice(inst) { const base = ITEMS[inst.id]?.price || 0; return Math.round(base * (inst.tier === 'legend' ? 2.5 : inst.tier === 'fine' ? 1.5 : 1)); }
+
+// 建築擺位(scene 用)
+export const PLOT_BUILDINGS = ['tavern', 'guild', 'market', 'restaurant', 'drinkShop', 'forge', 'alchemy', 'research', 'gate'];
+export const PLOT_COORDS = [
+  { x: 16, y: 164 }, { x: 96, y: 132 }, { x: 184, y: 166 }, { x: 62, y: 188 }, { x: 158, y: 194 },
+  { x: 22, y: 252 }, { x: 100, y: 258 }, { x: 178, y: 252 }, { x: 96, y: 314 },
+];
+export const PLOT_NAMES = { tavern: '獵人酒館', guild: '獵魔公會', market: '市集', restaurant: '餐廳', drinkShop: '飲料店', forge: '鐵匠鋪', alchemy: '煉金工房', research: '魔核研究所', gate: '獵場門' };
+export const BUILDING_TO_SCENE = { tavern: 'tavern', monument: 'guild', goldMine: 'market', restaurant: 'restaurant', drinkShop: 'drinkShop', weaponShop: 'forge', potionShop: 'alchemy', altar: 'research' };
+export const DEFAULT_PLOT_OF = Object.fromEntries(PLOT_BUILDINGS.map((b, i) => [b, i]));
+
 export function weaponElement(hero) { const eq = hero.equipment?.weapon; return eq ? (ITEMS[eq.id]?.element || null) : null; }
 export function elementCounterMult(hero, zone) { const w = weaponElement(hero); return (w && ELEMENT_BEATS[w] === zone?.element) ? 1.25 : 1; }
 export function zoneWeaknessText(zone) { const w = Object.keys(ELEMENT_BEATS).find(k => ELEMENT_BEATS[k] === zone?.element); return w ? `${ELEMENT_NAMES[zone.element]}・弱${ELEMENT_NAMES[w]}` : (ELEMENT_NAMES[zone?.element] || ''); }

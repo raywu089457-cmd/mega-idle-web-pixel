@@ -3,21 +3,15 @@
 // 設計:不 import ui.js;sfx + showToast inline;renderAll 由 caller 負責
 // 進階章節(abyss)在 expeditions.js — 用 finishAbyssCombat / startAbyssCombat 晚綁
 
-import {
-  ZONES, DIFF_LABELS, BOSS_MECH_TEXT, HERO_CLASSES, ELEMENT_NAMES,
-  weaponElement, elementCounterMult, zoneWeaknessText,
-} from './data.js';
-import {
-  liveCombats, partyCombats, mapProgress, sceneNight, expandedReports, battleReports,
-  dispatchHeroId, settings, setDispatchHeroId, setBattleReports,
-} from './state.js';
-import { getHeroStats, usePotion, grantXp, restHero, syncActiveExplorations } from './heroes-stats.js';
-import { getHeroSkillLevel, tickSkillCds, applySkillBuffs, tryTriggerActiveSkill } from './skills.js';
-import { rand, randf, choice, clamp, uid, $, timeAgo, showModal, hideModal, showToast, esc, closeModal } from './util.js';
-import { sfx } from './audio.js';
-import { gainGold, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js';
-import { addDropItem } from './inventory.js';
-import { territoryHeroes, teams, setTeams, impls } from './state.js';
+import { ZONES, DIFF_LABELS, BOSS_MECH_TEXT, HERO_CLASSES, ELEMENT_NAMES, weaponElement, elementCounterMult, zoneWeaknessText } from './data.js'
+import { liveCombats, partyCombats, mapProgress, sceneNight, expandedReports, battleReports, dispatchHeroId, settings, setDispatchHeroId, setBattleReports } from './state.js'
+import { getHeroStats, usePotion, grantXp, restHero, syncActiveExplorations } from './heroes-stats.js'
+import { getHeroSkillLevel, tickSkillCds, applySkillBuffs, tryTriggerActiveSkill } from './skills.js'
+import { rand, randf, choice, clamp, uid, $, timeAgo, showModal, hideModal, showToast, esc, closeModal } from './util.js'
+import { sfx } from './audio.js'
+import { gainGold, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js'
+import { addDropItem } from './inventory.js'
+import { territoryHeroes, teams, setTeams, impls } from './state.js'
 // startAbyssCombat / finishAbyssCombat 走 state.impls(避免循環)
 
 // ═══════════════════════════════════════════════════════════════════
@@ -76,7 +70,7 @@ export function runCombat(hero, enemyTemplate, ctx) {
   }
   return { won, rounds, lines, rewards };
 }
-import { stats } from './state.js';
+import { stats } from './state.js'
 function battleReportsKills(_hero, ctx) {
   stats.kills += 1; if (ctx.boss) stats.bossKills += 1;
 }
@@ -115,10 +109,10 @@ export function dispatchHero(heroId, zoneId, difficulty, quiet) {
   if (!quiet) { sfx('dispatch'); showToast(`${hero.name} 前往 ${zone.name}（${DIFF_LABELS[difficulty]}）`, 'info'); }
   syncActiveExplorations();
 }
-import { invCount, removeItem, showModal as showModal2 } from './inventory.js';
+import { invCount, removeItem } from './inventory.js'
 // 上面 invCount/removeItem 是真的函式;closeDispatch/openDispatch 用 ui.js 提供的 showModal/hideModal
 // 因為 1F1521 引用 — 修正:dispatchHero 內部不直接呼叫 invCount;改由 ui.js 統一處理搬運邏輯
-function closeDispatch() { setDispatchHeroId(null); hideModal('modal-dispatch'); }
+export function closeDispatch() { setDispatchHeroId(null); hideModal('modal-dispatch'); }
 
 // ═══════════════════════════════════════════════════════════════════
 // 即時派遣戰鬥
@@ -369,7 +363,6 @@ export function openDispatch(heroId) {
 // ═══════════════════════════════════════════════════════════════════
 // 隊伍 / 重新出發(從 heroes-stats.js 搬入避免循環)
 // ═══════════════════════════════════════════════════════════════════
-import { invCount, removeItem } from './inventory.js';
 function teamAvailableMembers(team) { return team.members.map(id => territoryHeroes.find(h => h.id === id)).filter(h => h && h.status === 'idle' && (h.fatigue || 0) < 90); }
 export { teamAvailableMembers };
 export function redeployAllHeroes() {

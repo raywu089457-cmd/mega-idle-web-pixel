@@ -5,8 +5,8 @@
 // 設計:state.js 只持有「資料面 SOT」與 save/load/migration 函式;
 // runtime bootstrap (applyStateToRuntime / init / gameTick) 搬到 settings-and-init.js。
 
-import { ZONES, BUILDINGS, BUILDING_ORDER } from './data.js';
-import { isGear, makeGearInstance } from './data.js';
+import { ZONES, BUILDINGS, BUILDING_ORDER } from './data.js'
+import { isGear, makeGearInstance } from './data.js'
 
 // ─── SAVE_KEY 常數 ───────────────────────────────────────────────────
 export const SAVE_KEY = 'kingdomBuilderSave';

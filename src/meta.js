@@ -3,18 +3,11 @@
 // 注意:renderAll 不在這裡呼叫;由 caller (init / onclick) 負責
 // 注意:bonus aggregation (getXpMultiplier 等) 在 bonuses.js
 
-import {
-  ACHIEVEMENTS, DIFF_LABELS, HERO_CLASSES, ITEMS, MATERIAL_TYPES, ZONES, RESOURCES,
-} from './data.js';
-import {
-  achievementsUnlocked, daily, mapProgress, pendingDailyReward, pendingOfflineSummary,
-  potionShopAutoProduce, potionShopTickCounter, gearTickCounter, shopStock,
-  territoryHeroes, stats, setPotionShopAutoProduce,
-  incPotionShopTickCounter, incGearTickCounter, setPendingDailyReward, setDaily, setPendingOfflineSummary,
-} from './state.js';
-import { BuildingSystem_getLevel, BuildingSystem_getPotionProduction, ResourceSystem_add, gainGold } from './resources-buildings.js';
-import { $, esc, fmt, todayKey, yesterdayKey, showToast, hideModal, showModal } from './util.js';
-import { sfx } from './audio.js';
+import { ACHIEVEMENTS, DIFF_LABELS, HERO_CLASSES, ITEMS, MATERIAL_TYPES, ZONES, RESOURCES } from './data.js'
+import { achievementsUnlocked, daily, mapProgress, pendingDailyReward, pendingOfflineSummary, potionShopAutoProduce, potionShopTickCounter, gearTickCounter, shopStock, territoryHeroes, stats, setPotionShopAutoProduce, incPotionShopTickCounter, incGearTickCounter, setPendingDailyReward, setDaily, setPendingOfflineSummary } from './state.js'
+import { BuildingSystem_getLevel, BuildingSystem_getPotionProduction, BuildingSystem_getTotalLevels, BuildingSystem_getGoldRate, ResourceSystem_add, gainGold } from './resources-buildings.js'
+import { $, esc, fmt, todayKey, yesterdayKey, showToast, hideModal, showModal } from './util.js'
+import { sfx } from './audio.js'
 // combat.js 與 inventory.js 為 forward ref(只 call 進函式內,無模組層級使用)
 // 實際型別由 main.js 在 init 前先 import,確保 ES module graph 完整
 function spawnFloatText(text, x, y, color) { impls.spawnFloat?.(text, x, y, color); }
@@ -48,7 +41,7 @@ export function produceTick() {
 }
 
 // ─── 注入 addItem / potionStockCap / gearStockCap (來自 inventory.js, 晚綁) ───
-import { addItem, potionStockCap, gearStockCap } from './inventory.js';
+import { addItem, potionStockCap, gearStockCap } from './inventory.js'
 
 // ═══════════════════════════════════════════════════════════════════
 // OFFLINE
@@ -158,7 +151,7 @@ export function getPrestigeGain() {
 }
 
 // ─── forward refs (晚綁,避免 import 循環) ───
-import { rand, choice } from './util.js';
-import { weather, impls } from './state.js';
-import { getMaterialMultiplier, getCombatGoldMultiplier, getXpMultiplier, getAchievementBonuses } from './bonuses.js';
-import { runCombat, getZone } from './combat.js';
+import { rand, choice } from './util.js'
+import { weather, impls } from './state.js'
+import { getMaterialMultiplier, getCombatGoldMultiplier, getXpMultiplier, getAchievementBonuses } from './bonuses.js'
+import { runCombat, getZone } from './combat.js'
