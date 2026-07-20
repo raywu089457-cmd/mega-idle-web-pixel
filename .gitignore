@@ -14,3 +14,7 @@ smoke-test.png
 screenshots/*.png
 !screenshots/baselines/*.png
 package-lock.json
+
+# Test artifacts
+offline-test.png
+perf-baseline.json

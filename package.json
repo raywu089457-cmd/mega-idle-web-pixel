@@ -13,6 +13,10 @@
     "test:onclick": "node scripts/check-onclick.mjs",
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:screenshot": "node scripts/screenshot.mjs",
+    "test:a11y": "node scripts/a11y-test.mjs",
+    "test:offline": "node scripts/offline-test.mjs",
+    "test:perf": "node scripts/perf-bench.mjs",
+    "test:perf:save": "node scripts/perf-bench.mjs --save",
     "lint:stale-imports": "node scripts/find-stale-imports.mjs"
   },
   "repository": {
