@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <meta name="description" content="放置王國 MEGA IDLE — 像素風放置王國建設遊戲">
 <meta name="theme-color" content="#5d4037">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,7 +28,7 @@
   --blue: #3498DB;
   --purple: #9B59B6;
   --text: #3e2723;
-  --text-dim: rgba(62,39,35,0.65);
+  --text-dim: #3e2723;
   --text-faint: rgba(62,39,35,0.4);
   --card-bg: rgba(139,90,43,0.1);
   --card-border: rgba(93,64,55,0.3);
@@ -101,7 +101,7 @@ body{
 
 /* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;height:var(--nav-h);padding-bottom:max(env(safe-area-inset-bottom),0px);margin:0 auto;z-index:100;background:var(--rich-soil);border-top:2px solid var(--charcoal);display:flex;box-shadow:-2px -2px 0 var(--charcoal);}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--dark-tan);font-family:'Lora',serif;font-size:12px;padding:4px 0;position:relative;min-height:44px;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:transparent;color:var(--cream);font-family:'Lora',serif;font-size:12px;padding:4px 0;position:relative;min-height:44px;font-weight:600;}
 .nav-btn .nav-ico{font-size:28px;transition:transform 0.15s;}
 .nav-btn:hover,.nav-btn.active{color:var(--golden-wheat);}
 .nav-btn:active .nav-ico{transform:scale(0.9);}
@@ -202,7 +202,7 @@ body{
 /* ── BUTTONS ── */
 .btn{padding:14px 28px;font-family:'Press Start 2P',monospace;font-size:15px;cursor:pointer;border:2px solid var(--charcoal);display:inline-flex;align-items:center;gap:8px;box-shadow:2px 2px 0 var(--charcoal);transition:transform 0.05s;}
 .btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--charcoal);}
-.btn-gold{background:var(--golden-wheat);border-color:var(--charcoal);color:var(--rich-soil);}
+.btn-gold{background:var(--golden-wheat);border-color:var(--charcoal);color:#000;}
 .btn-gold:hover{background:var(--hover-hl);}
 .btn-outline{background:transparent;border-color:var(--warm-wood);color:var(--rich-soil);}
 .btn-outline:hover{background:var(--card-bg);}
@@ -309,7 +309,7 @@ body{
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:var(--cream);border:2px solid var(--charcoal);padding:20px;max-width:340px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:4px 4px 0 var(--charcoal);transform:translateY(20px);transition:transform 0.25s;}
 .modal-overlay.open .modal{transform:translateY(0);}
-.modal-title{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--rich-soil);margin-bottom:14px;text-align:center;}
+.modal-title{font-family:'Press Start 2P',monospace;font-size:8px;color:#000;margin-bottom:14px;text-align:center;}
 .modal-body{display:flex;flex-direction:column;gap:10px;}
 .offline-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(139,90,43,0.1);}
 .offline-label{font-size:15px;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
@@ -337,8 +337,8 @@ body{
 
 /* ── SAVE CODE / ONBOARDING ── */
 .save-code{width:100%;background:var(--card-bg);border:2px solid var(--card-border);color:var(--text);font-size:10px;font-family:monospace;padding:6px;resize:vertical;box-sizing:border-box;}
-.onboard-step{margin-bottom:10px;font-size:13px;color:var(--text-dim);}
-.onboard-step b{display:block;margin-bottom:2px;color:var(--rich-soil);}
+.onboard-step{margin-bottom:10px;font-size:13px;color:#000;}
+.onboard-step b{display:block;margin-bottom:2px;color:#000;}
 
 /* ── PARTY DISPATCH MODAL ── */
 .party-modal{display:flex;flex-direction:column;gap:12px;}
@@ -404,8 +404,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 </head>
 <body>
 <div class="bg-layer"></div>
-<canvas id="float-canvas"></canvas>
-<div id="game-wrap">
+<canvas id="float-canvas" aria-hidden="true"></canvas>
+<main id="game-wrap" class="main-canvas" aria-label="主遊戲區">
 
 <!-- ── HUD ── -->
 <header class="hud" id="hud">
@@ -431,7 +431,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 </header>
 
 <!-- ── MAIN SCENE ── -->
-<main class="main-canvas" id="main-canvas">
+<div class="main-canvas" id="main-canvas">
   <canvas id="scene-canvas"></canvas>
   <div class="scene-overlay">
     <div class="castle-label">放置王國</div>
@@ -528,15 +528,16 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div id="ach-list"></div>
   </div>
 </div>
+</main>
 
 <!-- ── BOTTOM NAV ── -->
-<nav class="bottom-nav">
-  <button class="nav-btn" id="nav-res" onclick="togglePanel('res')"><div class="nav-ico">📦</div>資源</button>
-  <button class="nav-btn" id="nav-hero" onclick="togglePanel('hero')"><div class="nav-ico">⚔️</div>獵人<span class="nav-badge" id="nav-badge-hero" style="display:none;"></span></button>
-  <button class="nav-btn" id="nav-build" onclick="togglePanel('build')"><div class="nav-ico">🏗️</div>建築</button>
-  <button class="nav-btn" id="nav-map" onclick="togglePanel('map')"><div class="nav-ico">🗺️</div>地圖</button>
-  <button class="nav-btn" id="nav-shop" onclick="togglePanel('shop')"><div class="nav-ico">🛒</div>商店</button>
-  <button class="nav-btn" id="nav-ach" onclick="togglePanel('ach')"><div class="nav-ico">🏆</div>成就<span class="nav-badge" id="nav-badge-ach" style="display:none;">!</span></button>
+<nav class="bottom-nav" aria-label="主導覽">
+  <button class="nav-btn" id="nav-res" onclick="togglePanel('res')" aria-label="資源面板"><div class="nav-ico" aria-hidden="true">📦</div>資源</button>
+  <button class="nav-btn" id="nav-hero" onclick="togglePanel('hero')" aria-label="獵人面板"><div class="nav-ico" aria-hidden="true">⚔️</div>獵人<span class="nav-badge" id="nav-badge-hero" style="display:none;"></span></button>
+  <button class="nav-btn" id="nav-build" onclick="togglePanel('build')" aria-label="建築面板"><div class="nav-ico" aria-hidden="true">🏗️</div>建築</button>
+  <button class="nav-btn" id="nav-map" onclick="togglePanel('map')" aria-label="地圖狩獵面板"><div class="nav-ico" aria-hidden="true">🗺️</div>地圖</button>
+  <button class="nav-btn" id="nav-shop" onclick="togglePanel('shop')" aria-label="工坊商店面板"><div class="nav-ico" aria-hidden="true">🛒</div>商店</button>
+  <button class="nav-btn" id="nav-ach" onclick="togglePanel('ach')" aria-label="成就面板"><div class="nav-ico" aria-hidden="true">🏆</div>成就<span class="nav-badge" id="nav-badge-ach" style="display:none;">!</span></button>
 </nav>
 
 <!-- ── TOAST ── -->
@@ -565,8 +566,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
   <div class="modal">
     <div class="modal-title">⚙️ 遊戲設定</div>
     <div class="modal-body">
-      <div class="setting-row"><div class="setting-label">🎵 音樂音量</div><input type="range" class="slider" id="slider-music" min="0" max="100" value="40"></div>
-      <div class="setting-row"><div class="setting-label">🔊 音效音量</div><input type="range" class="slider" id="slider-sfx" min="0" max="100" value="80"></div>
+      <div class="setting-row"><label class="setting-label" for="slider-music">🎵 音樂音量</label><input type="range" class="slider" id="slider-music" min="0" max="100" value="40" aria-label="音樂音量"></div>
+      <div class="setting-row"><label class="setting-label" for="slider-sfx">🔊 音效音量</label><input type="range" class="slider" id="slider-sfx" min="0" max="100" value="80" aria-label="音效音量"></div>
       <div class="setting-row"><div class="setting-label">🔔 推播通知</div><div class="toggle on" id="toggle-notif"></div></div>
       <div class="setting-row"><div class="setting-label">😪 疲勞自動召回</div><div class="toggle on" id="toggle-autorecall"></div></div>
       <div class="setting-row"><div class="setting-label">⏩ 戰鬥速度</div><div id="speed-btns" style="display:flex;gap:4px;"></div></div>
