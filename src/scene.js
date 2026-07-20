@@ -835,7 +835,9 @@ export function initScene() {
     else { setSceneHint('請點擊發亮建築、獵場門或流浪獵人'); spawnFloat('選擇目標', e.clientX, e.clientY, '#d2b48c'); }
   });
   let lastNow = performance.now();
-  const loop = (now) => { const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now; drawScene((now - sceneStart) / 1000, dt); if (!reduceMotion) requestAnimationFrame(loop); };
+  // rAF loop 必須永遠跑 — drawScene 內部動畫(雲/煙/泡/portal glow)各自有 if(!reduceMotion) guard;
+  // 若 loop 本身被 reduceMotion 中斷,整個場景會 freeze 住。
+  const loop = (now) => { const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now; drawScene((now - sceneStart) / 1000, dt); requestAnimationFrame(loop); };
   requestAnimationFrame(loop);
 }
 function setSceneHint(text) { const el = $('scene-hint'); if (el && el.textContent !== text) el.textContent = text; }
