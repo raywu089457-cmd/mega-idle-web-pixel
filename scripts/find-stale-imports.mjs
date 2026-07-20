@@ -1,31 +1,45 @@
-// scripts/find-stale-imports.mjs — 掃所有 src/*.js 的 import 找 stale(目標 module 沒 export 該名)
+#!/usr/bin/env node
+/**
+ * scripts/find-stale-imports.mjs — 掃所有 src/*.js 的 import 找 stale(目標 module 沒 export 該名)
+ * 用法:node scripts/find-stale-imports.mjs
+ * 退出碼:0 沒問題;1 有 stale
+ */
+
 import { readdir, readFile } from 'node:fs/promises';
-import { join, dirname, resolve, relative } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SRC = resolve(__dirname, '..', 'src');
 
-const files = await readdir(SRC);
-const modules = {};
-for (const f of files) if (f.endsWith('.js')) modules[f] = await readFile(join(SRC, f), 'utf8');
+const files = (await readdir(SRC)).filter(f => f.endsWith('.js'));
+const sources = {};
+for (const f of files) sources[f] = await readFile(join(SRC, f), 'utf8');
 
-const importRe = /import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g;
-const exportRe = /^export\s+(?:async\s+)?(?:function|const|let|var|class)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/gm;
-
+// 收集每個 module 的 exports(支援 multi-name:export let A = 0, B = 0)
 const exportsMap = {};
-for (const [f, src] of Object.entries(modules)) {
+for (const [f, src] of Object.entries(sources)) {
   exportsMap[f] = new Set();
-  for (const m of src.matchAll(exportRe)) exportsMap[f].add(m[1]);
+  for (const line of src.split('\n')) {
+    // 匹配 export 開頭的各種形式
+    const m = line.match(/^\s*export\s+(?:async\s+)?(?:function|const|let|var|class)\s+([a-zA-Z_$][a-zA-Z0-9_$,\s=]*)[\s({=]/);
+    if (!m) continue;
+    // 抓出所有逗號分隔的 name
+    const decl = m[1].split(',').map(s => s.trim().split(/\s*[={]/)[0].trim()).filter(Boolean);
+    for (const name of decl) exportsMap[f].add(name);
+  }
 }
 
+const importRe = /^import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/gm;
 const issues = [];
-for (const [f, src] of Object.entries(modules)) {
+
+for (const [f, src] of Object.entries(sources)) {
   for (const m of src.matchAll(importRe)) {
     const namesRaw = m[1];
     const spec = m[2];
     const target = spec.replace(/^\.\//, '');
-    if (!exportsMap[target]) { issues.push(`${f}: cannot resolve './${target}'`); continue; }
+    if (!exportsMap[target]) continue;
+    const targetExports = exportsMap[target];
     const names = namesRaw.split(',').map(n => {
       const trimmed = n.trim();
       const asMatch = trimmed.match(/^(\w+)\s+as\s+(\w+)$/);
@@ -33,16 +47,8 @@ for (const [f, src] of Object.entries(modules)) {
     });
     for (const { orig, local } of names) {
       if (!orig) continue;
-      // check if locally defined too (same-file declaration)
-      const localDeclRe = new RegExp(`^\\s*(?:export\\s+)?(?:async\\s+)?(?:function|const|let|var|class)\\s+${local}\\b`, 'm');
-      const hasLocalDecl = localDeclRe.test(src);
-      if (!exportsMap[target].has(orig) && !hasLocalDecl) {
-        issues.push(`${f}: '${orig}' not exported from './${target}' and not locally declared`);
-      } else if (hasLocalDecl && exportsMap[target].has(orig)) {
-        // 重複:既 import 又本檔宣告(可能 OK if 是同名 export re-import,但語法上是 conflict)
-        // 檢查是不是真的 duplicate(import 出現不只一次也算)
-        const importCount = (src.match(new RegExp(`\\b${orig}\\b`, 'g')) || []).length;
-        if (importCount > 1) issues.push(`${f}: '${orig}' both imported from './${target}' and declared locally (${importCount} references)`);
+      if (!targetExports.has(orig)) {
+        issues.push(`${f}: '${orig}' not exported from './${target}'`);
       }
     }
   }

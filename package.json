@@ -7,7 +7,13 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node scripts/verify-all.mjs",
+    "test:syntax": "for f in src/*.js; do node --check \"$f\" || exit 1; done",
+    "test:cycles": "node scripts/check-imports.mjs src/",
+    "test:onclick": "node scripts/check-onclick.mjs",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:screenshot": "node scripts/screenshot.mjs",
+    "lint:stale-imports": "node scripts/find-stale-imports.mjs"
   },
   "repository": {
     "type": "git",
