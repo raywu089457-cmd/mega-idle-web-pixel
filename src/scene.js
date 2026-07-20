@@ -3,10 +3,10 @@
 // 不 import ui.js;render 函式會被 ui.js 觸發;scene 本身的 hotspot 處理會呼叫 ui.js 的 openPanel(透過 import 注入)
 
 import { RESOURCES, MATERIAL_TYPES, RARITIES, HERO_CLASSES, CLASS_NAMES_ZH, WEATHERS } from './data.js'
-import { sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, hoverHotspot, placementPick, buildingPlots, floatState, villagerNPCs, wildMonsters, tombstones, wanderingHeroes, mapProgress, weather, activeExplorations, stats, shopStock, setBuildingPlots, setPlacementPick, setSceneCtx, setSceneStart, setSceneNight, setHoverHotspot, setPendingDailyReward, impls } from './state.js'
+import { sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, hoverHotspot, placementPick, buildingPlots, floatState, villagerNPCs, wildMonsters, tombstones, wanderingHeroes, mapProgress, weather, activeExplorations, stats, shopStock, setBuildingPlots, setPlacementPick, setSceneCtx, setSceneStart, setSceneNight, setHoverHotspot, setPendingDailyReward, impls, nextWanderingSpawnIn, setNextWanderingSpawnIn } from './state.js'
 import { $, esc, showToast, showModal, hideModal, rand, randf, clamp, choice, uid, fmt, timeAgo } from './util.js'
 import { sfx } from './audio.js'
-import { gainGold, ResourceSystem_add, BuildingSystem_getLevel, BuildingSystem_getGoldRate } from './resources-buildings.js'
+import { gainGold, ResourceSystem_add, BuildingSystem_getLevel, BuildingSystem_getGoldRate, BuildingSystem_getWanderingSpawnInterval } from './resources-buildings.js'
 import { getHeroStats, usePotion, grantXp, normalizeHero } from './heroes-stats.js'
 import { getCombatGoldMultiplier } from './bonuses.js'
 import { defaultTeams } from './combat-party.js'
@@ -867,5 +867,22 @@ function collectMarketClick(e) {
 // impls 反向注入(給其他模組用)
 // ═══════════════════════════════════════════════════════════════════
 impls.spawnFloat = spawnFloat;
-impls.bumpNextWanderingSpawn = (n) => { /* TODO: tie to nextWanderingSpawnIn */ };
-impls.consumeNextWanderingSpawn = () => false;
+// 流浪獵人自動生成:processWanderingTick 從 gameTick(setInterval 1000ms) 呼叫一次 consume,
+// 所以倒數單位是「秒」,遞減 1。
+// state.js 初始值是 0,settings-and-init 載入存檔會 setNextWanderingSpawnIn(秒數)
+// — 若都沒設,首次呼叫 consume 會把 0 視為「未初始化」並初始化為間隔。
+impls.bumpNextWanderingSpawn = (n) => setNextWanderingSpawnIn(n);
+impls.consumeNextWanderingSpawn = () => {
+  if (nextWanderingSpawnIn <= 0) {
+    // 未初始化或剛 spawn 過 — 設為酒館等級對應間隔(秒),等下一輪才 spawn
+    setNextWanderingSpawnIn(BuildingSystem_getWanderingSpawnInterval());
+    return false;
+  }
+  const next = Math.max(0, nextWanderingSpawnIn - 1);
+  setNextWanderingSpawnIn(next);
+  if (next <= 0) {
+    setNextWanderingSpawnIn(BuildingSystem_getWanderingSpawnInterval());
+    return true;
+  }
+  return false;
+};
