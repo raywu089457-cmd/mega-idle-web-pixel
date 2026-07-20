@@ -7,7 +7,7 @@ import { HERO_CLASSES, ADV_CLASSES, HUNTER_NAMES, RARITIES, TRAITS, AFFIXES, GEA
 import { territoryHeroes, wanderingHeroes, liveCombats, partyCombats, mapProgress, weather, activeExplorations, setActiveExplorations } from './state.js'
 import { applyPassiveSkills, grantSkillPoints, getSkillApGain } from './skills.js'
 import { getAchievementBonuses, getCombatGoldMultiplier, getXpMultiplier } from './bonuses.js'
-import { ResourceSystem_spend, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js'
+import { ResourceSystem_spend, ResourceSystem_add, BuildingSystem_getLevel, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js'
 import { rand, choice, clamp, uid, showToast, fmt } from './util.js'
 import { sfx } from './audio.js'
 
