@@ -31,6 +31,7 @@ import { pickPlacement, resetBuildingPlots } from './scene.js';
 import {
   setHeroSubTab, setSkillTabHeroId, setHeroReportSubTab, setShopFilter,
   heroSubTab, skillTabHeroId, heroReportSubTab, shopFilter, saveGame,
+  territoryHeroes, setTerritoryHeroes,
 } from './state.js';
 import { closeModal } from './util.js';
 
@@ -102,3 +103,4 @@ Object.defineProperty(window, 'heroSubTab', { get: () => heroSubTab, set: (v) =>
 Object.defineProperty(window, 'skillTabHeroId', { get: () => skillTabHeroId, set: (v) => setSkillTabHeroId(v), configurable: true });
 Object.defineProperty(window, 'heroReportSubTab', { get: () => heroReportSubTab, set: (v) => setHeroReportSubTab(v), configurable: true });
 Object.defineProperty(window, 'shopFilter', { get: () => shopFilter, set: (v) => setShopFilter(v), configurable: true });
+Object.defineProperty(window, 'territoryHeroes', { get: () => territoryHeroes, set: (v) => setTerritoryHeroes(v), configurable: true });
