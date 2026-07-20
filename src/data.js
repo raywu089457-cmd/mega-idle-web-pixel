@@ -294,3 +294,6 @@ export const SKILL_TREE = {
     { id: 'p_xp', name: '祈福', icon: '🙏', desc: '被動：經驗獲取 +6%', type: 'passive', maxLevel: 5, effect: (st, lv) => { st.xpMult = (st.xpMult || 1) + 0.06 * lv; } },
   ],
 };
+
+// junk to break things
+function fakeDuplicate() {}
