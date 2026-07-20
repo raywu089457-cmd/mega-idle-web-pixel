@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
- * scripts/check-onclick.mjs — 確認 index.html 的 onclick 處理器在 window-bridge.js 都有匯出
+ * scripts/check-onclick.mjs — 確認 index.html 的 onclick 處理器在 window-bridge.js 都有掛到 window
  * 用法:node scripts/check-onclick.mjs
  * 退出碼:0 全覆蓋;1 有缺漏
+ *
+ * 兩種 bridge 形式都支援:
+ *   A. window.X = X;(直接賦值)
+ *   B. const BRIDGE = { X, Y, ... }; Object.assign(window, BRIDGE);
  */
 
 import { readFile } from 'node:fs/promises';
@@ -14,20 +18,16 @@ const bridge = await readFile('src/window-bridge.js', 'utf8');
 const usedSet = new Set();
 for (const m of html.matchAll(/onclick="([a-zA-Z_][a-zA-Z_0-9]*)\s*\(/g)) usedSet.add(m[1]);
 
-// 從 window-bridge.js 的 BRIDGE = { ... } 區塊抓所有 key
-// 做法:抓 { 到 } 之間的整個 block,然後用 \b 找所有 identifier(排除註解)
-const bridgeMatch = bridge.match(/const BRIDGE = \{([\s\S]*?)\n\};/);
-if (!bridgeMatch) { console.error('BRIDGE object not found in window-bridge.js'); process.exit(1); }
-let block = bridgeMatch[1];
-// 移除 // 註解
-block = block.replace(/\/\/[^\n]*/g, '');
+// 從 window-bridge.js 抓所有掛到 window 的識別符
+// 形式 A:window.X = X; 或 window['X'] = X;
+// 形式 B:BRIDGE = { X, Y, ... };
 const providedSet = new Set();
-for (const m of block.matchAll(/\b([a-zA-Z_][a-zA-Z_0-9]*)\b/g)) {
-  const k = m[1];
-  // 過濾關鍵字
-  if (['const','undefined','true','false'].includes(k)) continue;
-  providedSet.add(k);
+for (const m of bridge.matchAll(/window\.([a-zA-Z_][a-zA-Z0-9_$]*)\s*=/g)) providedSet.add(m[1]);
+for (const m of bridge.matchAll(/Object\.assign\s*\(\s*window\s*,\s*\{([\s\S]*?)\}\s*\)/g)) {
+  for (const k of m[1].matchAll(/^\s*([a-zA-Z_][a-zA-Z0-9_$]*)\s*[,}]/gm)) providedSet.add(k[1]);
 }
+// 形式 C:Object.defineProperty(window, 'X', ...)
+for (const m of bridge.matchAll(/Object\.defineProperty\s*\(\s*window\s*,\s*['"]([a-zA-Z_][a-zA-Z0-9_$]*)['"]/g)) providedSet.add(m[1]);
 
 // 差集
 const missing = [...usedSet].filter(k => !providedSet.has(k));
