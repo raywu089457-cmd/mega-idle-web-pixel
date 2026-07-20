@@ -305,8 +305,8 @@ body{
 .log-heal{color:#16a085;}
 
 /* ── MODALS ── */
-.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;}
-.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
 .modal{background:var(--cream);border:2px solid var(--charcoal);padding:20px;max-width:340px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:4px 4px 0 var(--charcoal);transform:translateY(20px);transition:transform 0.25s;}
 .modal-overlay.open .modal{transform:translateY(0);}
 .modal-title{font-family:'Press Start 2P',monospace;font-size:8px;color:#000;margin-bottom:14px;text-align:center;}
@@ -337,8 +337,8 @@ body{
 
 /* ── SAVE CODE / ONBOARDING ── */
 .save-code{width:100%;background:var(--card-bg);border:2px solid var(--card-border);color:var(--text);font-size:10px;font-family:monospace;padding:6px;resize:vertical;box-sizing:border-box;}
-.onboard-step{margin-bottom:10px;font-size:13px;color:#000;}
-.onboard-step b{display:block;margin-bottom:2px;color:#000;}
+.onboard-step{margin-bottom:10px;font-size:13px;color:var(--text);}
+.onboard-step b{display:block;margin-bottom:2px;color:var(--rich-soil);font-weight:700;}
 
 /* ── PARTY DISPATCH MODAL ── */
 .party-modal{display:flex;flex-direction:column;gap:12px;}
@@ -444,9 +444,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- 資源面板 -->
 <div class="panel" id="panel-res">
-  <div class="panel-inner">
+  <div class="panel-inner" role="region" aria-labelledby="panel-res-title">
     <div class="panel-header">
-      <div class="panel-title">📦 資源</div>
+      <div class="panel-title" id="panel-res-title">📦 資源</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="res-grid" id="res-grid"></div>
@@ -455,9 +455,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- 獵人面板 -->
 <div class="panel" id="panel-hero">
-  <div class="panel-inner">
+  <div class="panel-inner" role="region" aria-labelledby="panel-hero-title">
     <div class="panel-header">
-      <div class="panel-title">⚔ 獵人</div>
+      <div class="panel-title" id="panel-hero-title">⚔ 獵人</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="tab-content active" id="hero-territory"></div>
@@ -471,9 +471,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- 建築面板 -->
 <div class="panel" id="panel-build">
-  <div class="panel-inner">
+  <div class="panel-inner" role="region" aria-labelledby="panel-build-title">
     <div class="panel-header">
-      <div class="panel-title">🏗 建築</div>
+      <div class="panel-title" id="panel-build-title">🏗 建築</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="building-grid" id="building-grid"></div>
@@ -482,9 +482,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- 地圖面板 -->
 <div class="panel" id="panel-map">
-  <div class="panel-inner">
+  <div class="panel-inner" role="region" aria-labelledby="panel-map-title">
     <div class="panel-header">
-      <div class="panel-title">🗺 地圖狩獵</div>
+      <div class="panel-title" id="panel-map-title">🗺 地圖狩獵</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="active-explore" id="active-explore"></div>
@@ -500,9 +500,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- 商店面板 -->
 <div class="panel" id="panel-shop">
-  <div class="panel-inner">
+  <div class="panel-inner" role="region" aria-labelledby="panel-shop-title">
     <div class="panel-header">
-      <div class="panel-title">🛒 工坊商店</div>
+      <div class="panel-title" id="panel-shop-title">🛒 工坊商店</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div class="shop-filter" id="shop-filter"></div>
@@ -518,9 +518,9 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- 成就 / 傳承面板 -->
 <div class="panel" id="panel-ach">
-  <div class="panel-inner">
+  <div class="panel-inner" role="region" aria-labelledby="panel-ach-title">
     <div class="panel-header">
-      <div class="panel-title">🏆 成就與傳承</div>
+      <div class="panel-title" id="panel-ach-title">🏆 成就與傳承</div>
       <button class="btn-close" onclick="closePanel()">✕</button>
     </div>
     <div id="ach-special"></div>
@@ -545,8 +545,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── WELCOME BACK MODAL ── -->
 <div class="modal-overlay" id="modal-welcome">
-  <div class="modal">
-    <div class="modal-title">🌙 歡迎回來！</div>
+  <div class="modal" role="region" aria-labelledby="modal-welcome-title">
+    <div class="modal-title" id="modal-welcome-title">🌙 歡迎回來！</div>
     <div class="modal-body" id="modal-welcome-body"></div>
     <div class="modal-actions"><button class="btn btn-gold" onclick="collectOffline()">✦ 全部收取</button></div>
   </div>
@@ -554,8 +554,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── DAILY LOGIN MODAL ── -->
 <div class="modal-overlay" id="modal-daily">
-  <div class="modal">
-    <div class="modal-title">📅 每日登入獎勵</div>
+  <div class="modal" role="region" aria-labelledby="modal-daily-title">
+    <div class="modal-title" id="modal-daily-title">📅 每日登入獎勵</div>
     <div class="modal-body" id="modal-daily-body"></div>
     <div class="modal-actions"><button class="btn btn-gold" onclick="claimDaily()">✦ 領取獎勵</button></div>
   </div>
@@ -563,8 +563,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── SETTINGS MODAL ── -->
 <div class="modal-overlay" id="modal-settings">
-  <div class="modal">
-    <div class="modal-title">⚙️ 遊戲設定</div>
+  <div class="modal" role="region" aria-labelledby="modal-settings-title">
+    <div class="modal-title" id="modal-settings-title">⚙️ 遊戲設定</div>
     <div class="modal-body">
       <div class="setting-row"><label class="setting-label" for="slider-music">🎵 音樂音量</label><input type="range" class="slider" id="slider-music" min="0" max="100" value="40" aria-label="音樂音量"></div>
       <div class="setting-row"><label class="setting-label" for="slider-sfx">🔊 音效音量</label><input type="range" class="slider" id="slider-sfx" min="0" max="100" value="80" aria-label="音效音量"></div>
@@ -597,8 +597,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── ONBOARDING MODAL ── -->
 <div class="modal-overlay" id="modal-onboard">
-  <div class="modal">
-    <div class="modal-title">🏹 歡迎來到放置王國！</div>
+  <div class="modal" role="region" aria-labelledby="modal-onboard-title">
+    <div class="modal-title" id="modal-onboard-title">🏹 歡迎來到放置王國！</div>
     <div class="modal-body">
       <div class="onboard-step"><b>第 1 步 ⚔ 派遣狩獵</b><div>打開「地圖」，派獵人前往迷霧森林驅逐魔物，賺取金幣與經驗。</div></div>
       <div class="onboard-step"><b>第 2 步 🔨 製作裝備</b><div>素材會隨時間自動累積。到「商店」製作武器與防具，讓獵人挑戰更難的獵場。</div></div>
@@ -611,8 +611,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── DISPATCH MODAL ── -->
 <div class="modal-overlay" id="modal-dispatch">
-  <div class="modal">
-    <div class="modal-title">⚔ 出征派遣</div>
+  <div class="modal" role="region" aria-labelledby="modal-dispatch-title">
+    <div class="modal-title" id="modal-dispatch-title">⚔ 出征派遣</div>
     <div id="dispatch-hero-name" style="text-align:center;font-size:15px;font-weight:bold;color:var(--rich-soil);margin-bottom:10px;"></div>
     <div class="dispatch-zone-grid" id="dispatch-zone-grid"></div>
     <div class="modal-actions">
@@ -623,8 +623,8 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── PARTY DISPATCH MODAL ── -->
 <div class="modal-overlay" id="modal-party-dispatch">
-  <div class="modal">
-    <div class="modal-title">👥 組隊派遣</div>
+  <div class="modal" role="region" aria-labelledby="modal-party-dispatch-title">
+    <div class="modal-title" id="modal-party-dispatch-title">👥 組隊派遣</div>
     <div class="modal-body" id="party-dispatch-body"></div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closePartyDispatch()">取消</button>
@@ -635,7 +635,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── INVENTORY / EQUIP MODAL ── -->
 <div class="modal-overlay" id="modal-inventory">
-  <div class="modal">
+  <div class="modal" role="region" aria-labelledby="inv-modal-title">
     <div class="modal-title" id="inv-modal-title">🎒 背包</div>
     <div id="inv-modal-hero" style="text-align:center;font-size:13px;color:var(--text-faint);margin-bottom:12px;"></div>
     <div id="inv-modal-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;"></div>
@@ -645,7 +645,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── DIFFICULTY DETAIL MODAL ── -->
 <div class="modal-overlay" id="modal-detail">
-  <div class="modal">
+  <div class="modal" role="region" aria-labelledby="modal-detail-name">
     <div class="modal-title" id="modal-detail-name">難度詳情</div>
     <div id="modal-detail-body" style="max-height:55vh;overflow-y:auto;"></div>
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button></div>
