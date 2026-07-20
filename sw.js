@@ -4,11 +4,12 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v22';   // v22 — prompt-controlled 更新(使用者點 toast 才 skipWaiting);sw.js 不入 precache
+const CACHE_NAME = 'hunter-village-v22';   // bump to v22 — 加 SKIP_WAITING message 支援 + 自動更新提示
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './sw.js',
 ];
 // 由 install 動態掃 src/ 補上;這裡放常見入口,讓 fetch handler 觸發 src/*.js runtime cache
 const SRC_GLOB = [
@@ -175,8 +176,10 @@ self.addEventListener('install', (event) => {
         }
         console.log('[SW] Cached', ASSETS_TO_CACHE.length + SRC_GLOB.length + FONT_GLOB.length, 'assets');
       })
-      // 刻意不在 install 時 skipWaiting:新 SW 停在 waiting,等使用者點「新版本已就緒」toast
-      // → 送 SKIP_WAITING(見下方 message handler)才啟用。避免半場替換資源、把控制權交給使用者。
+      .then(() => {
+        console.log('[SW] Skip waiting');
+        return self.skipWaiting();
+      })
   );
 });
 
