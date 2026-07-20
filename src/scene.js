@@ -545,7 +545,7 @@ export function drawWanderingActors(c, t) {
     c.fillStyle = '#3a2a1c';
     for (let x = z.x; x <= z.x + z.w; x += 9) { c.fillRect(x, z.y - 2, 2, 6); c.fillRect(x, z.y + z.h - 4, 2, 6); }
     c.fillStyle = '#dfe7ff'; c.fillRect(z.x + 4, z.y + 4, 2, 2); c.fillRect(z.x + 8, z.y + 6, 2, 2);
-    c.font = '7px "Press Start 2P", monospace'; c.lineWidth = 3; c.strokeStyle = '#2c2c2c';
+    c.font = '10px "Press Start 2P", monospace'; c.lineWidth = 4; c.strokeStyle = '#2c2c2c';
     const tag = `${z.name} Lv${z.minLv}~${z.maxLv}`;
     c.strokeText(tag, z.x + 3, z.y - 4); c.fillStyle = '#ff8a8a'; c.fillText(tag, z.x + 3, z.y - 4);
   }
@@ -589,10 +589,10 @@ export function drawWanderingActors(c, t) {
     else if (h.class === 'archer') { c.strokeStyle = '#8b5a2b'; c.lineWidth = 1; c.strokeRect(x + 3.5, y - 10 + bob, 2, 7); }
     else { c.fillStyle = '#f4d03f'; c.fillRect(x + 3, y - 8 + bob, 1, 5); }
     const icon = stateIcon[h.aiState];
-    if (icon) { c.font = '7px sans-serif'; c.fillText(icon, x + 4, y - 11 + bob); }
+    if (icon) { c.font = '9px sans-serif'; c.fillText(icon, x + 4, y - 12 + bob); }
     if (h.effects && h.effects.length) {
-      c.font = '7px sans-serif';
-      h.effects.forEach((e, k) => { c.fillText(effectIcon[e.kind] || '✦', x - 6 - k * 8, y - 11 + bob); });
+      c.font = '9px sans-serif';
+      h.effects.forEach((e, k) => { c.fillText(effectIcon[e.kind] || '✦', x - 7 - k * 9, y - 12 + bob); });
     }
     const st = getHeroStats(h);
     if (h.hp < st.maxHp || h.aiState === 'fighting') {
@@ -600,13 +600,13 @@ export function drawWanderingActors(c, t) {
       c.fillStyle = '#2ecc71'; c.fillRect(x - 5, y - 16 + bob, Math.max(1, Math.round(11 * h.hp / st.maxHp)), 2);
     }
     if (h.bubble && h.bubble.text) {
-      c.font = '7px "Press Start 2P", monospace';
-      const bw = Math.min(56, h.bubble.text.length * 7 + 6);
-      const bx = clamp(x - bw / 2, 2, sceneW - bw - 2), by = y - 30 + bob;
-      c.fillStyle = 'rgba(255,248,220,0.95)'; c.fillRect(bx, by, bw, 10);
-      c.fillStyle = '#fff8dc'; c.fillRect(x - 1, by + 10, 2, 2);
-      c.strokeStyle = '#6b4a2f'; c.lineWidth = 1; c.strokeRect(bx + 0.5, by + 0.5, bw - 1, 9);
-      c.fillStyle = '#3a2a1c'; c.fillText(h.bubble.text, bx + 3, by + 8);
+      c.font = '10px "Press Start 2P", monospace';
+      const bw = Math.min(80, h.bubble.text.length * 10 + 8);
+      const bx = clamp(x - bw / 2, 2, sceneW - bw - 2), by = y - 32 + bob;
+      c.fillStyle = 'rgba(255,248,220,0.95)'; c.fillRect(bx, by, bw, 14);
+      c.fillStyle = '#fff8dc'; c.fillRect(x - 1, by + 14, 2, 3);
+      c.strokeStyle = '#6b4a2f'; c.lineWidth = 1; c.strokeRect(bx + 0.5, by + 0.5, bw - 1, 13);
+      c.fillStyle = '#3a2a1c'; c.fillText(h.bubble.text, bx + 4, by + 11);
     }
     if (h.aiState === 'fighting' && !reduceMotion && Math.sin(t * 14 + x) > 0.2) {
       c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 1;
@@ -691,7 +691,7 @@ function drawStaticLayer(t) {
   c.fillStyle = '#7a5a3c'; c.fillRect(0, 206, w, 14); c.fillRect(112, 120, 16, 236); c.fillRect(0, 292, w, 12);
   c.fillStyle = 'rgba(244,208,63,0.12)'; for (let x = 6; x < w; x += 24) { c.fillRect(x, 211, 8, 3); c.fillRect(x, 297, 8, 3); }
   // 9 棟建築(每幀重畫若 plot 變動)
-  const label = (txt, x, y, color = '#fff8dc') => { c.font = '8px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
+  const label = (txt, x, y, color = '#fff8dc') => { c.font = '11px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 4; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
   const house = (x, y, ww, hh, roof, wall) => { c.fillStyle = wall; c.fillRect(x, y, ww, hh); c.fillStyle = roof; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + ww / 2, y - 18); c.lineTo(x + ww + 4, y); c.closePath(); c.fill(); c.fillStyle = '#2c2c2c'; c.fillRect(x + ww / 2 - 5, y + hh - 18, 10, 18); };
   const blv = (id) => BuildingSystem_getLevel(id);
   const bwall = (id, wood, stone) => blv(id) >= 3 ? stone : wood;
