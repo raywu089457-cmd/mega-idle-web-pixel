@@ -3,7 +3,7 @@
 // 設計:不 import meta.js / settings-and-init.js(它們會呼叫 ui.js)
 // 收 renderAll / openPanel / togglePanel / closePanel / renderPanel / saveGame 等供其他模組呼叫
 
-import { RESOURCES, MATERIAL_TYPES, BUILDINGS, BUILDING_ORDER, HERO_CLASSES, CLASS_NAMES_ZH, RARITIES, ZONES, DIFF_LABELS, ITEMS, GEAR_TIERS, AFFIXES, ACHIEVEMENTS, WEATHERS, SKILL_TREE, baseClassOf, advClassFor, isGear, gearDisplayName, ADV_CLASSES, DIFF_COLORS, ENHANCE_MAX } from './data.js'
+import { RESOURCES, MATERIAL_TYPES, BUILDINGS, BUILDING_ORDER, HERO_CLASSES, CLASS_NAMES_ZH, RARITIES, ZONES, DIFF_LABELS, ITEMS, GEAR_TIERS, AFFIXES, ACHIEVEMENTS, WEATHERS, SKILL_TREE, baseClassOf, advClassFor, isGear, gearDisplayName, ADV_CLASSES, DIFF_COLORS, ENHANCE_MAX, BUILDING_TO_SCENE } from './data.js'
 import { activePanel, heroSubTab, heroReportSubTab, skillTabHeroId, expandedReports, dispatchHeroId, equipPick, craftOrders, stats, achievementsUnlocked, prestige, daily, settings, shopFilter, priceMult, shopStock, weather, territoryHeroes, wanderingHeroes, battleReports, activeExplorations, mapProgress, liveCombats, partyCombats, teams, partyDispatchState, setShopFilter, setHeroSubTab, setSkillTabHeroId, setHeroReportSubTab, setActivePanel, setDispatchHeroId, setEquipPick, setCraftOrders, territoryCombatTickCounter, incTerritoryCombatTickCounter, setDispatchHeroId as _setDispatchHeroId } from './state.js'
 import { $, esc, pct, fmt, timeAgo, showModal, hideModal, showToast, closeModal } from './util.js'
 import { sfx } from './audio.js'
@@ -14,7 +14,7 @@ import { getAchievementBonuses, getMaterialMultiplier, getClickGold } from './bo
 import { finalBossDefeated, getPrestigeGain, checkAchievements } from './meta.js'
 import { getZone, isZoneUnlocked, isBossReady } from './combat.js'
 import { partyMembers, heroTeam } from './combat-party.js'
-import { invCount, salePrice, potionStockCap, gearStockCap, canCraft, craftItem, setPriceTier, sellItem, sellGear, salvageGear, sellAllCommons } from './inventory.js'
+import { invCount, salePrice, potionStockCap, gearStockCap, canCraft, craftItem, setPriceTier, sellItem, sellGear, salvageGear, sellAllCommons, itemStatsText } from './inventory.js'
 import { territoryHeroes as _territoryHeroes } from './state.js'
 import { addToTeam, removeFromTeam, toggleTeamFormation } from './combat-party.js'
 import { xpNeed } from './heroes-stats.js'
@@ -124,7 +124,7 @@ function heroCardHtml(h) {
     : '無特質';
   const advBtn = advClassFor(h.class) ? `<button class="btn btn-purple btn-sm" ${canAdvance(h) ? '' : 'disabled'} title="Lv.20 + 20💠 轉職為${ADV_CLASSES[advClassFor(h.class)].name}" onclick="advanceClass('${h.id}')">⬆ 轉職</button>` : '';
   const teamTag = heroTeam(h.id) ? `・🛡隊${heroTeam(h.id).id + 1}` : '';
-  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${traitsHtml}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span>${teamTag}</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${h.xp}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button>${advBtn}</div></div>`;
+  return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${cls.icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span class="rarity-tag" style="color:${rc.color}">${rc.name}</span>${statusBadge}</div><div class="hero-class">${cls.name} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${traitsHtml}・🧪${h.inventory.healthPotion || 0}・😪${h.fatigue || 0}%・🗡<span style="color:${ap > 0 ? 'var(--purple)' : 'var(--text-faint)'}">${ap}AP</span>${teamTag}</div><div class="hero-stats"><div class="stat-hp-bar"><div class="hp-bar"><div class="hp-fill ${pct(h.hp, st.maxHp) > 60 ? 'high' : pct(h.hp, st.maxHp) > 30 ? 'med' : ''}" style="width:${pct(h.hp, st.maxHp)}%"></div></div><span class="hp-text">${Math.round(h.hp)}/${st.maxHp}</span></div><div class="stat-xp-bar"><div class="xp-bar"><div class="xp-fill" style="width:${pct(h.xp, xpNeed(h.level))}%"></div></div><span class="xp-text">${Math.round(h.xp)}/${xpNeed(h.level)}</span></div><div class="stat">⚔ ${st.atk} <span class="eq-bonus">(+${st.atk - (h.atk || 0) - BuildingSystem_getLevel('weaponShop') - getAchievementBonuses().atk})</span>　🛡 ${st.def}　💥 ${Math.round(st.crit * 100)}%</div><div class="hero-equip">${eq('weapon', '武器')}${eq('armor', '防具')}${eq('accessory', '飾品')}<span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','weapon')">強化武器</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','armor')">強化防具</span><span class="inv-btn-slot" onclick="enhanceEquip('${h.id}','accessory')">強化飾品</span>${setBadge}</div></div></div></div><div class="hero-actions"><button class="btn btn-blue btn-sm" ${canAct ? '' : 'disabled'} onclick="openDispatch('${h.id}')">派遣</button><button class="btn btn-gold btn-sm" onclick="trainHero('${h.id}')">訓練 ${fmt(trainCost(h).gold)}🪙</button><button class="btn btn-outline btn-sm" ${h.status === 'exploring' ? '' : 'disabled'} onclick="recallHero('${h.id}')">召回</button><button class="btn btn-purple btn-sm" onclick="skillTabHeroId='${h.id}';heroSubTab='skills';renderHeroesPanel()">🗡技能</button>${advBtn}</div></div>`;
 }
 import { unequipItem, enhanceEquip } from './inventory.js'
 export function renderHeroesPanel() {
@@ -196,8 +196,8 @@ export function renderSkillsTab() {
     <div class="skill-grid">${skillsHtml}</div>
   `;
 }
-import { setBuildingPlots, buildingPlots } from './state.js'
-import { resetBuildingPlots, pickPlacement } from './scene.js'
+import { setBuildingPlots, buildingPlots, placementPick } from './state.js'
+import { resetBuildingPlots, pickPlacement, plotNameOf } from './scene.js'
 export function renderBuildingsPanel() {
   const castleLv = BuildingSystem_getLevel('monument');
   const placeHint = placementPick ? `⇄ 擺設模式：選擇要與「${plotNameOf(placementPick)}」交換的建築` : '⇄ 點「換位」可兩兩交換建築位置（場景即時生效）';
@@ -302,16 +302,13 @@ import { choice as import_choice } from './util.js'
 import { gearInventory } from './state.js'
 export function renderShopPanel() {
   $('shop-filter').innerHTML = [['all', '全部'], ['weapon', '⚔️ 武器'], ['armor', '🛡 防具'], ['potion', '🧪 藥水'], ['accessory', '📿 飾品']]
-    .map(([k, label]) => `<button class="report-sub-btn ${shopFilter === k ? 'active' : ''}" onclick="shopFilter='${k}';renderShopPanel()">${label}</button>`).join('');
+    .map(([k, label]) => `<button class="report-sub-btn ${shopFilter === k ? 'active' : ''}" data-filter="${k}" onclick="shopFilter='${k}';renderShopGrid()">${label}</button>`).join('');
   const tierBtn = (kind, mult, label) => `<button class="report-sub-btn ${priceMult[kind] === mult ? 'active' : ''}" onclick="setPriceTier('${kind}',${mult})">${label}</button>`;
   $('shop-stock').innerHTML = `<div class="section-label">🏪 村莊貨架（賣給獵人・營收累計 ${fmt(stats.shopRevenue || 0)}🪙）</div>
     <div class="shop-stock-row">🧪 藥水貨架 <b>${shopStock.healthPotion}/${potionStockCap()}</b>・售價 ${salePrice(25, 'potion')}🪙　${tierBtn('potion', 0.8, '薄利')}${tierBtn('potion', 1, '標準')}${tierBtn('potion', 1.6, '高價')}</div>
     <div class="shop-stock-row">⚒️ 裝備貨架 <b>${shopStock.gear}/${gearStockCap()}</b>・售價 ${salePrice(120, 'gear')}🪙　${tierBtn('gear', 0.8, '薄利')}${tierBtn('gear', 1, '標準')}${tierBtn('gear', 1.6, '高價')}</div>
     <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">定價越高獵人越可能嫌貴不買；缺貨會讓獵人心情變差。貨架由煉金工房/鐵匠鋪自動補貨。</div>`;
-  $('shop-grid').innerHTML = Object.values(ITEMS).filter(item => shopFilter === 'all' || item.type === shopFilter).map(item => {
-    const chk = canCraft(item.id);
-    return `<div class="shop-card rar-${item.rarity} ${chk.ok ? '' : 'locked-item'}"><div class="shop-ico">${item.icon}</div><div class="shop-name">${item.name}</div><div class="shop-stats">${itemStatsText(item)}${item.forClass ? '・' + CLASS_NAMES_ZH[item.forClass] : ''}</div><div class="shop-stock">倉庫 ×${invCount(item.id)}・售價 ${item.price}🪙</div><div class="shop-req">${chk.ok ? '' : chk.reason}</div><div class="building-cost">${Object.entries(item.cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn btn-gold btn-sm" ${chk.ok ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作</button></div>`;
-  }).join('');
+  renderShopGrid();
   $('shop-orders').innerHTML = craftOrders.length ? `<div class="section-label">📜 委託訂單（高價收購・限時）</div>` + craftOrders.map(o => {
     const d = ITEMS[o.itemId];
     const have = gearInventory.some(g => g.id === o.itemId);
@@ -332,6 +329,17 @@ export function renderShopPanel() {
   });
   const allRows = potionRows.concat(gearRows).join('');
   $('inv-list').innerHTML = (commonCount ? `<button class="btn btn-outline btn-sm" onclick="sellAllCommons()">🪙 一鍵賣出普通裝（${commonCount} 件）</button>` : '') + (allRows || '<div class="empty-state">倉庫是空的</div>');
+}
+// 抽出 grid-only render:filter 切換時只 rebuild shop-grid,不用整頁重畫(包含庫存清單)
+// 切換按鈕 onclick="...;renderShopGrid()" → 立即更新 active class + 只畫 grid
+export function renderShopGrid() {
+  // toggle active class on filter buttons
+  const btns = document.querySelectorAll('#shop-filter .report-sub-btn');
+  for (const b of btns) b.classList.toggle('active', b.dataset.filter === shopFilter);
+  $('shop-grid').innerHTML = Object.values(ITEMS).filter(item => shopFilter === 'all' || item.type === shopFilter).map(item => {
+    const chk = canCraft(item.id);
+    return `<div class="shop-card rar-${item.rarity} ${chk.ok ? '' : 'locked-item'}"><div class="shop-ico">${item.icon}</div><div class="shop-name">${item.name}</div><div class="shop-stats">${itemStatsText(item)}${item.forClass ? '・' + CLASS_NAMES_ZH[item.forClass] : ''}</div><div class="shop-stock">倉庫 ×${invCount(item.id)}・售價 ${item.price}🪙</div><div class="shop-req">${chk.ok ? '' : chk.reason}</div><div class="building-cost">${Object.entries(item.cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn btn-gold btn-sm" ${chk.ok ? '' : 'disabled'} onclick="craftItem('${item.id}')">製作</button></div>`;
+  }).join('');
 }
 import { shopInventory } from './state.js'
 export function renderAchPanel() {

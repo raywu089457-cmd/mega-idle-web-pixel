@@ -30,6 +30,11 @@ export function openSettings() {
 }
 import { settings } from './state.js'
 export function closeSettings() { saveGame(); hideModal('modal-settings'); }
+export function renderSpeedBtns() {
+  if (!$('speed-btns')) return;
+  const opts = [[0.5, '0.5x'], [1, '1x'], [2, '2x'], [4, '4x']];
+  $('speed-btns').innerHTML = opts.map(([v, label]) => `<button class="report-sub-btn ${settings.combatSpeed === v ? 'active' : ''}" onclick="setCombatSpeed(${v})">${label}</button>`).join('');
+}
 export function setCombatSpeed(n) { settings.combatSpeed = n; sfx('click'); renderSpeedBtns(); saveGame(); }
 export function closeOnboard() { settings.onboarded = true; saveGame(); hideModal('modal-onboard'); sfx('click'); }
 export function bindSettings() {

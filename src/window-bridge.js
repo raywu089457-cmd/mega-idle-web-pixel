@@ -15,7 +15,7 @@ import {
   craftItem, sellItem, sellGear, salvageGear, sellAllCommons, setPriceTier,
 } from './inventory.js';
 import {
-  closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, fulfillOrder,
+  closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, renderShopGrid, fulfillOrder,
 } from './ui.js';
 import {
   setCombatSpeed, openSettings, closeSettings, exportSaveCode, importSaveCode,
@@ -73,6 +73,7 @@ window.togglePanel = togglePanel;
 window.upgradeBuilding = upgradeBuilding;
 window.renderHeroesPanel = renderHeroesPanel;
 window.renderMapPanel = renderMapPanel;
+window.renderShopGrid = renderShopGrid;
 window.setCombatSpeed = setCombatSpeed;
 window.openSettings = openSettings;
 window.closeSettings = closeSettings;

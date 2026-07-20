@@ -46,7 +46,7 @@ export let stats = { kills: 0, bossKills: 0, goldEarned: 0, clicks: 0, crafted: 
 export let achievementsUnlocked = {};
 export let prestige = { shards: 0, count: 0 };
 export let daily = { lastClaim: null, streak: 0, bestStreak: 0 };
-export let settings = { music: 40, sfx: 80, notif: true };
+export let settings = { music: 40, sfx: 80, notif: true, combatSpeed: 1, autoRecall: true };
 
 // 遊戲循環輔助
 export let nextWanderingSpawnIn = 0;
