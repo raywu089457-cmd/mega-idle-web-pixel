@@ -4,12 +4,11 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v21';   // bump to v20 — install event 自動掃 src/ 並 precache,離線 reload 可用
+const CACHE_NAME = 'hunter-village-v22';   // v22 — prompt-controlled 更新(使用者點 toast 才 skipWaiting);sw.js 不入 precache
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './sw.js',
 ];
 // 由 install 動態掃 src/ 補上;這裡放常見入口,讓 fetch handler 觸發 src/*.js runtime cache
 const SRC_GLOB = [
@@ -176,10 +175,8 @@ self.addEventListener('install', (event) => {
         }
         console.log('[SW] Cached', ASSETS_TO_CACHE.length + SRC_GLOB.length + FONT_GLOB.length, 'assets');
       })
-      .then(() => {
-        console.log('[SW] Skip waiting');
-        return self.skipWaiting();
-      })
+      // 刻意不在 install 時 skipWaiting:新 SW 停在 waiting,等使用者點「新版本已就緒」toast
+      // → 送 SKIP_WAITING(見下方 message handler)才啟用。避免半場替換資源、把控制權交給使用者。
   );
 });
 
@@ -250,6 +247,14 @@ self.addEventListener('fetch', (event) => {
           });
       })
   );
+});
+
+// ─── 收到 SKIP_WAITING 訊息(讓用戶點 toast 主動跳過 waiting) ──────────
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skip waiting by user request');
+    self.skipWaiting();
+  }
 });
 
 // ─── Background Sync (for future save functionality) ─────────────────────────

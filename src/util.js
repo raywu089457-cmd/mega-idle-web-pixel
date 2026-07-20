@@ -40,9 +40,13 @@ export const rgb = (arr) => `rgb(${arr[0]},${arr[1]},${arr[2]})`;
 export function showModal(id) { $(id).classList.add('open'); }
 export function hideModal(id) { $(id).classList.remove('open'); }
 export function closeModal() { hideModal('modal-detail'); }
-export function showToast(msg, type = 'info') {
-  const box = $('toast-container'); if (!box) return;
+export function showToast(msg, type = 'info', duration = 2200) {
+  const box = $('toast-container'); if (!box) return null;
   const el = document.createElement('div'); el.className = `toast toast-${type} show`; el.textContent = msg;
   box.appendChild(el);
-  setTimeout(() => { el.style.animation = 'toastOut 0.3s ease forwards'; setTimeout(() => el.remove(), 320); }, 2200);
+  // duration <= 0 → 持久 toast(不自動消失),供需要使用者互動的提示(如「點此更新」)使用
+  if (duration > 0) {
+    setTimeout(() => { el.style.animation = 'toastOut 0.3s ease forwards'; setTimeout(() => el.remove(), 320); }, duration);
+  }
+  return el;
 }

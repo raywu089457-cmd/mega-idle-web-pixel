@@ -67,8 +67,46 @@ import { achievementsUnlocked, prestige } from './state.js';
 import { DEFAULT_PLOT_OF } from './data.js';
 export function registerSW() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('./sw.js').catch(() => { });
+    // 頁面載入當下是否已被 SW 控制:首次安裝 = false,回訪 = true。
+    // 用來過濾「首次安裝時 clients.claim() 觸發的那次 controllerchange」——那次不該 reload。
+    const hadController = !!navigator.serviceWorker.controller;
+    let _refreshing = false;
+    // 新 SW 真的接管本頁時才 reload(使用者點更新 toast → SKIP_WAITING → activate → claim 觸發)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || _refreshing) return;
+      _refreshing = true;
+      location.reload();
+    });
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      // 已有等待中的新 SW(上次沒點更新就關頁)→ 直接提示
+      if (reg.waiting && hadController) promptUpdate(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          // installed + 已有 controller = 這是「更新」而非首次安裝
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) promptUpdate(nw);
+        });
+      });
+      // 分頁 focus 時主動檢查更新(覆蓋瀏覽器 24h 預設檢查太慢的問題)
+      window.addEventListener('focus', () => reg.update().catch(() => {}));
+    }).catch(() => { });
   }
+}
+// 以「worker 實例」去重,而非一次性布林:同一個 worker 只提示一次,但之後真的又有新版仍會再提示
+let _promptedWorker = null;
+function promptUpdate(worker) {
+  if (_promptedWorker === worker) return;
+  _promptedWorker = worker;
+  // duration=0 → 持久 toast,等使用者點擊;reload 交給 controllerchange(不用盲猜的 setTimeout)
+  const el = showToast('✨ 新版本已就緒,點此更新', 'success', 0);
+  if (!el) return;
+  el.style.pointerEvents = 'auto';   // #toast-container 是 pointer-events:none,可點的 toast 要自行開啟
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    el.textContent = '更新中…';
+    worker.postMessage({ type: 'SKIP_WAITING' });
+  }, { once: true });
 }
 export function exportSaveCode() {
   saveGame();
