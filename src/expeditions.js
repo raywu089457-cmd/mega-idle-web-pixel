@@ -8,7 +8,7 @@ import { ZONES, HERO_CLASSES, WANDERING_HERO_TYPES, RARITIES, WEATHERS } from '.
 import { wanderingHeroes, territoryHeroes, weather, settings, impls, incWeatherTicks, setWeather, sceneCtx, sceneW, sceneH, sceneStart, sceneNight, setSceneNight } from './state.js'
 import { rand, randf, clamp, choice, $, showToast, esc } from './util.js'
 import { sfx as audioSfx } from './audio.js'
-import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js'
+import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots, ResourceSystem_add } from './resources-buildings.js'
 import { getHeroStats, normalizeHero, rollStars, getHeroStats as getHeroStatsFn } from './heroes-stats.js'
 import { startLiveCombat } from './combat.js'
 
@@ -18,8 +18,12 @@ import { startLiveCombat } from './combat.js'
 export function abyssUnlocked() { return !!(mapProgress && mapProgress.zoneProgress[5] && mapProgress.zoneProgress[5].bossDefeated); }
 import { mapProgress } from './state.js'
 export function abyssEnemy(depth) {
-  const baseAtk = 30 + depth * 6;
-  const baseHp = 200 + depth * 80;
+  // BALANCE: softened scaling so depth 2+ is achievable for Lv80+ heroes with +10 gear.
+  // depth 1: HP 150±20, ATK 25±3  (was 200/30)
+  // depth 10: HP 650, ATK 65  (was 1000/96)
+  // depth 50: HP 2650, ATK 225  (was 4200/330)
+  const baseAtk = 25 + depth * 4;
+  const baseHp = 150 + depth * 50;
   return { name: `深淵魔物 Lv.${depth}`, hp: baseHp + rand(-20, 20), atk: baseAtk + rand(-3, 3), def: 10 + Math.floor(depth / 3) };
 }
 export function dispatchAbyss(heroId) {
@@ -38,7 +42,7 @@ export function startAbyssCombat(hero) {
   enemy.maxHp = enemy.hp; enemy.isBoss = false; enemy.zoneId = 'abyss';
   const lc = {
     heroId: hero.id, zoneId: 'abyss', diff: 'hard', isBoss: false, isAbyss: true,
-    cfg: { goldRange: [50 + depth * 20, 100 + depth * 40], magicStoneChance: 0.05 + depth * 0.02, xp: 30 + depth * 20, drops: ['healthPotion'] },
+    cfg: { goldRange: [50 + depth * 20, 100 + depth * 40], magicStoneChance: 0.3 + depth * 0.015, xp: 30 + depth * 20, drops: ['healthPotion'] },
     enemy,
     round: 0, lines: [`🕳 第 ${depth} 層：遭遇 ${enemy.name}！`], phase2: false, enraged: false,
     dmgDealt: 0, dmgTaken: 0, crits: 0, bossMech: null, lastCounterDmg: 0,
@@ -53,8 +57,12 @@ export function startAbyssCombat(hero) {
     real.cfg = lc.cfg;
     real.lines.unshift(lc.lines[0]);
   } else {
-    // fallback:手動建立
+    // FALLBACK (abyss is not a real zone ID): create liveCombats manually.
+    // CRITICAL: startLiveCombat sets hero.status='idle' when getZone('abyss') fails
+    // (returns undefined since 'abyss' is not in ZONES array). We must restore
+    // hero.status='exploring' so processHeroTick processes this liveCombat.
     liveCombats[hero.id] = lc;
+    hero.status = 'exploring';
   }
 }
 import { liveCombats } from './state.js'
@@ -65,8 +73,17 @@ export function finishAbyssCombat(hero, lc, won) {
     hero.abyssDepth = depth + 1;
     if (depth > (mapProgress.abyssBest || 0)) mapProgress.abyssBest = depth;
     stats.kills += 1;
-    showToast(`🕳 第 ${depth} 層已清,前往第 ${depth + 1} 層。`, 'success');
+    // BALANCE: abyss wins now drop MS (was 0). Mirrors finishLiveCombat's MS path.
+    // Depth-scaled: deeper wins yield more stones.
+    const msDrop = 1 + Math.floor(depth / 10);
+    ResourceSystem_add('magicStones', msDrop);
+    showToast(`🕳 第 ${depth} 層已清,前往第 ${depth + 1} 層(+${msDrop}💠)`, 'success');
     hero.status = 'exploring'; hero.explorationProgress = 0;
+    // CRITICAL: reset fatigue so hero doesn't auto-recall from abyss at fatigue 90
+    // (restHero would treat the next depth as a "loss" and reset abyssDepth to 1,
+    // making the win worthless). This simulates the hero resting briefly between
+    // abyss layers without losing progression.
+    hero.fatigue = 0;
   } else {
     const reached = (hero.abyssDepth || 1) - 1;
     if (reached > (mapProgress.abyssBest || 0)) mapProgress.abyssBest = reached;
