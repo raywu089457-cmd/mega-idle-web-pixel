@@ -157,7 +157,7 @@ export function advanceLiveCombat(hero, lc) {
   const zone = getZone(lc.zoneId);
   const skillAtkMult = 1 + (st.atkBonus || 0) + (st.skillDmgBonus || 0);
   const counterMult = elementCounterMult(hero, zone);
-  const shieldMult = (lc.bossMech === 'shield' && lc.round <= 10) ? 0.6 : 1;
+  const shieldMult = (lc.bossMech === 'shield' && lc.round <= 15) ? 0.5 : 1;
   const bossMult = lc.isBoss ? 1 + (st.bossDmg || 0) : 1;
   const critEff = (st.crit || 0) + (st.critBonus || 0);
   const defEff = Math.max(0, Math.round((lc.enemy.def || 0) * (1 - Math.min(0.9, st.pierce || 0))));
@@ -205,22 +205,22 @@ export function advanceLiveCombat(hero, lc) {
       if (lc.enemy.hp <= 0) { finishLiveCombat(hero, lc, true); return; }
     }
   }
-  // Boss 專屬機制
+  // Boss 專屬機制(強化版 — 影響戰鬥節奏)
   if (lc.bossMech && lc.enemy.hp > 0 && hero.hp > 0) {
     if (lc.bossMech === 'regen' && lc.round % 5 === 0) {
-      const heal = Math.round(lc.enemy.maxHp * 0.08);
+      const heal = Math.round(lc.enemy.maxHp * 0.15);
       lc.enemy.hp = Math.min(lc.enemy.maxHp, lc.enemy.hp + heal);
       lc.lines.push(`🌱 ${lc.enemy.name} 再生恢復 ${heal} HP（${Math.round(lc.enemy.hp)}/${lc.enemy.maxHp}）`);
     } else if (lc.bossMech === 'poison' && lc.round % 3 === 0) {
-      const dot = Math.max(1, Math.round(st.maxHp * 0.05));
+      const dot = Math.max(1, Math.round(st.maxHp * 0.08));
       hero.hp -= dot; lc.dmgTaken += dot;
       lc.lines.push(`☠️ ${hero.name} 中毒流失 ${dot} HP（${Math.max(0, Math.round(hero.hp))}/${st.maxHp}）`);
     } else if (lc.bossMech === 'lifesteal' && lc.lastCounterDmg > 0) {
-      const steal = Math.round(lc.lastCounterDmg * 0.5);
+      const steal = Math.round(lc.lastCounterDmg * 0.8);
       lc.enemy.hp = Math.min(lc.enemy.maxHp, lc.enemy.hp + steal);
       lc.lines.push(`🩸 ${lc.enemy.name} 吸取 ${steal} HP（${Math.round(lc.enemy.hp)}/${lc.enemy.maxHp}）`);
     } else if (lc.bossMech === 'aoe' && lc.round % 6 === 0) {
-      const aoe = Math.max(1, Math.round(st.maxHp * 0.2));
+      const aoe = Math.max(1, Math.round(st.maxHp * 0.25));
       hero.hp -= aoe; lc.dmgTaken += aoe;
       lc.lines.push(`💥 ${lc.enemy.name} 釋放毀滅衝擊，無視防禦造成 ${aoe} 傷害！`);
       sfx('boss');

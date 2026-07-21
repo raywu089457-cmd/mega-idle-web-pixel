@@ -176,6 +176,31 @@ export const ZONES = [
       hard:   { recommendedLevel: 14, enemies: [{ name: '深淵執政官', hp: 200, atk: 38, def: 26 }, { name: '破滅領主', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 1.0, xp: 100, drops: ['holyMace', 'knightArmor', 'mysticStaff'] },
     },
     boss: { name: '魔域大君', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 1.0, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200, mechanic: 'aoe' },
+    // ─── NEW: Nightmare mode (Lv 30+ access, end-game content) ───
+    nightmare: { name: '魔域大君・冥影', hp: 1800, atk: 100, def: 70, goldRange: [2000, 3500], magicStoneChance: 1.0, drops: ['dragonSlayer', 'voidStaff', 'phoenixArmor'], xp: 500, mechanic: 'aoe' },
+  },
+  // ─── NEW: Nightmare zones (unlocked after normal boss clear) ───
+  {
+    id: 6, name: '噩夢迴廊', icon: '🌀', element: 'dark',
+    isNightmare: true,
+    unlockHeroLevel: 30,
+    difficulties: {
+      easy: { recommendedLevel: 25, enemies: [{ name: '迴廊幻影', hp: 250, atk: 50, def: 25 }], goldRange: [200, 400], magicStoneChance: 1.0, xp: 80, drops: ['healthPotion'] },
+      normal: { recommendedLevel: 35, enemies: [{ name: '迴廊深淵', hp: 400, atk: 70, def: 35 }], goldRange: [400, 700], magicStoneChance: 1.0, xp: 120, drops: ['healthPotion', 'hunterCharm'] },
+      hard: { recommendedLevel: 50, enemies: [{ name: '迴廊虛影', hp: 700, atk: 100, def: 50 }], goldRange: [800, 1200], magicStoneChance: 1.0, xp: 200, drops: ['mysticStaff', 'ironArmor'] },
+    },
+    boss: { name: '迴廊之主', hp: 3000, atk: 130, def: 60, goldRange: [3000, 5000], magicStoneChance: 1.0, drops: ['voidStaff', 'phoenixArmor', 'ringOfMight'], xp: 600, mechanic: 'aoe' },
+  },
+  {
+    id: 7, name: '深淵核心', icon: '🕳', element: 'dark',
+    isNightmare: true,
+    unlockHeroLevel: 60,
+    difficulties: {
+      easy: { recommendedLevel: 50, enemies: [{ name: '核心守衛', hp: 800, atk: 110, def: 55 }], goldRange: [500, 800], magicStoneChance: 1.0, xp: 150, drops: ['healthPotion', 'ironArmor'] },
+      normal: { recommendedLevel: 70, enemies: [{ name: '核心傀儡', hp: 1200, atk: 140, def: 70 }], goldRange: [800, 1300], magicStoneChance: 1.0, xp: 250, drops: ['holyMace', 'ironArmor'] },
+      hard: { recommendedLevel: 90, enemies: [{ name: '核心巨像', hp: 2000, atk: 180, def: 90 }], goldRange: [1500, 2500], magicStoneChance: 1.0, xp: 400, drops: ['knightArmor', 'hunterCharm'] },
+    },
+    boss: { name: '深淵之心', hp: 5000, atk: 220, def: 100, goldRange: [5000, 8000], magicStoneChance: 1.0, drops: ['infernoGreatsword', 'aegisPlate', 'omnipotenceCrown'], xp: 1000, mechanic: 'aoe' },
   },
 ];
 
