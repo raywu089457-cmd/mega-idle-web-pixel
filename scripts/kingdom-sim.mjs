@@ -229,9 +229,10 @@ function diagSig(s) {
   const maxAdvanced = (s.heroes || []).filter(h => h.isAdvancedClass).length;
   const buildSum = Object.values(s.buildings || {}).reduce((acc, b) => acc + (b.level || 0), 0);
   const live = s.liveCombats || 0;
+  const abyssBest = m.abyssBest || 0;
   // allHeroesGear: every hero has BOTH weapon AND armor equipped (gear +10 is the +1 effort).
   const allHeroesGear = (s.heroes || []).length > 0 && (s.heroes || []).every(h => h.gear?.weapon && h.gear?.armor);
-  return { gold, ms, ts, wx, gInv, clearedBosses, clearedDiffs, heroSumLv, maxStars, maxAdvanced, buildSum, live, allHeroesGear };
+  return { gold, ms, ts, wx, gInv, clearedBosses, clearedDiffs, heroSumLv, maxStars, maxAdvanced, buildSum, live, allHeroesGear, abyssBest };
 }
 
 let lastSig = null; let stagnantTicks = 0; const STAGNANT_LIMIT = 5000;
@@ -510,9 +511,12 @@ while (report.totalTicks < MAX_TICKS && !stopReason) {
 
   // Stop early only when EVERYTHING is achieved:
 // 15 heroes, all bosses/diffs cleared, all advanced, MS capped,
-// AND all 15 heroes have at least weapon+armor equipped (gear+10 is +1 effort).
+// AND all 15 heroes have at least weapon+armor equipped (gear+10 is +1 effort),
+// AND abyssBest reached ≥ target (so deep progression is exercised).
+const ABYSS_TARGET = Number((ARGS.find(a => a.startsWith('--abyssTarget=')) || '').split('=')[1]) || 10;
 if (sig.clearedBosses >= 5 && sig.clearedDiffs >= 15 && sig.maxAdvanced >= 15 && sig.ms >= 999
-    && sig.allHeroesGear) {
+    && sig.allHeroesGear
+    && (sig.abyssBest || 0) >= ABYSS_TARGET) {
     stopReason = 'ALL_GOALS_COMPLETE';
     report.stops.push({ at: report.totalTicks, reason: stopReason, sig });
     break;
@@ -549,18 +553,27 @@ if (sig.clearedBosses >= 5 && sig.clearedDiffs >= 15 && sig.maxAdvanced >= 15 &&
   }
 
   // PHASE C: progress zones in order — clear zone N difficulty before moving to N+1
-  // After all bosses cleared, continue dispatching into zone5 hard for MS farming (100% drop rate).
-  // Each dispatch pass re-reads state to pick up newly-returned heroes.
+  // After all bosses cleared, dispatch heroes into ABYSS (when --abyssTarget > 0) for deep progression.
+  // Otherwise fall back to zone5 hard for MS farming (100% drop rate).
   phaseLabel = 'C';
   const allCleared = sig.clearedBosses >= 5;
+  const wantAbyss = ABYSS_TARGET > 0 && allCleared;
   for (let dispatchPass = 0; dispatchPass < 4; dispatchPass++) {
     const fresh = await snapshot();
     const idle = fresh.heroes.filter(h => h.status === 'idle' && (h.fatigue || 0) < 85);
     let idleDispatched = 0;
     for (const h of idle) {
       let dispatched = false;
-      // If all bosses cleared → farm zone5 hard for magicStones (100% drop rate)
-      if (allCleared && fresh.mapProgress.unlockedZones?.includes(5)) {
+      // If all bosses cleared AND abyss progression is enabled → dispatch to abyss.
+      // Abyss is preferred over zone5 hard because depth-based MS drops cap at 1.05 (≥ zone5's 1.0).
+      if (wantAbyss) {
+        try {
+          window.dispatchAbyss(h.id);
+          dispatched = true;
+          idleDispatched++;
+          actionsTaken.dispatches++;
+        } catch {}
+      } else if (allCleared && fresh.mapProgress.unlockedZones?.includes(5)) {
         const r = await dispatch(h.id, 5, 'hard');
         if (r && r.ok) { actionsTaken.dispatches++; idleDispatched++; dispatched = true; }
       } else {
@@ -774,7 +787,7 @@ if (sig.clearedBosses >= 5 && sig.clearedDiffs >= 15 && sig.maxAdvanced >= 15 &&
     cur = await snapshot();
     const d = diagSig(cur);
     const ar = cur.resources;
-    console.log(`[t=${report.totalTicks}] phase=${phaseLabel} act=${JSON.stringify(actionsTaken)} | gold=${ar.gold?.value}/${ar.gold?.cap} ms=${ar.magicStones?.value} | terr=${d.ts}/${tSlots} | wandered=${d.wx} | bosses=${d.clearedBosses}/5 diffs=${d.clearedDiffs}/15 | maxStars=${d.maxStars} | advN=${d.maxAdvanced} | sumLv=${d.heroSumLv} | buildSum=${d.buildSum} | gInv=${d.gInv} | live=${d.live}`);
+    console.log(`[t=${report.totalTicks}] phase=${phaseLabel} act=${JSON.stringify(actionsTaken)} | gold=${ar.gold?.value}/${ar.gold?.cap} ms=${ar.magicStones?.value} | terr=${d.ts}/${tSlots} | wandered=${d.wx} | bosses=${d.clearedBosses}/5 diffs=${d.clearedDiffs}/15 | maxStars=${d.maxStars} | advN=${d.maxAdvanced} | sumLv=${d.heroSumLv} | buildSum=${d.buildSum} | gInv=${d.gInv} | live=${d.live} | abyssBest=${d.abyssBest || 0}`);
     logEvent(cur, `tick ${report.totalTicks}: ${JSON.stringify({ ...actionsTaken, ...d })}`);
   }
 }
