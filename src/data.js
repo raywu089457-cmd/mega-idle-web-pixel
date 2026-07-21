@@ -1,6 +1,9 @@
 // src/data.js — L0 純資料表
 // 從 index.html L661-909 + L2543-2548 搬出
-// 零 import 依賴;所有 const 對外 export
+// 依賴: ./util.js (choice)
+// 所有 const 對外 export
+
+import { choice } from './util.js';
 
 // ─── RESOURCES ───────────────────────────────────────────────────────
 export const RESOURCES = {
@@ -127,47 +130,47 @@ export const ZONES = [
   {
     id: 1, name: '迷霧森林', icon: '🌲', element: 'nature',
     difficulties: {
-      easy:   { recommendedLevel: 1, enemies: [{ name: '腐牙野狼', hp: 20, atk: 5, def: 2 }, { name: '迷霧哥布林', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 0.05, xp: 10, drops: ['healthPotion'] },
-      normal: { recommendedLevel: 2, enemies: [{ name: '荊棘魔', hp: 35, atk: 8, def: 4 }, { name: '霧狼頭目', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 0.1, xp: 20, drops: ['healthPotion', 'woodenSword'] },
-      hard:   { recommendedLevel: 3, enemies: [{ name: '枯木妖', hp: 50, atk: 12, def: 6 }, { name: '掠食藤', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 0.15, xp: 35, drops: ['woodenSword', 'healthPotion'] },
+      easy: { recommendedLevel: 1, enemies: [{ name: '腐牙野狼', hp: 20, atk: 5, def: 2 }, { name: '迷霧哥布林', hp: 15, atk: 4, def: 1 }], goldRange: [20, 40], magicStoneChance: 1.0, xp: 10, drops: ['healthPotion'] },
+      normal: { recommendedLevel: 2, enemies: [{ name: '荊棘魔', hp: 35, atk: 8, def: 4 }, { name: '霧狼頭目', hp: 30, atk: 10, def: 3 }], goldRange: [40, 70], magicStoneChance: 1.0, xp: 20, drops: ['healthPotion', 'woodenSword'] },
+      hard: { recommendedLevel: 3, enemies: [{ name: '枯木妖', hp: 50, atk: 12, def: 6 }, { name: '掠食藤', hp: 55, atk: 14, def: 5 }], goldRange: [70, 100], magicStoneChance: 1.0, xp: 35, drops: ['woodenSword', 'healthPotion'] },
     },
-    boss: { name: '迷霧樹心', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 0.3, drops: ['woodenSword', 'leatherArmor'], xp: 50, mechanic: 'regen' },
+    boss: { name: '迷霧樹心', hp: 120, atk: 16, def: 8, goldRange: [150, 200], magicStoneChance: 1.0, drops: ['woodenSword', 'leatherArmor'], xp: 50, mechanic: 'regen' },
   },
   {
     id: 2, name: '腐化沼澤', icon: '🪷', element: 'poison',
     difficulties: {
-      easy:   { recommendedLevel: 3, enemies: [{ name: '泥沼殭屍', hp: 40, atk: 10, def: 5 }, { name: '毒霧蛙', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 0.1, xp: 15, drops: ['healthPotion', 'leatherArmor'] },
-      normal: { recommendedLevel: 5, enemies: [{ name: '沼澤巫婆', hp: 60, atk: 14, def: 8 }, { name: '腐鱗鱷', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 0.15, xp: 30, drops: ['huntersBow', 'ironDagger'] },
-      hard:   { recommendedLevel: 6, enemies: [{ name: '疫病使徒', hp: 85, atk: 18, def: 10 }, { name: '深泥巨怪', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 0.2, xp: 50, drops: ['ironDagger', 'huntersBow'] },
+      easy:   { recommendedLevel: 3, enemies: [{ name: '泥沼殭屍', hp: 40, atk: 10, def: 5 }, { name: '毒霧蛙', hp: 35, atk: 12, def: 4 }], goldRange: [50, 80], magicStoneChance: 1.0, xp: 15, drops: ['healthPotion', 'leatherArmor'] },
+      normal: { recommendedLevel: 5, enemies: [{ name: '沼澤巫婆', hp: 60, atk: 14, def: 8 }, { name: '腐鱗鱷', hp: 70, atk: 16, def: 6 }], goldRange: [80, 130], magicStoneChance: 1.0, xp: 30, drops: ['huntersBow', 'ironDagger'] },
+      hard:   { recommendedLevel: 6, enemies: [{ name: '疫病使徒', hp: 85, atk: 18, def: 10 }, { name: '深泥巨怪', hp: 95, atk: 20, def: 9 }], goldRange: [130, 180], magicStoneChance: 1.0, xp: 50, drops: ['ironDagger', 'huntersBow'] },
     },
-    boss: { name: '腐化母巢', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 0.35, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80, mechanic: 'poison' },
+    boss: { name: '腐化母巢', hp: 200, atk: 22, def: 12, goldRange: [250, 350], magicStoneChance: 1.0, drops: ['huntersBow', 'mysticStaff', 'ironArmor'], xp: 80, mechanic: 'poison' },
   },
   {
     id: 3, name: '荒廢礦坑', icon: '⛏️', element: 'earth',
     difficulties: {
-      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑骷髏', hp: 55, atk: 14, def: 8 }, { name: '穴居魔', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 0.12, xp: 20, drops: ['ironDagger', 'healthPotion'] },
-      normal: { recommendedLevel: 7, enemies: [{ name: '鏽甲監工', hp: 80, atk: 18, def: 12 }, { name: '暗影爆破者', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 0.18, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
-      hard:   { recommendedLevel: 9, enemies: [{ name: '礦心魔像', hp: 110, atk: 24, def: 14 }, { name: '深坑爬行者', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 0.22, xp: 65, drops: ['mysticStaff', 'ironArmor'] },
+      easy:   { recommendedLevel: 5, enemies: [{ name: '礦坑骷髏', hp: 55, atk: 14, def: 8 }, { name: '穴居魔', hp: 50, atk: 16, def: 7 }], goldRange: [70, 110], magicStoneChance: 1.0, xp: 20, drops: ['ironDagger', 'healthPotion'] },
+      normal: { recommendedLevel: 7, enemies: [{ name: '鏽甲監工', hp: 80, atk: 18, def: 12 }, { name: '暗影爆破者', hp: 75, atk: 22, def: 10 }], goldRange: [110, 160], magicStoneChance: 1.0, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
+      hard:   { recommendedLevel: 9, enemies: [{ name: '礦心魔像', hp: 110, atk: 24, def: 14 }, { name: '深坑爬行者', hp: 120, atk: 26, def: 15 }], goldRange: [160, 220], magicStoneChance: 1.0, xp: 65, drops: ['mysticStaff', 'ironArmor'] },
     },
-    boss: { name: '礦坑魔像王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 0.4, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120, mechanic: 'shield' },
+    boss: { name: '礦坑魔像王', hp: 300, atk: 28, def: 18, goldRange: [400, 500], magicStoneChance: 1.0, drops: ['ironArmor', 'mysticStaff', 'holyMace'], xp: 120, mechanic: 'shield' },
   },
   {
     id: 4, name: '熔岩裂谷', icon: '🌋', element: 'fire',
     difficulties: {
-      easy:   { recommendedLevel: 7, enemies: [{ name: '熔岩蜥', hp: 70, atk: 18, def: 10 }, { name: '灰燼蝠', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 0.15, xp: 25, drops: ['ironArmor', 'healthPotion'] },
-      normal: { recommendedLevel: 9, enemies: [{ name: '焰角魔', hp: 100, atk: 22, def: 14 }, { name: '熔核祭司', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 0.2, xp: 50, drops: ['holyMace', 'ironArmor'] },
-      hard:   { recommendedLevel: 11, enemies: [{ name: '裂谷督軍', hp: 140, atk: 30, def: 18 }, { name: '黑曜巨兵', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 0.25, xp: 80, drops: ['holyMace', 'mysticStaff'] },
+      easy:   { recommendedLevel: 7, enemies: [{ name: '熔岩蜥', hp: 70, atk: 18, def: 10 }, { name: '灰燼蝠', hp: 65, atk: 20, def: 9 }], goldRange: [100, 150], magicStoneChance: 1.0, xp: 25, drops: ['ironArmor', 'healthPotion'] },
+      normal: { recommendedLevel: 9, enemies: [{ name: '焰角魔', hp: 100, atk: 22, def: 14 }, { name: '熔核祭司', hp: 95, atk: 26, def: 12 }], goldRange: [150, 200], magicStoneChance: 1.0, xp: 50, drops: ['holyMace', 'ironArmor'] },
+      hard:   { recommendedLevel: 11, enemies: [{ name: '裂谷督軍', hp: 140, atk: 30, def: 18 }, { name: '黑曜巨兵', hp: 150, atk: 32, def: 20 }], goldRange: [200, 280], magicStoneChance: 1.0, xp: 80, drops: ['holyMace', 'mysticStaff'] },
     },
-    boss: { name: '熔岩暴君', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 0.45, drops: ['holyMace', 'knightArmor', 'mysticStaff'], xp: 160, mechanic: 'lifesteal' },
+    boss: { name: '熔岩暴君', hp: 400, atk: 35, def: 22, goldRange: [500, 650], magicStoneChance: 1.0, drops: ['holyMace', 'knightArmor', 'mysticStaff'], xp: 160, mechanic: 'lifesteal' },
   },
   {
     id: 5, name: '魔域王座', icon: '👹', element: 'dark',
     difficulties: {
-      easy:   { recommendedLevel: 10, enemies: [{ name: '魔域犬魔', hp: 100, atk: 24, def: 15 }, { name: '血咒騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 0.2, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
-      normal: { recommendedLevel: 12, enemies: [{ name: '虛空掠奪者', hp: 150, atk: 30, def: 20 }, { name: '王座守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 0.25, xp: 70, drops: ['holyMace', 'huntersBow'] },
-      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵執政官', hp: 200, atk: 38, def: 26 }, { name: '破滅領主', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 0.3, xp: 100, drops: ['holyMace', 'knightArmor', 'mysticStaff'] },
+      easy:   { recommendedLevel: 10, enemies: [{ name: '魔域犬魔', hp: 100, atk: 24, def: 15 }, { name: '血咒騎士', hp: 110, atk: 26, def: 16 }], goldRange: [150, 220], magicStoneChance: 1.0, xp: 40, drops: ['mysticStaff', 'ironArmor'] },
+      normal: { recommendedLevel: 12, enemies: [{ name: '虛空掠奪者', hp: 150, atk: 30, def: 20 }, { name: '王座守衛', hp: 160, atk: 32, def: 22 }], goldRange: [220, 300], magicStoneChance: 1.0, xp: 70, drops: ['holyMace', 'huntersBow'] },
+      hard:   { recommendedLevel: 14, enemies: [{ name: '深淵執政官', hp: 200, atk: 38, def: 26 }, { name: '破滅領主', hp: 210, atk: 40, def: 28 }], goldRange: [300, 400], magicStoneChance: 1.0, xp: 100, drops: ['holyMace', 'knightArmor', 'mysticStaff'] },
     },
-    boss: { name: '魔域大君', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 0.5, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200, mechanic: 'aoe' },
+    boss: { name: '魔域大君', hp: 600, atk: 45, def: 30, goldRange: [800, 1000], magicStoneChance: 1.0, drops: ['holyMace', 'mysticStaff', 'knightArmor', 'huntersBow'], xp: 200, mechanic: 'aoe' },
   },
 ];
 

@@ -285,9 +285,9 @@ export function processHeroTick() {
     const st = getHeroStats(hero);
     if (hero.status === 'resting') {
       hero.restTicks = Math.max(0, (hero.restTicks || 0) - 1);
-      hero.fatigue = clamp((hero.fatigue || 0) - 14, 0, 100);
-      hero.hp = Math.min(st.maxHp, hero.hp + Math.ceil(st.maxHp * 0.18 * (1 + BuildingSystem_getLevel('inn') * 0.1)));
-      if (hero.restTicks <= 0 && hero.hp >= st.maxHp * 0.6 && hero.fatigue < 70) hero.status = 'idle';
+      hero.fatigue = clamp((hero.fatigue || 0) - 18, 0, 100);
+      hero.hp = Math.min(st.maxHp, hero.hp + Math.ceil(st.maxHp * 0.25 * (1 + BuildingSystem_getLevel('inn') * 0.1)));
+      if (hero.restTicks <= 0 && hero.hp >= st.maxHp * 0.5 && hero.fatigue < 90) hero.status = 'idle';
     } else if (hero.status === 'exploring') {
       if (hero.partyId) {
         hero.fatigue = clamp((hero.fatigue || 0) + (hero.exploreDifficulty === 'boss' ? 4 : 3), 0, 100);

@@ -9,7 +9,7 @@ import { wanderingHeroes, territoryHeroes, weather, settings, impls, incWeatherT
 import { rand, randf, clamp, choice, $, showToast, esc } from './util.js'
 import { sfx as audioSfx } from './audio.js'
 import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js'
-import { getHeroStats, normalizeHero, getHeroStats as getHeroStatsFn } from './heroes-stats.js'
+import { getHeroStats, normalizeHero, rollStars, getHeroStats as getHeroStatsFn } from './heroes-stats.js'
 import { startLiveCombat } from './combat.js'
 
 // ═══════════════════════════════════════════════════════════════════
@@ -91,7 +91,7 @@ export function spawnWanderingHero() {
   const h = normalizeHero({
     id, name: choice(['阿嵐','艾琳','白洛','班恩','碧翠','布蘭','凱恩','卡菈']),
     class: tpl.class, level: tpl.level,
-    xp: 0, stars: 3, rarity,
+    xp: 0, stars: rollStars(), rarity,
     status: 'idle',
     equipment: { weapon: null, armor: null },
     inventory: {},

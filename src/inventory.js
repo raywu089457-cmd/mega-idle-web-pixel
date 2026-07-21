@@ -121,8 +121,9 @@ export function salvageGear(id, tier, affix) {
     ResourceSystem_add(rid, back); parts.push(`${RESOURCES[rid].icon}${back}`);
   }
   let ms = 0;
-  const msChance = inst.tier === 'legend' ? 0.6 : inst.tier === 'fine' ? 0.3 : 0;
-  if (Math.random() < msChance) { ms = 1; ResourceSystem_add('magicStones', 1); }
+  const msChance = inst.tier === 'legend' ? 1.0 : inst.tier === 'fine' ? 0.8 : 0;
+  const msAmount = inst.tier === 'legend' ? 3 : inst.tier === 'fine' ? 1 : 0;
+  if (Math.random() < msChance && msAmount > 0) { ms = msAmount; ResourceSystem_add('magicStones', msAmount); }
   sfx('craft'); showToast(`分解 ${gearDisplayName(inst)}：回收 ${parts.join(' ') || '—'}${ms ? ' +1💠' : ''}`, 'success');
 }
 export function sellAllCommons() {
