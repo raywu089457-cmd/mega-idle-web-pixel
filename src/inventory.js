@@ -84,6 +84,9 @@ export function canCraft(itemId) {
   const def = ITEMS[itemId]; if (!def) return { ok: false, reason: '未知物品' };
   const lv = BuildingSystem_getLevel(def.req.b);
   if (lv < def.req.lv) return { ok: false, reason: `${BUILDINGS[def.req.b].name} Lv.${def.req.lv}` };
+  if (def.req.altar && BuildingSystem_getLevel('altar') < def.req.altar) {
+    return { ok: false, reason: `魔核研究所 Lv.${def.req.altar}` };
+  }
   if (invTotal() >= MAX_INV) return { ok: false, reason: '倉庫已滿' };
   if (!ResourceSystem_canAfford(def.cost)) return { ok: false, reason: '材料不足' };
   return { ok: true };

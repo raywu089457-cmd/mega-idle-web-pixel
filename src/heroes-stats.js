@@ -29,9 +29,9 @@ export function getEquipBonuses(eq) {
     out.crit += (def.crit || 0) * tmult;
     out.msFind += (def.msFind || 0) * tmult;
   }
-  if (def?.type === 'weapon') out.atk += plus * 2;
-  if (def?.type === 'armor') { out.def += plus * 2; out.hp += plus * 10; }
-  if (def?.type === 'accessory') { out.atk += plus; out.hp += plus * 5; out.crit += plus * 0.01; }
+  if (def?.type === 'weapon') out.atk += plus * 3;
+  if (def?.type === 'armor') { out.def += plus * 3; out.hp += plus * 15; }
+  if (def?.type === 'accessory') { out.atk += plus * 2; out.hp += plus * 8; out.crit += plus * 0.015; }
   if (eq.affix) out.affix = AFFIXES.find(a => a.id === eq.affix) || null;
   return out;
 }
