@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>PoC B — three.js 2.5D 廣告牌</title>
+<style>
+  html,body{margin:0;height:100%;background:#0d0b16;color:#fff8dc;font-family:system-ui,sans-serif;overflow:hidden}
+  canvas{display:block}
+  #hud{position:fixed;top:8px;left:8px;z-index:10;font-size:12px;line-height:1.5;
+       background:rgba(28,20,40,.72);border:1px solid #5d4037;padding:8px 10px;border-radius:4px;max-width:62vw}
+  #hud b{color:#f4d03f}
+  #pick{position:fixed;bottom:10px;left:8px;z-index:10;font-size:14px;color:#f4d03f;
+        background:rgba(28,20,40,.8);border:1px solid #5d4037;padding:6px 10px;border-radius:4px}
+  #err{position:fixed;inset:auto 8px 48px 8px;z-index:10;color:#ff8a8a;font-size:12px}
+</style>
+<!-- three.js 走 ESM importmap,無 build tool。離線需把它 vendor 進 assets/ 並加入 sw.js precache。 -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="hud">
+  <b>PoC B · three.js 2.5D 廣告牌</b><br>
+  拖曳旋轉 · 滾輪縮放 · 點建築顯示名稱<br>
+  建築=box+屋頂 mesh;小人=離屏 canvas 像素貼圖 Sprite(永遠面向相機)<br>
+  <span id="clock"></span>
+</div>
+<div id="pick">點一棟建築試試</div>
+<div id="err"></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+window.addEventListener('error', e => { document.getElementById('err').textContent = '載入失敗(可能無網路,CDN 抓不到 three):' + e.message; });
+
+// 世界 240(x) × 360(y) → three XZ,置中
+const WORLD_W = 240, WORLD_H = 360;
+const mapX = wx => wx - WORLD_W/2;
+const mapZ = wy => wy - WORLD_H/2;
+
+const PLOT_COORDS = [
+  {x:16,y:164},{x:96,y:132},{x:184,y:166},{x:62,y:188},{x:158,y:194},
+  {x:22,y:252},{x:100,y:258},{x:178,y:252},{x:96,y:314},
+];
+const BUILDINGS = [
+  {id:'tavern',name:'酒館',fw:42,fd:30,h:44,wall:0xa9764b,roof:0x6d3f2a},
+  {id:'guild',name:'公會',fw:50,fd:40,h:70,wall:0xc9b082,roof:0x46324a},
+  {id:'market',name:'市集',fw:40,fd:30,h:36,wall:0x8b5a2b,roof:0xe74c3c},
+  {id:'restaurant',name:'餐廳',fw:26,fd:18,h:26,wall:0xa94f3c,roof:0x7a2f22},
+  {id:'drinkShop',name:'飲料',fw:22,fd:16,h:24,wall:0x3c6ea9,roof:0x274a70},
+  {id:'forge',name:'鐵匠',fw:44,fd:30,h:42,wall:0x8f8f9d,roof:0x3c3c46},
+  {id:'alchemy',name:'煉金',fw:40,fd:28,h:38,wall:0x9b7bb8,roof:0x4b3a63},
+  {id:'research',name:'研究',fw:40,fd:30,h:46,wall:0x7890c9,roof:0x2d3d63},
+  {id:'gate',name:'獵場門',fw:48,fd:26,h:34,wall:0x4a4a55,roof:0x1b1026},
+].map((b,i)=>({...b, wx:PLOT_COORDS[i].x + b.fw/2, wy:PLOT_COORDS[i].y + b.fd/2}));
+
+const CLASS_COLOR = {warrior:'#e74c3c',mage:'#9b59b6',rogue:'#2c3e50',archer:'#27ae60',priest:'#f1c40f'};
+const CLASS_LIST = Object.keys(CLASS_COLOR);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio||1));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x5c9ad6);
+scene.fog = new THREE.Fog(0x5c9ad6, 260, 520);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 1, 1000);
+camera.position.set(180, 210, 260);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 10, 0);
+controls.maxPolarAngle = Math.PI * 0.48;
+controls.update();
+
+// 光源(日夜由 sun 驅動)
+const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x3a5a3a, 0.7);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2c8, 1.1);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 800;
+sun.shadow.camera.left=-260; sun.shadow.camera.right=260; sun.shadow.camera.top=260; sun.shadow.camera.bottom=-260;
+scene.add(sun);
+scene.add(sun.target);
+
+// 地面
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(WORLD_W, WORLD_H),
+  new THREE.MeshStandardMaterial({ color:0x6f9f52 })
+);
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
+scene.add(ground);
+// 主幹道
+const road = new THREE.Mesh(new THREE.PlaneGeometry(20, WORLD_H), new THREE.MeshStandardMaterial({ color:0x7a5a3c }));
+road.rotation.x = -Math.PI/2; road.position.set(mapX(118), 0.1, 0); road.receiveShadow = true;
+scene.add(road);
+
+// 建築 = box + 金字塔屋頂
+const pickables = [];
+for (const b of BUILDINGS){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(b.fw, b.h, b.fd), new THREE.MeshStandardMaterial({ color:b.wall }));
+  body.position.y = b.h/2; body.castShadow = true; body.receiveShadow = true;
+  const roofH = Math.max(10, b.fw*0.35);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(b.fw,b.fd)*0.72, roofH, 4), new THREE.MeshStandardMaterial({ color:b.roof, flatShading:true }));
+  roof.rotation.y = Math.PI/4; roof.position.y = b.h + roofH/2; roof.castShadow = true;
+  const door = new THREE.Mesh(new THREE.PlaneGeometry(8, Math.min(16,b.h*0.5)), new THREE.MeshStandardMaterial({ color:0x1b1026 }));
+  door.position.set(0, Math.min(8,b.h*0.25), b.fd/2 + 0.2);
+  g.add(body, roof, door);
+  g.position.set(mapX(b.wx), 0, mapZ(b.wy));
+  g.userData = { name:b.name, id:b.id };
+  body.userData = g.userData; roof.userData = g.userData;
+  scene.add(g);
+  pickables.push(body, roof);
+}
+
+// ── 像素小人貼圖(離屏 canvas)→ Sprite ────────────────────
+function heroTexture(cls){
+  const S=6, cv=document.createElement('canvas'); cv.width=16*S; cv.height=22*S;
+  const x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
+  const px=(cx,cy,w,h,col)=>{ x.fillStyle=col; x.fillRect(cx*S,cy*S,w*S,h*S); };
+  px(5,10,6,7, CLASS_COLOR[cls]);        // 身體
+  px(5,5,6,5, '#f0c8a0');                 // 頭
+  px(4,3,8,2, CLASS_COLOR[cls]);          // 帽
+  px(3,3,2,2, '#1b1026'); px(11,3,2,2,'#1b1026'); // 眼周框(帽緣)
+  px(6,6,1,1,'#1b1026'); px(9,6,1,1,'#1b1026');   // 眼
+  px(12,8,1,7,'#dfe7ff');                 // 武器
+  const tex = new THREE.CanvasTexture(cv); tex.magFilter=THREE.NearestFilter; tex.minFilter=THREE.NearestFilter;
+  return tex;
+}
+const heroTex = Object.fromEntries(CLASS_LIST.map(c=>[c, heroTexture(c)]));
+function mobTexture(color){
+  const S=6, cv=document.createElement('canvas'); cv.width=12*S; cv.height=10*S;
+  const x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
+  x.fillStyle=color; x.fillRect(2*S,3*S,8*S,5*S); x.fillRect(3*S,1*S,6*S,2*S);
+  x.fillStyle='#1b1026'; x.fillRect(4*S,4*S,1*S,1*S); x.fillRect(7*S,4*S,1*S,1*S);
+  const tex=new THREE.CanvasTexture(cv); tex.magFilter=THREE.NearestFilter; tex.minFilter=THREE.NearestFilter; return tex;
+}
+
+const actors = [];
+function addHero(){
+  const cls = CLASS_LIST[(Math.random()*CLASS_LIST.length)|0];
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map:heroTex[cls], transparent:true }));
+  spr.scale.set(13, 18, 1);
+  const a = { spr, type:'hero', wx:120, wy:346, tx:120, ty:346, spd:26+Math.random()*10, wait:0, bob:Math.random()*6 };
+  scene.add(spr); actors.push(a);
+}
+function addMob(){
+  const kinds=[['slime','#5fbf5f'],['rat','#a08a6a'],['wolf','#8a8f7a'],['golem','#7d6b5d']];
+  const [kind,color]=kinds[(Math.random()*kinds.length)|0];
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map:mobTexture(color), transparent:true }));
+  spr.scale.set(11, 9, 1);
+  const a = { spr, type:'mob', kind, wx:20+Math.random()*80, wy:315+Math.random()*35, tx:0,ty:0, spd:12, wait:0, bob:Math.random()*6 };
+  a.tx=20+Math.random()*80; a.ty=312+Math.random()*40;
+  scene.add(spr); actors.push(a);
+}
+for(let i=0;i<7;i++) addHero();
+for(let i=0;i<4;i++) addMob();
+
+const anchors = BUILDINGS.map(b=>({x:b.wx, y:b.wy + b.fd/2 + 8}));
+function retarget(a){
+  if(a.type==='hero'){ const an=anchors[(Math.random()*anchors.length)|0]; a.tx=an.x+(Math.random()*12-6); a.ty=an.y+(Math.random()*8-4); a.wait=0.6+Math.random()*2.5; }
+  else { a.tx=20+Math.random()*80; a.ty=312+Math.random()*40; a.wait=1+Math.random()*2; }
+}
+function stepActor(a, dt, t){
+  if(a.wait>0){ a.wait-=dt; }
+  else {
+    const dx=a.tx-a.wx, dy=a.ty-a.wy, d=Math.hypot(dx,dy);
+    if(d<1.5) retarget(a);
+    else { const s=Math.min(d, a.spd*dt); a.wx+=dx/d*s; a.wy+=dy/d*s; }
+  }
+  const bob = Math.abs(Math.sin(t*6+a.bob))*1.5;
+  a.spr.position.set(mapX(a.wx), (a.type==='hero'?9:5) + bob, mapZ(a.wy));
+}
+
+// ── 點擊拾取 ────────────────────────────────────────────────
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+renderer.domElement.addEventListener('pointerdown', e=>{
+  mouse.x=(e.clientX/innerWidth)*2-1; mouse.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  document.getElementById('pick').textContent = hit
+    ? `🏠 你點了:${hit.object.userData.name}(${hit.object.userData.id}) — 真實遊戲此處會 openPanel('${hit.object.userData.id}')`
+    : '(沒點到建築)';
+});
+
+// ── 主迴圈 + 日夜 ───────────────────────────────────────────
+const clock = new THREE.Clock();
+function tick(){
+  const dt = Math.min(0.05, clock.getDelta());
+  const t = clock.elapsedTime;
+  const day = (Math.sin(t/12)+1)/2;
+  const ang = Math.PI*(0.15 + 0.7*((t/24)%1));
+  sun.position.set(Math.cos(ang)*200, 60+day*220, Math.sin(ang)*160);
+  sun.intensity = 0.25 + day*1.0;
+  hemi.intensity = 0.25 + day*0.6;
+  const sky = new THREE.Color().setRGB(0.07+0.29*day, 0.06+0.54*day, 0.14+0.7*day);
+  scene.background = sky; scene.fog.color = sky;
+  for(const a of actors) stepActor(a, dt, t);
+  document.getElementById('clock').textContent = day>0.5?`☀ 白天 ${(day*100|0)}%`:`🌙 夜晚 ${((1-day)*100|0)}%`;
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

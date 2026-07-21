@@ -229,7 +229,9 @@ function diagSig(s) {
   const maxAdvanced = (s.heroes || []).filter(h => h.isAdvancedClass).length;
   const buildSum = Object.values(s.buildings || {}).reduce((acc, b) => acc + (b.level || 0), 0);
   const live = s.liveCombats || 0;
-  return { gold, ms, ts, wx, gInv, clearedBosses, clearedDiffs, heroSumLv, maxStars, maxAdvanced, buildSum, live };
+  // allHeroesGear: every hero has BOTH weapon AND armor equipped (gear +10 is the +1 effort).
+  const allHeroesGear = (s.heroes || []).length > 0 && (s.heroes || []).every(h => h.gear?.weapon && h.gear?.armor);
+  return { gold, ms, ts, wx, gInv, clearedBosses, clearedDiffs, heroSumLv, maxStars, maxAdvanced, buildSum, live, allHeroesGear };
 }
 
 let lastSig = null; let stagnantTicks = 0; const STAGNANT_LIMIT = 5000;
@@ -273,13 +275,19 @@ async function tryUpgrade(id) {
 
 async function tryCraft(itemId) {
   return page.evaluate((iid) => {
-    const { S, INV } = window.__sim;
+    const { S } = window.__sim;
     try {
       const def = window.__sim.D.ITEMS[iid];
-      const capBefore = S.gearInventory.length + Object.values(S.shopInventory).reduce((s, n) => s + (n || 0), 0);
+      // Only count gearInventory (shopInventory is dominated by healthPotion auto-production).
+      const capBefore = S.gearInventory.length;
       const ok = window.craftItem(iid);
-      const capAfter = S.gearInventory.length + Object.values(S.shopInventory).reduce((s, n) => s + (n || 0), 0);
-      return { ok: !!ok, capBefore, capAfter, def: def ? { atk: def.atk, def: def.def, hp: def.hp, type: def.type } : null };
+      const capAfter = S.gearInventory.length;
+      return {
+        ok: !!ok,
+        capBefore,
+        capAfter,
+        def: def ? { atk: def.atk, def: def.def, hp: def.hp, type: def.type, cost: def.cost, req: def.req } : null,
+      };
     } catch (e) {
       return { ok: false, msg: String(e && e.message) };
     }
@@ -456,7 +464,9 @@ async function resourceSummary() {
 async function inventorySize() {
   return page.evaluate(() => {
     const { S } = window.__sim;
-    return S.gearInventory.length + Object.values(S.shopInventory).reduce((s, n) => s + (n || 0), 0);
+    // Only count GEAR inventory. shopInventory is dominated by healthPotion auto-production
+    // (1/10 ticks at potionShop Lv1, 100s of potions by t=50k) which would falsely block craft.
+    return S.gearInventory.length;
   });
 }
 
@@ -498,9 +508,11 @@ while (report.totalTicks < MAX_TICKS && !stopReason) {
     break;
   }
 
-  // Stop early if all goals achieved (for quick validation runs)
-  // Goals: 15 heroes, all bosses/diffs cleared, all advanced, MS capped at 999, all gear +10.
-  if (sig.clearedBosses >= 5 && sig.clearedDiffs >= 15 && sig.maxAdvanced >= 15 && sig.ms >= 999) {
+  // Stop early only when EVERYTHING is achieved:
+// 15 heroes, all bosses/diffs cleared, all advanced, MS capped,
+// AND all 15 heroes have at least weapon+armor equipped (gear+10 is +1 effort).
+if (sig.clearedBosses >= 5 && sig.clearedDiffs >= 15 && sig.maxAdvanced >= 15 && sig.ms >= 999
+    && sig.allHeroesGear) {
     stopReason = 'ALL_GOALS_COMPLETE';
     report.stops.push({ at: report.totalTicks, reason: stopReason, sig });
     break;
@@ -596,19 +608,43 @@ while (report.totalTicks < MAX_TICKS && !stopReason) {
   }
 
   // 2) craft + equip best gear (over time)
+  // FIXED: try each item MULTIPLE times so 15 heroes can each get one.
+  // craftItem returns void so success is detected by inventory growing (capAfter > capBefore).
+  // Also: clear shopInventory healthPotions because potionShop auto-production fills it to MAX_INV,
+  // blocking canCraft() with "倉庫已滿".
   if (sig.ts > 0) {
+    // Clear accumulated healthPotions (we don't use them in the sim; production isn't our goal).
+    // Use setShopInventory to properly rebind the ES module export.
+    await page.evaluate(() => {
+      const { S } = window.__sim;
+      try { window.__sim.S.setShopInventory({}); } catch {}
+      try { S.shopInventory = {}; } catch {} // fallback (may not rebind module export)
+    });
     const gearList = caps.gearItemIds;
+    const cap = 80; // keep some headroom (MAX_INV=100)
+    // For each item, retry up to 15 times — enough for 15 heroes to each have one
+    // (or until materials deplete / inventory full).
     for (const iid of gearList) {
-      // try once per loop
-      const invBefore = await inventorySize();
-      const cap = 80; // keep some headroom (MAX_INV=100)
-      if (invBefore >= cap) break;
-      const r = await tryCraft(iid);
-      if (r && r.ok) actionsTaken.crafts += 1;
+      for (let attempt = 0; attempt < 15; attempt++) {
+        const invBefore = await inventorySize();
+        if (invBefore >= cap) break;
+        const r = await tryCraft(iid);
+        if (r && r.capAfter > r.capBefore) {
+          actionsTaken.crafts += 1;
+        } else {
+          break; // craft failed (materials / building req) — no point retrying this item
+        }
+      }
     }
-    // equip best available for each hero for each slot
-    for (const h of cur.heroes) {
-      const eq = await equipBestGear(h.id);
+    // Equip all heroes with whatever's available (each hero takes 1 item per slot, inventory shrinks).
+    // Heroes are iterated in shuffled order so no single hero monopolizes gear.
+    const heroIds = cur.heroes.map(h => h.id);
+    for (let i = heroIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [heroIds[i], heroIds[j]] = [heroIds[j], heroIds[i]];
+    }
+    for (const hid of heroIds) {
+      const eq = await equipBestGear(hid);
       if (eq && eq.equips && eq.equips.length) actionsTaken.equips += eq.equips.length;
     }
   }
