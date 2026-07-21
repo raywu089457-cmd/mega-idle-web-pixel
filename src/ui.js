@@ -244,7 +244,11 @@ export function renderMapPanel() {
         ${hero ? `<div class="stat-hp-bar" style="margin:3px 0;"><span style="font-size:11px;">⚔️ ${esc(hero.name)}</span><div class="hp-bar"><div class="hp-fill ${pct(hero.hp, hst.maxHp) > 60 ? 'high' : pct(hero.hp, hst.maxHp) > 30 ? 'med' : ''}" style="width:${pct(hero.hp, hst.maxHp)}%"></div></div><span class="hp-text">${Math.max(0, Math.round(hero.hp))}/${hst.maxHp}</span></div>` : ''}
         ${bossTag}${lastLines}</div>`;
     }
-    return `<div class="explore-item"><div class="explore-top"><span class="explore-name">${z.icon} ${z.name}・${DIFF_LABELS[e.difficulty]}</span><span class="explore-hero">${esc(e.heroName)}</span><span class="explore-pct">${Math.floor(e.progress)}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${e.progress}%"></div></div></div>`;
+    const hero = territoryHeroes.find(h => h.id === e.heroId);
+    const hst = hero ? getHeroStats(hero) : { maxHp: 1 };
+    return `<div class="explore-item"><div class="explore-top"><span class="explore-name">${z.icon} ${z.name}・${DIFF_LABELS[e.difficulty]}</span><span class="explore-hero">${esc(e.heroName)}</span><span class="explore-pct">${Math.floor(e.progress)}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${e.progress}%"></div></div>
+      ${hero ? `<div class="stat-hp-bar" style="margin:3px 0;"><span style="font-size:11px;">⚔️ ${esc(hero.name)} ${HERO_CLASSES[hero.class]?.icon || ''}</span><div class="hp-bar"><div class="hp-fill ${pct(hero.hp, hst.maxHp) > 60 ? 'high' : pct(hero.hp, hst.maxHp) > 30 ? 'med' : ''}" style="width:${pct(hero.hp, hst.maxHp)}%"></div></div><span class="hp-text">${Math.max(0, Math.round(hero.hp))}/${hst.maxHp}</span></div>` : ''}</div>`;
   }).join('') : '';
   $('active-explore').innerHTML = (partyHtml + soloHtml) || '<div class="empty-state">目前沒有狩獵隊伍</div>';
   $('zone-list').innerHTML = ZONES.map(z => {

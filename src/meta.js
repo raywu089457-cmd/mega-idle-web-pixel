@@ -18,9 +18,10 @@ function spawnFloatText(text, x, y, color) { impls.spawnFloat?.(text, x, y, colo
 export function produceTick() {
   const mon = BuildingSystem_getLevel('monument');
   const mult = getMaterialMultiplier();
+  // BUFF: slightly faster material regen (3 per tick, was 2) so endgame crafting doesn't bottleneck
   for (const mat of MATERIAL_TYPES) {
     const wMult = (mat === 'herbLow' && weather.type === 'rain') ? 1.2 : 1;
-    ResourceSystem_add(mat, Math.max(1, Math.round(rand(1, 3) * mon * mult * wMult)));
+    ResourceSystem_add(mat, Math.max(1, Math.round(rand(1, 4) * mon * mult * wMult)));
   }
   const goldRate = BuildingSystem_getGoldRate();
   if (goldRate > 0) gainGold(Math.max(1, Math.round(goldRate * (weather.type === 'snow' ? 0.9 : 1))));
