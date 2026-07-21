@@ -12,7 +12,7 @@ import {
 } from './combat-party.js';
 import {
   openEquipModal, equipItem, unequipItem, enhanceEquip, closeInventory,
-  craftItem, sellItem, sellGear, salvageGear, sellAllCommons, setPriceTier,
+  craftItem, sellItem, sellGear, salvageGear, sellAllCommons, transmuteGear, setPriceTier,
 } from './inventory.js';
 import {
   closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, renderShopGrid, fulfillOrder,
@@ -67,6 +67,7 @@ window.sellItem = sellItem;
 window.sellGear = sellGear;
 window.salvageGear = salvageGear;
 window.sellAllCommons = sellAllCommons;
+window.transmuteGear = transmuteGear;
 window.fulfillOrder = fulfillOrder;
 window.setPriceTier = setPriceTier;
 window.closePanel = closePanel;

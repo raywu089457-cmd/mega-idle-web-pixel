@@ -117,17 +117,40 @@ export function checkDaily() {
   const today = todayKey();
   if (daily.lastClaim === today) return;
   const nextStreak = daily.lastClaim === yesterdayKey() ? daily.streak + 1 : 1;
-  const reward = { streak: nextStreak, gold: 150 + nextStreak * 60, magicStones: nextStreak % 3 === 0 ? 1 : 0, potion: 1 + Math.floor(nextStreak / 2) };
+  // MILESTONE BONUSES (retention hooks): 7d/14d/30d/60d/100d reward big chunks
+  const milestones = {
+    7:  { gold: 500, magicStones: 5, potion: 5, extra: '🧪 5瓶藥水 + 5魔核' },
+    14: { gold: 1000, magicStones: 10, potion: 10, extra: '🌟 雙倍獎勵週' },
+    30: { gold: 2000, magicStones: 30, potion: 20, extra: '👑 月度大獎' },
+    60: { gold: 4000, magicStones: 60, potion: 40, extra: '💎 雙月獎勵' },
+    100:{ gold: 8000, magicStones: 150, potion: 100, extra: '🏆 百日傳奇' },
+  };
+  const milestone = milestones[nextStreak];
+  const baseGold = 150 + nextStreak * 60;
+  const baseMs = nextStreak % 3 === 0 ? 1 : 0;
+  const basePotion = 1 + Math.floor(nextStreak / 2);
+  const reward = {
+    streak: nextStreak,
+    gold: baseGold + (milestone?.gold || 0),
+    magicStones: baseMs + (milestone?.magicStones || 0),
+    potion: basePotion + (milestone?.potion || 0),
+    milestone: milestone?.extra || null,
+  };
   setPendingDailyReward(reward);
-  $('modal-daily-body').innerHTML = `<div style="text-align:center;font-size:13px;color:var(--text-dim);">連續登入第 ${nextStreak} 天</div><div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">+${reward.gold}</span></div><div class="offline-item"><span class="offline-label">💠 魔核</span><span class="offline-val">+${reward.magicStones}</span></div><div class="offline-item"><span class="offline-label">🧪 藥水</span><span class="offline-val">+${reward.potion}</span></div>`;
+  let html = `<div style="text-align:center;font-size:13px;color:var(--text-dim);">連續登入第 ${nextStreak} 天</div>`;
+  if (milestone) html += `<div style="text-align:center;color:var(--golden-wheat);font-weight:bold;margin-top:8px;">🎉 ${milestone.extra}！</div>`;
+  html += `<div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">+${reward.gold}</span></div>
+<div class="offline-item"><span class="offline-label">💠 魔核</span><span class="offline-val">+${reward.magicStones}</span></div>
+<div class="offline-item"><span class="offline-label">🧪 藥水</span><span class="offline-val">+${reward.potion}</span></div>`;
+  $('modal-daily-body').innerHTML = html;
   showModal('modal-daily');
 }
 
 export function claimDaily() {
   if (!pendingDailyReward) { hideModal('modal-daily'); return; }
   gainGold(pendingDailyReward.gold);
-  ResourceSystem_add('magicStones', pendingDailyReward.magicStones);
-  addItem('healthPotion', pendingDailyReward.potion);
+  if (pendingDailyReward.magicStones > 0) ResourceSystem_add('magicStones', pendingDailyReward.magicStones);
+  if (pendingDailyReward.potion > 0) addItem('healthPotion', pendingDailyReward.potion);
   setDaily({ ...daily, lastClaim: todayKey(), streak: pendingDailyReward.streak, bestStreak: Math.max(daily.bestStreak, pendingDailyReward.streak) });
   setPendingDailyReward(null); hideModal('modal-daily'); sfx('daily'); showToast('每日獎勵已領取！', 'success');
 }

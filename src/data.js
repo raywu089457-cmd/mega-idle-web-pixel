@@ -188,6 +188,34 @@ export const ITEMS = {
   hunterCharm: { id: 'hunterCharm', name: '獵魔護符', type: 'accessory', rarity: 'rare', price: 180, cost: { magicStones: 4, herbLow: 60 }, icon: '🧿', crit: 0.06, msFind: 0.1, req: { b: 'trinketShop', lv: 1 } },
   wolfFang: { id: 'wolfFang', name: '狼牙項鍊', type: 'accessory', rarity: 'rare', price: 150, cost: { fruitPoor: 80, ironRusty: 40 }, icon: '📿', atk: 7, req: { b: 'trinketShop', lv: 2 } },
   springRing: { id: 'springRing', name: '清泉戒指', type: 'accessory', rarity: 'epic', price: 220, cost: { waterDirty: 90, magicStones: 3 }, icon: '💍', hp: 60, def: 4, req: { b: 'trinketShop', lv: 3 } },
+  // ─── NEW: Tier 0 starter weapons (Lv 1 alternative to woodenSword) ───
+  woodenClub: { id: 'woodenClub', name: '粗木棍', type: 'weapon', rarity: 'common', price: 20, cost: { woodRotten: 20 }, icon: '🪵', forClass: 'warrior', atk: 3, element: 'earth', req: { b: 'weaponShop', lv: 1 } },
+  clothRobe: { id: 'clothRobe', name: '學徒布袍', type: 'armor', rarity: 'common', price: 25, cost: { fruitPoor: 15, waterDirty: 10 }, icon: '🥼', def: 3, hp: 15, req: { b: 'armorShop', lv: 1 } },
+  // ─── NEW: Epic class-locked weapons (parallel to mysticStaff) ───
+  arcaneBlade: { id: 'arcaneBlade', name: '秘紋闊刃', type: 'weapon', rarity: 'epic', price: 170, cost: { magicStones: 5, ironRusty: 60 }, icon: '⚔️', forClass: 'warrior', atk: 22, def: 3, element: 'thunder', req: { b: 'weaponShop', lv: 6 } },
+  shadowBlade: { id: 'shadowBlade', name: '影契短刃', type: 'weapon', rarity: 'epic', price: 160, cost: { magicStones: 5, fruitPoor: 80 }, icon: '🗡️', forClass: 'rogue', atk: 18, crit: 0.12, element: 'dark', req: { b: 'weaponShop', lv: 6 } },
+  silverBow: { id: 'silverBow', name: '銀月長弓', type: 'weapon', rarity: 'epic', price: 180, cost: { magicStones: 5, woodRotten: 90 }, icon: '🏹', forClass: 'archer', atk: 24, element: 'ice', req: { b: 'weaponShop', lv: 6 } },
+  crusadeMace: { id: 'crusadeMace', name: '十字戰錘', type: 'weapon', rarity: 'epic', price: 175, cost: { magicStones: 5, ironRusty: 50, herbLow: 30 }, icon: '🔨', forClass: 'priest', atk: 19, def: 6, hp: 30, element: 'holy', req: { b: 'weaponShop', lv: 6 } },
+  // ─── NEW: Legendary weapons (peak power) ───
+  dragonSlayer: { id: 'dragonSlayer', name: '屠龍巨刃', type: 'weapon', rarity: 'legendary', price: 500, cost: { magicStones: 20, ironRusty: 200, gold: 5000 }, icon: '🐉', forClass: 'warrior', atk: 45, element: 'fire', req: { b: 'weaponShop', lv: 10 } },
+  voidStaff: { id: 'voidStaff', name: '虛空法杖', type: 'weapon', rarity: 'legendary', price: 500, cost: { magicStones: 20, herbLow: 200, gold: 5000 }, icon: '🌀', forClass: 'mage', atk: 38, msFind: 0.3, element: 'dark', req: { b: 'weaponShop', lv: 10 } },
+  venomFang: { id: 'venomFang', name: '毒腺之牙', type: 'weapon', rarity: 'legendary', price: 500, cost: { magicStones: 20, fruitPoor: 200, gold: 5000 }, icon: '🐍', forClass: 'rogue', atk: 32, crit: 0.2, element: 'poison', req: { b: 'weaponShop', lv: 10 } },
+  galeBow: { id: 'galeBow', name: '暴風長弓', type: 'weapon', rarity: 'legendary', price: 500, cost: { magicStones: 20, woodRotten: 200, gold: 5000 }, icon: '🌪️', forClass: 'archer', atk: 50, element: 'thunder', req: { b: 'weaponShop', lv: 10 } },
+  divineHammer: { id: 'divineHammer', name: '神聖之錘', type: 'weapon', rarity: 'legendary', price: 500, cost: { magicStones: 20, ironRusty: 100, herbLow: 100, gold: 5000 }, icon: '⚡', forClass: 'priest', atk: 35, def: 12, hp: 60, element: 'holy', req: { b: 'weaponShop', lv: 10 } },
+  // ─── NEW: Legendary armor ───
+  phoenixArmor: { id: 'phoenixArmor', name: '鳳凰戰甲', type: 'armor', rarity: 'legendary', price: 450, cost: { magicStones: 15, ironRusty: 150, gold: 4000 }, icon: '🦅', def: 28, hp: 120, req: { b: 'armorShop', lv: 8 } },
+  // ─── NEW: New accessories (more variety for build diversity) ───
+  amuletOfVigor: { id: 'amuletOfVigor', name: '活力護身符', type: 'accessory', rarity: 'rare', price: 160, cost: { fruitPoor: 100, herbLow: 50 }, icon: '📿', hp: 80, def: 5, req: { b: 'trinketShop', lv: 2 } },
+  bootsOfSpeed: { id: 'bootsOfSpeed', name: '疾風之靴', type: 'accessory', rarity: 'rare', price: 170, cost: { waterDirty: 60, fruitPoor: 50, ironRusty: 30 }, icon: '👢', eva: 0.12, req: { b: 'trinketShop', lv: 3 } },
+  ringOfMight: { id: 'ringOfMight', name: '力量戒指', type: 'accessory', rarity: 'rare', price: 180, cost: { ironRusty: 80, magicStones: 2 }, icon: '💍', atk: 12, req: { b: 'trinketShop', lv: 2 } },
+  pendantOfWisdom: { id: 'pendantOfWisdom', name: '智者墜飾', type: 'accessory', rarity: 'epic', price: 250, cost: { herbLow: 100, magicStones: 5 }, icon: '🔯', xpMult: 0.15, msFind: 0.05, req: { b: 'trinketShop', lv: 4 } },
+  cloakOfShadows: { id: 'cloakOfShadows', name: '暗影斗篷', type: 'accessory', rarity: 'epic', price: 280, cost: { fruitPoor: 100, magicStones: 4 }, icon: '🧥', crit: 0.1, eva: 0.08, req: { b: 'trinketShop', lv: 4 } },
+  crownOfChampions: { id: 'crownOfChampions', name: '王者之冠', type: 'accessory', rarity: 'legendary', price: 500, cost: { magicStones: 15, ironRusty: 80, herbLow: 80, woodRotten: 80, fruitPoor: 80, waterDirty: 80, gold: 5000 }, icon: '👑', atk: 10, def: 10, hp: 50, crit: 0.05, msFind: 0.1, req: { b: 'trinketShop', lv: 5 } },
+  // ─── NEW: Consumables (potions + scrolls) ───
+  attackPotion: { id: 'attackPotion', name: '力量藥水', type: 'potion', rarity: 'rare', price: 60, cost: { herbLow: 30, ironRusty: 10 }, icon: '💪', atkBuff: 8, duration: 30, req: { b: 'potionShop', lv: 2 } },
+  defensePotion: { id: 'defensePotion', name: '防禦藥水', type: 'potion', rarity: 'rare', price: 60, cost: { herbLow: 30, waterDirty: 20 }, icon: '🛡️', defBuff: 8, duration: 30, req: { b: 'potionShop', lv: 2 } },
+  xpScroll: { id: 'xpScroll', name: '經驗卷軸', type: 'potion', rarity: 'epic', price: 200, cost: { herbLow: 100, magicStones: 2 }, icon: '📜', xpBuff: 100, req: { b: 'potionShop', lv: 3 } },
+  goldMagnetScroll: { id: 'goldMagnetScroll', name: '聚金卷軸', type: 'potion', rarity: 'rare', price: 80, cost: { ironRusty: 30, magicStones: 1 }, icon: '🧲', goldBuff: 0.25, duration: 60, req: { b: 'potionShop', lv: 2 } },
 };
 export const RARITY_NAMES = { common: '普通', rare: '稀有', epic: '史詩', legendary: '傳說' };
 
@@ -207,6 +235,15 @@ export const AFFIXES = [
 export const GEAR_SETS = [
   { id: 'hunter', name: '獵魔套', pieces: ['woodenSword', 'ironArmor'], text: '對頭目傷害 +15%', effect: st => { st.bossDmg = (st.bossDmg || 0) + 0.15; } },
   { id: 'slayer', name: '屠魔套', pieces: ['holyMace', 'knightArmor'], text: '攻/防/HP +8%', effect: st => { st.atk = Math.round(st.atk * 1.08); st.def = Math.round(st.def * 1.08); st.maxHp = Math.round(st.maxHp * 1.08); } },
+  // ─── NEW: 3-piece sets for late-game builds ───
+  { id: 'dragon', name: '龍鱗套', pieces: ['dragonSlayer', 'phoenixArmor', 'crownOfChampions'], text: '攻擊 +25% + 對頭目 +20%', effect: st => { st.atk = Math.round(st.atk * 1.25); st.bossDmg = (st.bossDmg || 0) + 0.20; } },
+  { id: 'void', name: '虛空套', pieces: ['voidStaff', 'phoenixArmor', 'pendantOfWisdom'], text: 'MP +50% + 經驗 +25%', effect: st => { st.msFind = (st.msFind || 0) + 0.5; st.xpMult *= 1.25; } },
+  { id: 'shadow', name: '影行者套', pieces: ['shadowBlade', 'cloakOfShadows', 'bootsOfSpeed'], text: '爆擊 +15% + 閃避 +15%', effect: st => { st.crit = (st.crit || 0) + 0.15; st.eva = (st.eva || 0) + 0.15; } },
+  { id: 'crusade', name: '十字軍套', pieces: ['crusadeMace', 'knightArmor', 'ringOfMight'], text: '攻 +20% + 防 +20% + HP +15%', effect: st => { st.atk = Math.round(st.atk * 1.20); st.def = Math.round(st.def * 1.20); st.maxHp = Math.round(st.maxHp * 1.15); } },
+  { id: 'archer', name: '神射手套', pieces: ['silverBow', 'galeBow', 'amuletOfVigor'], text: '攻 +30% + HP +30%', effect: st => { st.atk = Math.round(st.atk * 1.30); st.maxHp = Math.round(st.maxHp * 1.30); } },
+  // ─── NEW: Early-game 2-piece sets (accessibility for new players) ───
+  { id: 'trainee', name: '見習套', pieces: ['woodenClub', 'clothRobe'], text: '全屬性 +5%', effect: st => { st.atk = Math.round(st.atk * 1.05); st.def = Math.round(st.def * 1.05); st.maxHp = Math.round(st.maxHp * 1.05); } },
+  { id: 'beast', name: '野獸套', pieces: ['wolfFang', 'huntersBow'], text: '攻 +10%', effect: st => { st.atk = Math.round(st.atk * 1.10); } },
 ];
 
 // ─── DIFFICULTY / ELEMENT / BOSS MECH ────────────────────────────────

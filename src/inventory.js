@@ -2,7 +2,7 @@
 // 從 index.html L1578-1745 搬出
 // 設計:不 import audio.js / ui.js;UI 副作用(sfx/showToast/renderAll)由 caller 負責
 
-import { ITEMS, BUILDINGS, GEAR_TIERS, AFFIXES, CLASS_NAMES_ZH, RESOURCES, ENHANCE_MAX, isGear, makeGearInstance, gearTierMult, gearDisplayName, gearSellPrice, baseClassOf } from './data.js'
+import { ITEMS, BUILDINGS, GEAR_TIERS, AFFIXES, GEAR_SETS, CLASS_NAMES_ZH, RESOURCES, ENHANCE_MAX, isGear, makeGearInstance, gearTierMult, gearDisplayName, gearSellPrice, baseClassOf } from './data.js'
 import { gearInventory, shopInventory, MAX_INV, setEquipPick } from './state.js'
 import { $, showToast, hideModal, showModal, esc, uid } from './util.js'
 import { ResourceSystem_spend, ResourceSystem_canAfford, ResourceSystem_add, gainGold, BuildingSystem_getLevel } from './resources-buildings.js'
@@ -136,6 +136,41 @@ export function sellAllCommons() {
   gearInventory.length = 0; gearInventory.push(...next);
   if (!count) { showToast('沒有可賣的普通裝備。', 'info'); return; }
   gainGold(total); sfx('gold'); showToast(`賣出 ${count} 件普通裝備，+${total}🪙`, 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TRANSMUTE: convert unwanted fine/legend gear → magicStones + materials.
+// Retention hook: lets players recycle legendary drops they can't use
+// (e.g. wrong class) into progression resources instead of selling for gold.
+// ═══════════════════════════════════════════════════════════════════
+export function transmuteGear(gearId) {
+  const idx = gearInventory.findIndex(g => g.id === gearId);
+  if (idx < 0) return false;
+  const inst = gearInventory[idx];
+  const def = ITEMS[inst.id];
+  if (!def) return false;
+  // Transmute rewards scale by tier + rarity
+  const tierMult = inst.tier === 'legend' ? 3 : inst.tier === 'fine' ? 1.5 : 0.5;
+  const rarMult = def.rarity === 'legendary' ? 2.5 : def.rarity === 'epic' ? 1.8 : def.rarity === 'rare' ? 1.2 : 1;
+  const msGain = Math.max(1, Math.round(2 * tierMult * rarMult));
+  const goldGain = Math.round((def.price || 30) * 0.6 * tierMult);
+  // Material refund (50% of def.cost, excluding gold/magicStones)
+  const parts = [];
+  for (const [rid, amt] of Object.entries(def.cost || {})) {
+    if (rid === 'gold' || rid === 'magicStones') continue;
+    const back = Math.max(1, Math.floor(amt / 2));
+    ResourceSystem_add(rid, back); parts.push(`${RESOURCES[rid].icon}${back}`);
+  }
+  // Plus a chance at bonus material from set pieces
+  if (GEAR_SETS.some(s => s.pieces.includes(inst.id))) {
+    ResourceSystem_add('magicStones', 1); parts.push('套裝加成💠1');
+  }
+  gearInventory.splice(idx, 1);
+  ResourceSystem_add('magicStones', msGain);
+  gainGold(goldGain);
+  sfx('craft');
+  showToast(`🔄 轉化 ${gearDisplayName(inst)}：${msGain}💠 +${goldGain}🪙 + 素材${parts.length ? ' ' + parts.join(' ') : ''}`, 'success');
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════════════
