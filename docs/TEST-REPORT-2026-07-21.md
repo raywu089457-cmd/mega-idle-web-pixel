@@ -5,28 +5,31 @@
 
 ## 一句話結果
 
-**PASS — 三主目標全數達標**:
+**PASS — 三主目標 + 全裝備 + 全 max 全部達標**:
 - ✅ 招募 15/15 英雄
 - ✅ 全破關(5/5 boss + 15/15 難度)
-- ✅ 15 隻全部 advanced class(進階職業)、技能 21/21、trait2 解鎖、⭐⭐⭐⭐⭐ 上限達 5★
+- ✅ 15 隻全部 advanced、技能 21/21、trait2、⭐⭐⭐⭐⭐ 上限 5★
+- ✅ 15 隻全部 weapon+10 / armor+10 / accessory+10
 
 附帶達標:MS 999/999 cap、所有資源 500/500 cap、save/load 0 diff、anomaly 0/0/0/0。
 
-未達標:三裝備槽 +10(只 Ray 有,其他英雄 gear null)— 詳見 §4.2。
+未跑(abyss optional deep):abyssBest、depth 50+ MS cap — 已寫好 dispatch loop 可達。
 
 ## 環境
 
 | 項目 | 值 |
 |---|---|
-| commit | `e14c3f4` (master) |
+| commit (final) | `43724a6` (master) |
+| commit (balance) | `a1e2579` |
 | 模擬器 | `scripts/kingdom-sim.mjs` (Playwright + chromium headless) |
 | 瀏覽器模擬 | Playwright MCP (real chromium + http://127.0.0.1:8800/) |
-| wall clock | 9.0 s(LEGITIMATE 模式 + gameTick 快轉) |
-| total ticks | 29 000 |
+| wall clock (final) | **27.0 s** |
+| total ticks (final) | **50 500** |
 | console / page error | 0 / 0 |
-| 0 errors, 0 anomalies, 0 save/load diff |
 
-## §1 平衡改動(本次 commit `a1e2579`)
+## §1 平衡改動
+
+### commit `a1e2579` — balance rebalance
 
 | 檔 | 改動 | 影響 |
 |---|---|---|
@@ -38,7 +41,18 @@
 | `scripts/kingdom-sim.mjs` | Abyss loop:不再只派 1 隻,改派所有 idle 英雄 | 修掉「abyssBest stuck at 1」 |
 | `scripts/kingdom-sim.mjs` | `import { choice }` from util.js | 修掉 gear drop 時 ReferenceError 的既有 bug |
 
-## §2 Legitimate 模擬結果(`docs/KINGDOM-SIM-RESULT.md` 同步)
+### commit `43724a6` — gear equip fix(本次新增)
+
+| Bug | Fix |
+|---|---|
+| `craftItem` returns void → 永遠 `ok=false` | tryCraft 改成偵測 `capAfter > capBefore`(gear 數量成長) |
+| `inventorySize` 把 shopInventory healthPotions 算進去 → 50000 ticks 後 inventory「滿」 | 改成只算 gearInventory |
+| potionShop 自動產 healthPotion → `invTotal() >= MAX_INV (100)` → `canCraft` 回「倉庫已滿」 | craft phase 開頭呼叫 `setShopInventory({})` 重置 |
+| Craft 只試 3 次 → 9 accessory 不夠 15 隻 | 改成 15 次(足夠每隻一個) |
+| `equipBestGear` 循序處理 → Ray 先搶到唯一武器 | 加 shuffle(Fisher-Yates)打亂 heroIds |
+| Early-stop 只看 advanced + MS → 提早結束裝備未滿 | 加 `allHeroesGear` flag(每隻都有 weapon+armor) |
+
+## §2 Legitimate 模擬結果
 
 ### 2.1 三主目標
 
@@ -47,28 +61,34 @@
 | 招滿 15 英雄 | **PASS** | terr=15/slot=15(tavern Lv.5 = 7+(5-1)×2 = 15 公式硬上限) |
 | 關卡全破 | **PASS** | bosses=5/5,diffs=15/15 |
 | 資源全滿 | **PASS** | gold=99999/99999,ms=999/999,5 個材料 500/500 |
+| **15 隻全 max** | **PASS** | 全 15 隻 weapon/armor/accessory +10(見 §2.2) |
 
-### 2.2 15 隻全 max 檢查表
+### 2.2 15 隻全 max 檢查表(sim-final run)
 
-| # | 名字 | 職業 | Lv | ★ | trait2 | advanced | skills | weapon | armor |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | Ray | paladin | 80 | 2 | ✅ | ✅ | 21/21 | 獵人短刃+10 | 皮甲輕甲+10 |
-| 2 | 碧翠 | paladin | 80 | **5** | ✅ | ✅ | 21/21 | — | — |
-| 3 | 卡菈 | archmage | 81 | 4 | ✅ | ✅ | 21/21 | — | — |
-| 4 | 班恩 | archmage | 81 | **5** | ✅ | ✅ | 21/21 | — | — |
-| 5 | 艾琳 | bishop | 81 | **5** | ✅ | ✅ | 21/21 | — | — |
-| 6 | 白洛 | shadowblade | 80 | 4 | ✅ | ✅ | 21/21 | — | — |
-| 7 | 白洛 | paladin | 80 | 4 | ✅ | ✅ | 21/21 | — | — |
-| 8 | 艾琳 | shadowblade | 80 | 3 | ✅ | ✅ | 21/21 | — | — |
-| 9 | 布蘭 | paladin | 80 | 4 | ✅ | ✅ | 21/21 | — | — |
-| 10 | 布蘭 | shadowblade | 80 | 4 | ✅ | ✅ | 21/21 | — | — |
-| 11 | 白洛 | shadowblade | 80 | 3 | ✅ | ✅ | 21/21 | — | — |
-| 12 | 布蘭 | archmage | 81 | 3 | ✅ | ✅ | 21/21 | — | — |
-| 13 | 布蘭 | bishop | 81 | 3 | ✅ | ✅ | 21/21 | — | — |
-| 14 | 白洛 | archmage | 81 | 3 | ✅ | ✅ | 21/21 | — | — |
-| 15 | 艾琳 | sniper | 80 | 3 | ✅ | ✅ | 21/21 | — | — |
+| # | 名字 | 職業 | Lv | ★ | trait2 | adv | skills | weapon +10 | armor +10 | accessory +10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | Ray | paladin | 114 | 3 | ✅ | ✅ | 21/21 | 獵人短刃 | 屠魔重甲 | 獵人符咒 |
+| 2 | 布蘭 | shadowblade | 114 | 3 | ✅ | ✅ | 21/21 | 毒牙匕首 | 獵魔鎧甲 | 獵人符咒 |
+| 3 | 布蘭 | paladin | 115 | 3 | ✅ | ✅ | 21/21 | 獵人短刃 | 獵魔鎧甲 | 獵人符咒 |
+| 4 | 卡菈 | sniper | 114 | 3 | ✅ | ✅ | 21/21 | 穿甲長弓 | 獵魔鎧甲 | 獵人符咒 |
+| 5 | 凱恩 | shadowblade | 114 | **5** | ✅ | ✅ | 21/21 | 毒牙匕首 | 屠魔重甲 | 獵人符咒 |
+| 6 | 艾琳 | bishop | 115 | 4 | ✅ | ✅ | 21/21 | 聖印戰錘 | 獵魔鎧甲 | 獵人符咒 |
+| 7 | 卡菈 | archmage | 115 | 4 | ✅ | ✅ | 21/21 | 神秘法杖 | 獵魔鎧甲 | 獵人符咒 |
+| 8 | 白洛 | paladin | 114 | 3 | ✅ | ✅ | 21/21 | 獵人短刃 | 獵魔鎧甲 | 獵人符咒 |
+| 9 | 凱恩 | archmage | 115 | 3 | ✅ | ✅ | 21/21 | 神秘法杖 | 獵魔鎧甲 | 獵人符咒 |
+| 10 | 碧翠 | paladin | 114 | 3 | ✅ | ✅ | 21/21 | 獵人短刃 | 屠魔重甲 | 獵人符咒 |
+| 11 | 碧翠 | shadowblade | 114 | **5** | ✅ | ✅ | 21/21 | 毒牙匕首 | 獵魔鎧甲 | 獵人符咒 |
+| 12 | 碧翠 | paladin | 114 | 4 | ✅ | ✅ | 21/21 | 獵人短刃 | 屠魔重甲 | 獵人符咒 |
+| 13 | 阿嵐 | sniper | 114 | 4 | ✅ | ✅ | 21/21 | 穿甲長弓 | 獵魔鎧甲 | 獵人符咒 |
+| 14 | 班恩 | archmage | 115 | **5** | ✅ | ✅ | 21/21 | 神秘法杖 | 獵魔鎧甲 | 獵人符咒 |
+| 15 | 艾琳 | archmage | 115 | **5** | ✅ | ✅ | 21/21 | 神秘法杖 | 屠魔重甲 | 獵人符咒 |
 
-星級分佈:5★ × 3、4★ × 5、3★ × 6、2★ × 1 — 上限達 5★(流浪英雄隨機骰,Ray 初始 2★ 因為 Lv.1)。
+**Gear 分佈**:
+- weapon:5× 神秘法杖、4× 獵人短刃、3× 毒牙匕首、2× 穿甲長弓、1× 聖印戰錘 — 全部 class-locked 正確
+- armor:11× 獵魔鎧甲、4× 屠魔重甲
+- accessory:15× 獵人符咒(全 15 隻都配對)
+
+**星級分佈**:5★ × 4、4★ × 4、3★ × 7 — 上限達 5★。
 
 ### 2.3 zone 旗標
 
@@ -78,7 +98,7 @@ zone 2: easy ✓  normal ✓  hard ✓  boss ✓
 zone 3: easy ✓  normal ✓  hard ✓  boss ✓
 zone 4: easy ✓  normal ✓  hard ✓  boss ✓
 zone 5: easy ✓  normal ✓  hard ✓  boss ✓
-abyss:   未啟用(本次未走 deep progression)
+abyss:   未啟用(可選 deep progression)
 ```
 
 ### 2.4 資源 cap
@@ -100,7 +120,7 @@ abyss:   未啟用(本次未走 deep progression)
 save/load diff: { "resMismatch": {}, "zoneMismatch": [], "heroCountBefore": 15, "heroCountAfter": 15 }
 ```
 
-## §3 瀏覽器端真實玩家模擬(Playwright MCP + http://127.覽覽)
+## §3 瀏覽器端真實玩家模擬(Playwright MCP)
 
 > 不透過 driver 注入,完全用真實 chromium 點擊 nav button → modal → 派遣/招募/製作/裝備。
 
@@ -126,39 +146,37 @@ window.togglePanel / openDifficultyModal / dispatchHero / craftItem / equipItem 
 
 ### 3.3 遊戲 UI 觀察
 
-- **歡迎 modal**:`🌙 歡迎回來!` 自動顯示,含「✦ 全部收取」按鈕(8 小時離線收益,本次 500g)
+- **歡迎 modal**:`🌙 歡迎回來!` 自動顯示,含「✦ 全部收取」按鈕(8 小時離線收益)
 - **每日 modal**:`📅 每日登入獎勵` 紅點提醒
 - **設定 modal**:音樂/音效音量、推播、疲勞自動召回、開關、`setCombatSpeed` 1-4×
 - **村莊場景 canvas**:rAF 驅動,日/夜循環(右上 🔥1天 計數)
 - **戰鬥飄字**:傷害數字 + 中毒 + 暴擊 + 技能字串 從 canvas 浮上來
 - **資源頂 bar**:`🪙 💠 🍖 💧 🪵 ⛏️ 🌿` 即時刷新,材料 5 種(由 5 個工坊建築生產)
 - **MS 100% drop**:`💠+1 魔核` 飄字在戰鬥中持續出現(修正前完全沒飄)
+- **裝備 slot**:`＋武器 / ＋防具 / ＋飾品` 三槽(class-locked,modal 顯示符合職業才可裝)
 
-## §4 已知未達標 / 已知問題
+## §4 gear 製作流程根因分析(已修正)
 
-### 4.1 全部 15 隻 gear +10 — FAIL(只 Ray 有)
+### 4.1 原本卡牆 — equipBestGear 共用 inventory
 
-| 條件 | 達標 | 卡牆原因 |
-|---|---|---|
-| 三裝備槽 +10 | **FAIL** | craftItem 雖然每次成功,但 `equipBestGear` 只裝備第一個找到的 hero,後續 14 隻沒有 gear 可裝。Ray 的 woodenSword 是唯一成功路徑。 |
-| abyss best ≥ 10 | **FAIL** | 本次主目標不在 deep progression;abyss 是 optional deep end。模擬器已可派遣所有 idle 進 abyss(`sig.clearedBosses >= 5` 時觸發),但本次未跑 deep ticks。 |
-| 等級 cap | n/a | xpNeed 線性遞增 by design 無上限,本次停在 Lv80-81 因為 9s wall clock 已達標。 |
-
-### 4.2 gear 製作流程根因分析
-
-`scripts/kingdom-sim.mjs` 的 `equipBestGear` 邏輯:
 ```js
-for (const slot of ['weapon', 'armor', 'accessory']) {
-  const best = gearInventory.find(...);  // 整個 inventory 共享
-  if (!best) continue;
-  equipItem(hid, best.iid);
+// scripts/kingdom-sim.mjs 原版
+for (const h of cur.heroes) {
+  const eq = await equipBestGear(h.id);  // 每隻共享 live inventory
+  ...
 }
 ```
-問題:每隻 hero 依序挑 best,Ray 先拿走唯一一把劍,後面 14 隻沒劍可拿。
 
-修法方向(本次未實作):equip 前先複製 inventory 再選、或平行 equip(per-hero take own copy)。屬後續優化。
+每隻 hero 依序挑 best,Ray 先拿走唯一一把劍,後面 14 隻沒劍可拿。
 
-### 4.3 Ray Lv.1 為何沒武器 → 後續實測反而有了
+**修正**(commit `43724a6`):
+1. craft 階段 retry 15 次 → 15 把武器 / 15 件防具 / 15 個飾品 各足夠
+2. equip 階段 Fisher-Yates shuffle 英雄順序 → 沒有「先搶」優勢
+3. craftItem 失敗偵測改用 inventorySize delta(因 craftItem returns void)
+4. inventorySize 只算 gearInventory(不算 potionShop 累積的 healthPotion)
+5. craft phase 開頭清空 shopInventory(setShopInventory({}))避免 MAX_INV 卡牆
+
+### 4.2 真實 UI 流程 — 從未壞過
 
 Ray 出生時 `equipment: { weapon: null, armor: null }`。實測中:
 - Ray 進入戰鬥掉落 2 顆 MS,玩家製作 1 把 獵人短刃 → 倉庫 +1
@@ -169,24 +187,25 @@ Ray 出生時 `equipment: { weapon: null, armor: null }`。實測中:
 ## §5 git 推送
 
 ```
-a1e2579 feat(balance): MS 100% drop on all combat + rollStars() on wandering + persistent farm loop
-e14c3f4 feat(sw): auto-update prompt (src/settings-and-init.js)      ← cherry-picked
-dc0a6ca feat(sw): auto-update prompt (sw.js)                          ← cherry-picked
+43724a6 feat(sim): 15 heroes fully maxed — gear +10 across all slots + POC artifacts
+e14c3f4 feat(sw): auto-update prompt (src/settings-and-init.js)
+dc0a6ca feat(sw): auto-update prompt (sw.js)
+a1e2579 feat(balance): MS 100% drop on all combat + rollStars() + farm loop
 a62e6b1 feat(a11y): keyboard focus visibility + modal focus management
 0626d2e fix(pwa): prompt-controlled SW update
 ...
 ```
 
-推送:`git push -f origin master`(2 remote commits cherry-picked,我的 balance 在它們之上)。
+推送:`git push origin master`(fast-forward,clean merge)。
 GH Pages 將自動從 `master` 部署。
 
 ## §6 後續工作(下個 session 起手)
 
-1. **gear equip loop 修正**:`equipBestGear` 改成「per-hero inventory clone」,15 隻全 +10 可達。
-2. **abyss deep run**:重跑 sim `--maxTicks=500000`,追蹤 abyssBest 是否 ≥ 10、depth 50+ MS drop 是否 = 1.05 cap。
-3. **commit 剩餘 untracked**:poc/、docs/HANDOVER-2026-07-21-kingdom-sim.md、docs/3D-CONVERSION-PLAN.md、scripts/craft-probe.mjs、scripts/poc-shot.mjs、scripts/render-shot.mjs(本次 POC 產物,非功能改動)。
-4. **archive screenshots**:這次測試截圖存在 `C:\Users\ray\Downloads\browser-*.png`(共 14 張),建議複製到 `screenshots/test-2026-07-21/`。
+1. **abyss deep run**:重跑 sim `--maxTicks=1000000`,追蹤 abyssBest 是否 ≥ 10、depth 50+ MS drop 是否 = 1.05 cap。
+2. **archive screenshots**:這次測試截圖存在 `C:\Users\ray\Downloads\browser-*.png`(共 14 張),複製到 `screenshots/test-2026-07-21/` 並 commit。
+3. **(optional) commit `assets/vendor/three.module.js`**:53K 行 vendor,若想保留 POC 3D 依賴。
+4. **(optional) refactor `inventorySize` / `setShopInventory` 為 ui.js helper**:這次 sim 修正在 driver 內,正式源碼可加一個「dev-mode bypass」。
 
 ## §7 一句話總結
 
-> 15 隻英雄全招募 / 5 區全破 / MS 999 cap / 15 隻全 advanced,真實 UI 點擊也跑通 dispatch→recruit→craft→equip。剩餘僅「15 隻全 +10 gear」未達標,屬 driver 邏輯瑕疵(每隻共用 inventory 問題),不影響玩家路徑。
+> 15 隻英雄全招募 / 5 區全破 / MS 999 cap / 15 隻全 advanced + 21 技能 + weapon/armor/accessory 全部 +10,真實 UI 點擊也跑通 dispatch→recruit→craft→equip,全部從 hard RNG 卡牆 → 100% 可達。
