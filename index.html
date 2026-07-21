@@ -320,6 +320,12 @@ body{
 .slider{-webkit-appearance:none;appearance:none;width:110px;height:3px;background:rgba(139,90,43,0.2);outline:none;}
 .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--golden-wheat);cursor:pointer;border:2px solid var(--charcoal);}
 .slider::-moz-range-thumb{width:14px;height:14px;background:var(--golden-wheat);cursor:pointer;border:2px solid var(--charcoal);border-radius:0;}
+/* ── 鍵盤焦點環 (WCAG 2.4.7):只在鍵盤操作時顯示,滑鼠點擊不顯示 ── */
+:focus-visible{outline:3px solid var(--golden-wheat);outline-offset:2px;}
+.nav-btn:focus-visible{outline-offset:-3px;}
+.slider:focus-visible{outline:3px solid var(--golden-wheat);outline-offset:2px;}
+/* 舊瀏覽器不支援 :focus-visible 時,退回顯示 :focus(避免完全沒有焦點提示) */
+@supports not selector(:focus-visible){ a:focus,button:focus,input:focus,select:focus,textarea:focus,[tabindex]:focus{outline:3px solid var(--golden-wheat);outline-offset:2px;} }
 .toggle{width:36px;height:18px;background:rgba(139,90,43,0.2);position:relative;cursor:pointer;flex-shrink:0;}
 .toggle.on{background:var(--green);}
 .toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--parchment);transition:transform 0.2s;}
@@ -545,7 +551,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── WELCOME BACK MODAL ── -->
 <div class="modal-overlay" id="modal-welcome">
-  <div class="modal" role="region" aria-labelledby="modal-welcome-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-welcome-title">
     <div class="modal-title" id="modal-welcome-title">🌙 歡迎回來！</div>
     <div class="modal-body" id="modal-welcome-body"></div>
     <div class="modal-actions"><button class="btn btn-gold" onclick="collectOffline()">✦ 全部收取</button></div>
@@ -554,7 +560,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── DAILY LOGIN MODAL ── -->
 <div class="modal-overlay" id="modal-daily">
-  <div class="modal" role="region" aria-labelledby="modal-daily-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-daily-title">
     <div class="modal-title" id="modal-daily-title">📅 每日登入獎勵</div>
     <div class="modal-body" id="modal-daily-body"></div>
     <div class="modal-actions"><button class="btn btn-gold" onclick="claimDaily()">✦ 領取獎勵</button></div>
@@ -563,7 +569,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── SETTINGS MODAL ── -->
 <div class="modal-overlay" id="modal-settings">
-  <div class="modal" role="region" aria-labelledby="modal-settings-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
     <div class="modal-title" id="modal-settings-title">⚙️ 遊戲設定</div>
     <div class="modal-body">
       <div class="setting-row"><label class="setting-label" for="slider-music">🎵 音樂音量</label><input type="range" class="slider" id="slider-music" min="0" max="100" value="40" aria-label="音樂音量"></div>
@@ -597,7 +603,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── ONBOARDING MODAL ── -->
 <div class="modal-overlay" id="modal-onboard">
-  <div class="modal" role="region" aria-labelledby="modal-onboard-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-onboard-title">
     <div class="modal-title" id="modal-onboard-title">🏹 歡迎來到放置王國！</div>
     <div class="modal-body">
       <div class="onboard-step"><b>第 1 步 ⚔ 派遣狩獵</b><div>打開「地圖」，派獵人前往迷霧森林驅逐魔物，賺取金幣與經驗。</div></div>
@@ -611,7 +617,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── DISPATCH MODAL ── -->
 <div class="modal-overlay" id="modal-dispatch">
-  <div class="modal" role="region" aria-labelledby="modal-dispatch-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-dispatch-title">
     <div class="modal-title" id="modal-dispatch-title">⚔ 出征派遣</div>
     <div id="dispatch-hero-name" style="text-align:center;font-size:15px;font-weight:bold;color:var(--rich-soil);margin-bottom:10px;"></div>
     <div class="dispatch-zone-grid" id="dispatch-zone-grid"></div>
@@ -623,7 +629,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── PARTY DISPATCH MODAL ── -->
 <div class="modal-overlay" id="modal-party-dispatch">
-  <div class="modal" role="region" aria-labelledby="modal-party-dispatch-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-party-dispatch-title">
     <div class="modal-title" id="modal-party-dispatch-title">👥 組隊派遣</div>
     <div class="modal-body" id="party-dispatch-body"></div>
     <div class="modal-actions">
@@ -635,7 +641,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── INVENTORY / EQUIP MODAL ── -->
 <div class="modal-overlay" id="modal-inventory">
-  <div class="modal" role="region" aria-labelledby="inv-modal-title">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="inv-modal-title">
     <div class="modal-title" id="inv-modal-title">🎒 背包</div>
     <div id="inv-modal-hero" style="text-align:center;font-size:13px;color:var(--text-faint);margin-bottom:12px;"></div>
     <div id="inv-modal-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;"></div>
@@ -645,7 +651,7 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
 
 <!-- ── DIFFICULTY DETAIL MODAL ── -->
 <div class="modal-overlay" id="modal-detail">
-  <div class="modal" role="region" aria-labelledby="modal-detail-name">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-detail-name">
     <div class="modal-title" id="modal-detail-name">難度詳情</div>
     <div id="modal-detail-body" style="max-height:55vh;overflow-y:auto;"></div>
     <div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal()">關閉</button></div>

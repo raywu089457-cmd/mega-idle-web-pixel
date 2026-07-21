@@ -355,14 +355,30 @@ import { checkDaily } from './meta.js'
 // ═══════════════════════════════════════════════════════════════════
 function setupKeyboardNav() {
   document.addEventListener('keydown', (e) => {
+    const openModals = document.querySelectorAll('.modal-overlay.open');
+    const topModal = openModals.length ? openModals[openModals.length - 1] : null;
+
+    // Tab focus-trap:把焦點鎖在最上層 modal 內(配合 aria-modal="true")
+    if (e.key === 'Tab' && topModal) {
+      const box = topModal.querySelector('.modal') || topModal;
+      const items = [...box.querySelectorAll('button:not([disabled]), [href], input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => el.offsetParent !== null);
+      if (items.length === 0) { e.preventDefault(); return; }
+      const first = items[0], last = items[items.length - 1], active = document.activeElement;
+      // 焦點在 modal 外、或停在容器(tabindex=-1)本身時,顯式拉回(前向→first、shift→last),不賭原生行為
+      if (!box.contains(active) || active === box) { (e.shiftKey ? last : first).focus(); e.preventDefault(); }
+      else if (e.shiftKey && active === first) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && active === last) { first.focus(); e.preventDefault(); }
+      return;
+    }
+
     if (e.key !== 'Escape') return;
     // 不要搶 input/textarea 的 Esc
     const t = e.target;
     if (t && (t.matches?.('input, textarea, select') || t.isContentEditable)) return;
-    // 先關最上層 modal
-    const openModals = document.querySelectorAll('.modal-overlay.open');
-    if (openModals.length > 0) {
-      openModals[openModals.length - 1].classList.remove('open');
+    // 先關最上層 modal(走 hideModal → 焦點還給開啟它的元素)
+    if (topModal) {
+      hideModal(topModal.id);
       e.preventDefault();
       return;
     }

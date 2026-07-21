@@ -37,8 +37,25 @@ export const mixColor = (a, b, k) => [Math.round(a[0] + (b[0] - a[0]) * k), Math
 export const rgb = (arr) => `rgb(${arr[0]},${arr[1]},${arr[2]})`;
 
 // ─── Modal / toast (DOM-only,不依賴 game state) ─────────────────────
-export function showModal(id) { $(id).classList.add('open'); }
-export function hideModal(id) { $(id).classList.remove('open'); }
+const _modalOpener = {};
+export function showModal(id) {
+  const el = $(id); if (!el) return;
+  if (!el.classList.contains('open')) _modalOpener[id] = document.activeElement;
+  el.classList.add('open');
+  // 焦點移入 dialog 容器(tabindex=-1),讓 SR 從標題唸起、Tab 由 focus-trap 循環
+  const box = el.querySelector('.modal') || el;
+  if (!box.hasAttribute('tabindex')) box.setAttribute('tabindex', '-1');
+  box.focus?.();
+}
+export function hideModal(id) {
+  const el = $(id); if (!el) return;
+  const wasOpen = el.classList.contains('open');
+  el.classList.remove('open');
+  if (wasOpen) {
+    const opener = _modalOpener[id]; delete _modalOpener[id];
+    if (opener && document.contains(opener) && typeof opener.focus === 'function') opener.focus();
+  }
+}
 export function closeModal() { hideModal('modal-detail'); }
 export function showToast(msg, type = 'info', duration = 2200) {
   const box = $('toast-container'); if (!box) return null;
