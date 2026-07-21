@@ -98,12 +98,31 @@ export function finishAbyssCombat(hero, lc, won) {
 // ═══════════════════════════════════════════════════════════════════
 // 流浪獵人
 // ═══════════════════════════════════════════════════════════════════
+// Weighted spawn: common low-level heroes frequent; rare high-level rare.
+// This keeps the village flowing with new recruits while preserving the
+// "wow, a Lv 16 priest just walked in!" moment for endgame players.
+function pickWanderingType() {
+  // weight: T1=10, T2=5, T3=1
+  const weights = WANDERING_HERO_TYPES.map(t => {
+    if (t.level <= 3) return 10;
+    if (t.level <= 8) return 5;
+    return 1;
+  });
+  const total = weights.reduce((s, w) => s + w, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < WANDERING_HERO_TYPES.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return WANDERING_HERO_TYPES[i];
+  }
+  return WANDERING_HERO_TYPES[0];
+}
 export function spawnWanderingHero() {
   if (wanderingHeroes.length >= BuildingSystem_getMaxWanderingHeroes()) return;
-  const tpl = choice(WANDERING_HERO_TYPES);
+  const tpl = pickWanderingType();
   const rarity = pickRarity();
   const rDef = RARITIES[rarity];
-  const wallet = Math.round((40 + tpl.level * 30) * rDef.walletMult);
+  // Wallet scales with hero level so high-level visitors are pricey recruits
+  const wallet = Math.round((40 + tpl.level * 60) * rDef.walletMult);
   const id = 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   const h = normalizeHero({
     id, name: choice(['阿嵐','艾琳','白洛','班恩','碧翠','布蘭','凱恩','卡菈']),
@@ -113,7 +132,8 @@ export function spawnWanderingHero() {
     equipment: { weapon: null, armor: null },
     inventory: {},
     wallet, diamonds: 0,
-    mood: rand(50, 80),
+    // Higher-level visitors start with better mood (selective)
+    mood: rand(50, 80) + Math.min(15, tpl.level),
     dropMagicStoneChance: tpl.dropMagicStoneChance,
   });
   h.huntZoneId = null;

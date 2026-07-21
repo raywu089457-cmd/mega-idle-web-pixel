@@ -65,6 +65,18 @@ const HUNT_ZONES = [
       { kind: 'golem', name: '碎石魔像', color: '#7d6b5d', hp: 110, atk: 14, def: 6, gold: [36, 62], xp: 26, debuff: 'bleed' },
       { kind: 'wisp', name: '荒嶺怨靈', color: '#6ad3e0', hp: 72, atk: 18, def: 2, gold: [30, 54], xp: 22, debuff: 'poison' },
     ],
+    // Level-scaled monsters: HP/ATK scale with hero level beyond zone baseline
+    nightMonsters: [
+      { kind: 'scaledBeast', name: '暗影巨獸', color: '#5d2a5d', hp: 120, atk: 22, def: 5, gold: [50, 80], xp: 35, scalePerLevel: { hp: 12, atk: 2, def: 1 }, debuff: 'bleed' },
+    ],
+  },
+  // ─── NEW: Lv 15+ zone (post-ridge, scales infinitely with hero level) ───
+  { id: 'void', name: '虛空裂隙', minLv: 15, maxLv: 999, x: 16, y: 100, w: 80, h: 44, spawn: 3, ground: 'rgba(20,12,32,0.85)',
+    monsters: [
+      { kind: 'voidling', name: '虛空行者', color: '#7c5cff', hp: 180, atk: 28, def: 8, gold: [80, 140], xp: 60, scalePerLevel: { hp: 18, atk: 3, def: 2 }, debuff: 'poison' },
+      { kind: 'abyssEye', name: '深淵之眼', color: '#ff5c7c', hp: 240, atk: 36, def: 6, gold: [120, 200], xp: 90, scalePerLevel: { hp: 24, atk: 4, def: 1 }, debuff: 'bleed' },
+      { kind: 'soulReaver', name: '噬魂者', color: '#c0c0ff', hp: 320, atk: 44, def: 10, gold: [200, 320], xp: 140, scalePerLevel: { hp: 32, atk: 5, def: 2 }, debuff: 'poison' },
+    ],
   },
 ];
 const ANCHOR_BASE = {
@@ -180,16 +192,38 @@ function bestHuntZone(h) {
   if (z) return z;
   return lv < HUNT_ZONES[0].minLv ? HUNT_ZONES[0] : HUNT_ZONES[HUNT_ZONES.length - 1];
 }
+// Compute level-scaled monster stats: base + (highest hero level in zone − zone minLv) × scalePerLevel
+function scaleMonsterStats(t, zone, idx) {
+  // Find the highest-level wandering hero currently in this zone
+  let maxLvInZone = 0;
+  for (const h of wanderingHeroes) {
+    if (h.huntZoneId === zone.id && h.level > maxLvInZone) maxLvInZone = h.level;
+  }
+  const overshoot = Math.max(0, maxLvInZone - zone.minLv);
+  const s = t.scalePerLevel || {};
+  const hp = (t.hp || 0) + (s.hp || 0) * overshoot;
+  const atk = (t.atk || 0) + (s.atk || 0) * overshoot;
+  const def = (t.def || 0) + (s.def || 0) * overshoot;
+  // Slight variety per instance to avoid deterministic feel
+  const jitter = (idx * 7) % 11;
+  return {
+    hp: hp + Math.round(jitter * 0.5),
+    maxHp: hp + Math.round(jitter * 0.5),
+    atk: atk + Math.floor(jitter / 4),
+    def: def + Math.floor(jitter / 6),
+  };
+}
 function ensureWildMonsters() {
   for (const z of HUNT_ZONES) {
     const inZone = wildMonsters.filter(m => m.zone === z.id);
     for (let i = inZone.length; i < z.spawn; i++) {
       const pool = (sceneNight > 0.5 && z.nightMonsters) ? z.monsters.concat(z.nightMonsters) : z.monsters;
       const t = choice(pool);
+      const scaled = scaleMonsterStats(t, z, i);
       wildMonsters.push({
         id: uid(), zone: z.id, kind: t.kind, name: t.name, color: t.color, debuff: t.debuff || null,
         x: z.x + 8 + rand(0, z.w - 18), y: z.y + 12 + rand(0, z.h - 24),
-        hp: t.hp, maxHp: t.hp, atk: t.atk, def: t.def, gold: t.gold, xp: t.xp,
+        hp: scaled.hp, maxHp: scaled.maxHp, atk: scaled.atk, def: scaled.def, gold: t.gold, xp: t.xp,
         alive: true, respawnTicks: 0, flash: 0,
       });
     }
@@ -373,7 +407,16 @@ export function updateWanderingScene(dt) {
       m.respawnTicks -= dt;
       if (m.respawnTicks <= 0) {
         const z = huntZoneById(m.zone);
-        m.alive = true; m.hp = m.maxHp;
+        // Re-scale stats on respawn so monsters grow as wandering heroes level up
+        const baseT = (z.nightMonsters && sceneNight > 0.5) ? z.nightMonsters.concat(z.monsters) : z.monsters;
+        const t = baseT.find(tt => tt.kind === m.kind) || baseT[0];
+        if (t && t.scalePerLevel) {
+          const scaled = scaleMonsterStats(t, z, 0);
+          m.hp = scaled.hp; m.maxHp = scaled.maxHp; m.atk = scaled.atk; m.def = scaled.def;
+        } else {
+          m.hp = m.maxHp;
+        }
+        m.alive = true;
         m.x = z.x + 8 + rand(0, z.w - 18); m.y = z.y + 12 + rand(0, z.h - 24);
       }
     }

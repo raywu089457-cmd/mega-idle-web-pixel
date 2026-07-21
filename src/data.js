@@ -101,14 +101,19 @@ export const HUNTER_NAMES = [
 export const WANDERING_HERO_TYPES = [
   { typeId: 'wandering_warrior_1', class: 'warrior', name: '見習劍士', level: 1, dropGold: 20, dropMagicStoneChance: 0.1 },
   { typeId: 'wandering_warrior_2', class: 'warrior', name: '老練劍士', level: 5, dropGold: 50, dropMagicStoneChance: 0.15 },
+  { typeId: 'wandering_warrior_3', class: 'warrior', name: '戰爭英雄', level: 12, dropGold: 120, dropMagicStoneChance: 0.22 },
   { typeId: 'wandering_mage_1', class: 'mage', name: '流浪咒術師', level: 2, dropGold: 25, dropMagicStoneChance: 0.12 },
   { typeId: 'wandering_mage_2', class: 'mage', name: '禁書術士', level: 7, dropGold: 60, dropMagicStoneChance: 0.18 },
+  { typeId: 'wandering_mage_3', class: 'mage', name: '虛空召喚師', level: 15, dropGold: 180, dropMagicStoneChance: 0.3 },
   { typeId: 'wandering_rogue_1', class: 'rogue', name: '巷弄刺客', level: 1, dropGold: 15, dropMagicStoneChance: 0.08 },
   { typeId: 'wandering_rogue_2', class: 'rogue', name: '無聲獵手', level: 8, dropGold: 70, dropMagicStoneChance: 0.2 },
+  { typeId: 'wandering_rogue_3', class: 'rogue', name: '暗影行者', level: 14, dropGold: 150, dropMagicStoneChance: 0.28 },
   { typeId: 'wandering_archer_1', class: 'archer', name: '遊蕩遊俠', level: 3, dropGold: 35, dropMagicStoneChance: 0.12 },
   { typeId: 'wandering_archer_2', class: 'archer', name: '鷹眼神射', level: 6, dropGold: 55, dropMagicStoneChance: 0.17 },
+  { typeId: 'wandering_archer_3', class: 'archer', name: '破曉神射手', level: 13, dropGold: 140, dropMagicStoneChance: 0.26 },
   { typeId: 'wandering_priest_1', class: 'priest', name: '旅行神官', level: 2, dropGold: 22, dropMagicStoneChance: 0.14 },
   { typeId: 'wandering_priest_2', class: 'priest', name: '聖印祭司', level: 7, dropGold: 58, dropMagicStoneChance: 0.2 },
+  { typeId: 'wandering_priest_3', class: 'priest', name: '大主教代行', level: 16, dropGold: 200, dropMagicStoneChance: 0.32 },
 ];
 
 // ─── RARITIES ────────────────────────────────────────────────────────
