@@ -15,6 +15,7 @@ import { setActivePanel, activePanel, setHeroSubTab, heroSubTab, setShopFilter, 
 import { openPanel, renderHUD, renderAll } from './ui.js'
 import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, serviceZoneOf, drawWorldRing, drawGates, ROAD_GRAPH, getWaypoint, pathFind, nearestWaypoint } from './scene-map.js'
 import { getQueueSlotOffset } from './queue-points.js'
+import { getUnlockedDecorationsForBuilding } from './region-unlocks.js'
 
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -920,6 +921,27 @@ function drawStaticLayer(t) {
         c.lineWidth = 2;
         c.strokeRect(d.aura.x, d.aura.y, d.aura.w, d.aura.h);
         c.restore();
+      }
+    }
+    // region unlock (§十 第三):擊敗該區域 boss 後,在該棟加特殊裝飾
+    const REGION_DECOR_POSITIONS = {
+      alchemy:   { mistFlask: [{ x: 128, y: 246, w: 4, h: 6, color: '#7dffa8' }, { x: 124, y: 244, w: 2, h: 2, color: '#a8ffc8' }] },
+      market:    { crystalScale: [{ x: 198, y: 142, w: 5, h: 5, color: '#9b59b6' }] },
+      forge:     { goldPile: [{ x: 12, y: 286, w: 5, h: 4, color: '#ffd700' }, { x: 14, y: 290, w: 3, h: 2, color: '#d4a017' }] },
+      guild:     { lavaBanner: [{ x: 100, y: 100, w: 28, h: 10, color: '#ff6b35' }, { x: 102, y: 98, w: 24, h: 2, color: '#ffd700' }] },
+      research:  { voidBanner: [{ x: 184, y: 234, w: 16, h: 6, color: '#5a4a8a' }, { x: 186, y: 240, w: 12, h: 2, color: '#7d6ba8' }] },
+    };
+    const SCENE_TO_BUILDING = { tavern: 'tavern', guild: 'monument', market: 'goldMine', forge: 'weaponShop', alchemy: 'potionShop', research: 'altar', restaurant: 'restaurant', drinkShop: 'drinkShop' };
+    const buildingId = SCENE_TO_BUILDING[sceneKey];
+    if (buildingId) {
+      const regionDecs = getUnlockedDecorationsForBuilding(buildingId);
+      const positions = REGION_DECOR_POSITIONS[sceneKey] || {};
+      for (const decKey of regionDecs) {
+        const rects = positions[decKey]; if (!rects) continue;
+        for (const r of rects) {
+          c.fillStyle = r.color;
+          c.fillRect(r.x, r.y, r.w, r.h);
+        }
       }
     }
   };
