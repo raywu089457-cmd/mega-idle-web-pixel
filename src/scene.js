@@ -12,7 +12,7 @@ import { getCombatGoldMultiplier } from './bonuses.js'
 import { defaultTeams } from './combat-party.js'
 import { setActivePanel, activePanel, setHeroSubTab, heroSubTab, setShopFilter, shopFilter } from './state.js'
 import { openPanel, renderHUD, renderAll } from './ui.js'
-import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, serviceZoneOf, drawWorldRing, drawGates } from './scene-map.js'
+import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, serviceZoneOf, drawWorldRing, drawGates, ROAD_GRAPH, getWaypoint, pathFind, nearestWaypoint } from './scene-map.js'
 
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -245,13 +245,53 @@ function wanderingHeroAt(x, y) {
   return null;
 }
 function setWanderingTarget(h, state, x, y) {
-  h.aiState = state; h.targetX = x + rand(-5, 5); h.targetY = y + rand(-3, 3); h.actionTicks = 0;
+  h.aiState = state;
+  h.finalTargetX = x + rand(-5, 5);
+  h.finalTargetY = y + rand(-3, 3);
+  h.actionTicks = 0;
+  // 主動線路徑(走 ROAD_GRAPH BFS,§七 推薦)。若無路點鄰近或 BFS 失敗則 fallback 直線 — 行為與改動前相同。
+  if (h.sx == null) h.sx = 120;
+  if (h.sy == null) h.sy = 196;
+  const fromWp = nearestWaypoint(h.sx, h.sy);
+  const toWp = nearestWaypoint(h.finalTargetX, h.finalTargetY);
+  let trail = null;
+  if (fromWp && toWp) {
+    trail = (fromWp.id === toWp.id) ? [fromWp.id] : pathFind(fromWp.id, toWp.id);
+  }
+  if (trail && trail.length >= 2) {
+    h.wpTrail = trail;
+    h.wpTrailIndex = 1; // trail[0] = fromWp 所在,trail[1] 是要前往的下一個路點
+    const next = getWaypoint(trail[1]);
+    h.targetX = next.x + rand(-2, 2);
+    h.targetY = next.y + rand(-2, 2);
+  } else {
+    h.wpTrail = null; h.wpTrailIndex = 0;
+    h.targetX = h.finalTargetX; h.targetY = h.finalTargetY;
+  }
 }
 function moveActor(h, dt, speed = 26) {
   if (h.targetX == null) return true;
   const dx = h.targetX - h.sx, dy = h.targetY - h.sy;
   const dist = Math.hypot(dx, dy);
-  if (dist < 1.2) return true;
+  if (dist < 1.2) {
+    // 抵達當前 subtarget — 嘗試遞進路點 trail;否則 fall back 到最終目標。
+    if (h.wpTrail && h.wpTrailIndex < h.wpTrail.length - 1) {
+      h.wpTrailIndex++;
+      const next = getWaypoint(h.wpTrail[h.wpTrailIndex]);
+      if (next) {
+        h.targetX = next.x + rand(-2, 2);
+        h.targetY = next.y + rand(-2, 2);
+        return false; // 還在 trail 中,不算到終點
+      }
+    }
+    // trail 結束或無 trail — 走向原本最終目標(可能就 1-2 px 之差)
+    if (h.wpTrail) {
+      h.targetX = h.finalTargetX ?? h.targetX;
+      h.targetY = h.finalTargetY ?? h.targetY;
+      h.wpTrail = null; h.wpTrailIndex = 0;
+    }
+    return true;
+  }
   const step = Math.min(dist, speed * dt);
   h.sx += dx / dist * step; h.sy += dy / dist * step;
   return dist - step < 1.2;
