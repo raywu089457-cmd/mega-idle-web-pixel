@@ -817,6 +817,28 @@ function drawStaticLayer(t) {
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26);
   c.fillStyle = '#ff5252'; c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); // 眼睛不閃(畫在 static 層)
   c.restore();
+  // ── 主動線路點視覺(8 路點 + 連線虛線;對應 ROAD_GRAPH) ──
+  // 低調渲染:暖金 #f4d03f 半透明虛線 + 暗芯;不干擾建築輪廓,但讓「路」可視。
+  c.lineWidth = 1;
+  c.strokeStyle = 'rgba(244,208,63,0.32)';
+  c.setLineDash([2, 2]);
+  const _seenEdges = new Set();
+  for (const wp of ROAD_GRAPH) {
+    for (const aId of wp.adjacent) {
+      const key = wp.id < aId ? `${wp.id}|${aId}` : `${aId}|${wp.id}`;
+      if (_seenEdges.has(key)) continue;
+      _seenEdges.add(key);
+      const a = getWaypoint(aId); if (!a) continue;
+      c.beginPath(); c.moveTo(wp.x, wp.y); c.lineTo(a.x, a.y); c.stroke();
+    }
+  }
+  c.setLineDash([]);
+  for (const wp of ROAD_GRAPH) {
+    c.fillStyle = 'rgba(244,208,63,0.55)';
+    c.fillRect(wp.x - 1, wp.y - 1, 3, 3);
+    c.fillStyle = 'rgba(28,20,12,0.9)';
+    c.fillRect(wp.x, wp.y, 1, 1);
+  }
 }
 
 // 建築名 label — 改在 drawScene 主 canvas 直接畫(DPR-aware 解析度)
