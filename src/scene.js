@@ -14,6 +14,7 @@ import { defaultTeams } from './combat-party.js'
 import { setActivePanel, activePanel, setHeroSubTab, heroSubTab, setShopFilter, shopFilter } from './state.js'
 import { openPanel, renderHUD, renderAll } from './ui.js'
 import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, serviceZoneOf, drawWorldRing, drawGates, ROAD_GRAPH, getWaypoint, pathFind, nearestWaypoint } from './scene-map.js'
+import { getQueueSlotOffset } from './queue-points.js'
 
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -316,7 +317,17 @@ import { salePrice } from './inventory.js'
 // ═══════════════════════════════════════════════════════════════════
 function tryEnterShop(h, shopId) {
   const busy = wanderingHeroes.some(o => o !== h && o.inside && o.shopId === shopId);
-  if (busy) { h.aiState = 'queue'; h.queueFor = shopId; h.actionTicks = 1.5; setBubble(h, '排隊中…'); return; }
+  if (busy) {
+    h.aiState = 'queue'; h.queueFor = shopId; h.actionTicks = 1.5; setBubble(h, '排隊中…');
+    // §七 2:排隊點 — 依目前排隊人數分配 slot,避免全擠在門口
+    const queueIdx = wanderingHeroes.filter(o => o !== h && o.aiState === 'queue' && o.queueFor === shopId).length;
+    const offset = getQueueSlotOffset(shopId, queueIdx);
+    if (offset) {
+      const a = BUILDING_ANCHORS[shopId];
+      if (a) { h.sx = a.x + offset.dx; h.sy = a.y + offset.dy; }
+    }
+    return;
+  }
   h.aiState = 'inShop'; h.shopId = shopId; h.inside = true; h.actionTicks = randf(0.8, 1.4);
 }
 function buyPotionAtShop(h) {
