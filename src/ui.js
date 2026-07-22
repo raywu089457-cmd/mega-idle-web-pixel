@@ -9,6 +9,7 @@ import { $, esc, pct, fmt, timeAgo, showModal, hideModal, showToast, closeModal 
 import { sfx } from './audio.js'
 import { ResourceSystem_get, ResourceSystem_getFillPercent, ResourceSystem_canAfford, ResourceSystem_spend, BuildingSystem_getLevel, BuildingSystem_getTotalLevels, BuildingSystem_getPotionProduction, BuildingSystem_upgrade, getBuildingCost, buildingMaxLevel } from './resources-buildings.js'
 import { getBuildingStage, getNextStage, levelsToNextStage } from './building-stages.js'
+import { isSceneReachable } from './reachability.js'
 import { stageProductionRate, stageCapacity } from './building-effects.js'
 import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
 import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
@@ -217,7 +218,9 @@ export function renderBuildingsPanel() {
     const nextStage = getNextStage(stage);
     const stageBadge = stage ? `<span class="building-stage-badge stage--${stage.id}">${stage.label}</span>` : '';
     const stageHint = (nextStage && levelsToNextStage(lvl) != null) ? `<div class="building-stage-hint">距離「${nextStage.label}」還差 ${levelsToNextStage(lvl)} 級</div>` : '';
-    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''}"><div class="building-header"><div class="building-name">${b.name}${stageBadge}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div>${stageHint}<div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}${placeBtn}</div>`;
+    const unreachable = sceneKey && !isSceneReachable(sceneKey, buildingPlots);
+    const reachWarn = unreachable ? `<div class="building-reach-warn" title="建築與主幹道不連通,NPC 將無法造訪">⚠️ 路徑中斷</div>` : '';
+    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''} ${unreachable ? 'unreachable' : ''}"><div class="building-header"><div class="building-name">${b.name}${stageBadge}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div>${stageHint}${reachWarn}<div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}${placeBtn}</div>`;
   }).join('');
 }
 export function upgradeBuilding(id) {
