@@ -144,7 +144,8 @@ export function checkDaily() {
 <div class="offline-item"><span class="offline-label">💠 魔核</span><span class="offline-val">+${reward.magicStones}</span></div>
 <div class="offline-item"><span class="offline-label">🧪 藥水</span><span class="offline-val">+${reward.potion}</span></div>`;
   $('modal-daily-body').innerHTML = html;
-  showModal('modal-daily');
+  // ?skipdaily=1 — 分享連結 / 開發測試跳過每日獎勵彈窗
+  if (new URLSearchParams(location.search).get('skipdaily') !== '1') showModal('modal-daily');
 }
 
 export function claimDaily() {

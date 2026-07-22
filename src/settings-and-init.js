@@ -194,14 +194,18 @@ export function init() {
   initFloatCanvas();
   // Offline progress
   const elapsed = Math.floor((Date.now() - (gameState.lastOnline || Date.now())) / 1000);
-  if (elapsed > 60) {
+  // ?skipwelcome=1 — 分享連結 / 開發測試跳過離線收益彈窗
+  const skipWelcome = new URLSearchParams(location.search).get('skipwelcome') === '1';
+  if (!skipWelcome && elapsed > 60) {
     const capped = Math.min(elapsed, 8 * 3600);
     setPendingOfflineSummary({ seconds: capped, gains: computeOffline(capped) });
     $('modal-welcome-body').innerHTML = offlineModalHtml(getPendingOfflineSummary().gains, capped);
     showModal('modal-welcome');
   }
   checkDaily();
-  if (!settings.onboarded) showModal('modal-onboard');
+  // ?skiponboard=1 — 分享連結 / 深連結跳過新手導覽(開發測試也方便)
+  const skipOnboard = new URLSearchParams(location.search).get('skiponboard') === '1';
+  if (!skipOnboard && !settings.onboarded) showModal('modal-onboard');
   checkAchievements();
   renderAll();
   setInterval(gameTick, 1000);
