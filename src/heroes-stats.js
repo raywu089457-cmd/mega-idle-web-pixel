@@ -8,6 +8,7 @@ import { territoryHeroes, wanderingHeroes, liveCombats, partyCombats, mapProgres
 import { applyPassiveSkills, grantSkillPoints, getSkillApGain } from './skills.js'
 import { getAchievementBonuses, getCombatGoldMultiplier, getXpMultiplier } from './bonuses.js'
 import { ResourceSystem_spend, ResourceSystem_add, BuildingSystem_getLevel, BuildingSystem_getTerritoryHeroSlots } from './resources-buildings.js'
+import { stageCapacity } from './building-effects.js'
 import { rand, choice, clamp, uid, showToast, fmt } from './util.js'
 import { sfx } from './audio.js'
 
@@ -240,7 +241,7 @@ export function recallAllHeroes() {
 export function recruitCost(w) { return { gold: 60 + (w.level || 1) * 45 }; }
 export function recruitWanderingHero(heroId) {
   const idx = wanderingHeroes.findIndex(h => h.id === heroId); if (idx < 0) return;
-  if (territoryHeroes.length >= BuildingSystem_getTerritoryHeroSlots()) { showToast('獵人空位不足，請升級酒館。', 'error'); return; }
+  if (territoryHeroes.length >= stageCapacity('tavern', BuildingSystem_getTerritoryHeroSlots())) { showToast('獵人空位不足，請升級酒館。', 'error'); return; }
   const w = wanderingHeroes[idx];
   if (!ResourceSystem_spend(recruitCost(w))) { showToast('金幣不足，無法招募。', 'error'); return; }
   wanderingHeroes.splice(idx, 1);

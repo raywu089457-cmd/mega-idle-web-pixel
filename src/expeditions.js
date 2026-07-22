@@ -9,6 +9,7 @@ import { wanderingHeroes, territoryHeroes, weather, settings, impls, incWeatherT
 import { rand, randf, clamp, choice, $, showToast, esc } from './util.js'
 import { sfx as audioSfx } from './audio.js'
 import { BuildingSystem_getWanderingSpawnInterval, BuildingSystem_getMaxWanderingHeroes, BuildingSystem_getTerritoryHeroSlots, ResourceSystem_add } from './resources-buildings.js'
+import { stageCapacity } from './building-effects.js'
 import { getHeroStats, normalizeHero, rollStars, getHeroStats as getHeroStatsFn } from './heroes-stats.js'
 import { startLiveCombat } from './combat.js'
 
@@ -117,7 +118,7 @@ function pickWanderingType() {
   return WANDERING_HERO_TYPES[0];
 }
 export function spawnWanderingHero() {
-  if (wanderingHeroes.length >= BuildingSystem_getMaxWanderingHeroes()) return;
+  if (wanderingHeroes.length >= stageCapacity('tavern', BuildingSystem_getMaxWanderingHeroes())) return;
   const tpl = pickWanderingType();
   const rarity = pickRarity();
   const rDef = RARITIES[rarity];

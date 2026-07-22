@@ -8,6 +8,8 @@ import { activePanel, heroSubTab, heroReportSubTab, skillTabHeroId, expandedRepo
 import { $, esc, pct, fmt, timeAgo, showModal, hideModal, showToast, closeModal } from './util.js'
 import { sfx } from './audio.js'
 import { ResourceSystem_get, ResourceSystem_getFillPercent, ResourceSystem_canAfford, ResourceSystem_spend, BuildingSystem_getLevel, BuildingSystem_getTotalLevels, BuildingSystem_getPotionProduction, BuildingSystem_upgrade, getBuildingCost, buildingMaxLevel } from './resources-buildings.js'
+import { getBuildingStage } from './building-stages.js'
+import { stageProductionRate, stageCapacity } from './building-effects.js'
 import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
 import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
 import { getAchievementBonuses, getMaterialMultiplier, getClickGold } from './bonuses.js'
@@ -25,19 +27,21 @@ import { applyStateToRuntime } from './settings-and-init.js' // late-bind
 // ═══════════════════════════════════════════════════════════════════
 export function buildingEffectText(id) {
   const lvl = BuildingSystem_getLevel(id);
+  const stage = getBuildingStage(lvl);
+  const stageSuffix = stage?.effects?.label ? ' ｜ ' + stage.effects.label : '';
   switch (id) {
-    case 'monument': return '⚡ 各材料 +' + lvl + '~' + (3 * lvl) + '/秒';
-    case 'goldMine': return lvl > 0 ? '🪙 +' + (lvl * 2) + ' 金幣/秒・點擊 +' + Math.floor(lvl / 2) : '🪙 建造後每秒產出金幣';
-    case 'tavern': return '🛏 獵人空位 ' + BuildingSystem_getTerritoryHeroSlots() + '・訪客上限 ' + BuildingSystem_getMaxWanderingHeroes();
-    case 'weaponShop': return '🗡 全獵人攻擊 +' + lvl + '・可製作 Lv.' + lvl + ' 級武器';
-    case 'armorShop': return '🛡 全獵人防禦 +' + lvl + '・可製作 Lv.' + lvl + ' 級防具';
-    case 'potionShop': { const p = BuildingSystem_getPotionProduction(); return '💊 每' + p.ticks + '秒生產 ' + p.amount + ' 瓶藥水'; }
-    case 'altar': return lvl > 0 ? '🔯 戰鬥金幣/經驗 +' + (lvl * 4) + '%' : '🔯 建造後提升戰鬥收益';
-    case 'restaurant': return lvl > 0 ? `🍖 休息餐費 ${8 + lvl * 2}🪙/次・心情恢復 +${lvl * 30}%` : '🍖 建造後獵人休息會付餐費';
-    case 'drinkShop': return lvl > 0 ? `🥤 飲料 ${salePrice(10, 'potion')}🪙/杯・心情 +${15 + lvl * 3}` : '🥤 建造後獵人會來買飲料';
-    case 'inn': return lvl > 0 ? `🛏️ 復活 ${Math.max(6, 18 - lvl * 2)} 秒・休整回血 +${lvl * 10}%` : '🛏️ 建造後加速復活與休整';
-    case 'trainingGround': return lvl > 0 ? `🎯 閒置獵人 +${lvl * 2} XP/秒` : '🎯 建造後閒置獵人自動練功';
-    case 'enhanceForge': return lvl > 0 ? `⚒️ 強化費用 -${lvl * 6}%` : '⚒️ 建造後降低強化費用';
+    case 'monument': return '⚡ 各材料 +' + lvl + '~' + (3 * lvl) + '/秒' + stageSuffix;
+    case 'goldMine': return lvl > 0 ? '🪙 +' + Math.floor(stageProductionRate('goldMine', lvl * 2)) + ' 金幣/秒・點擊 +' + Math.floor(lvl / 2) + stageSuffix : '🪙 建造後每秒產出金幣';
+    case 'tavern': return '🛏 獵人空位 ' + stageCapacity('tavern', BuildingSystem_getTerritoryHeroSlots()) + '・訪客上限 ' + stageCapacity('tavern', BuildingSystem_getMaxWanderingHeroes()) + stageSuffix;
+    case 'weaponShop': return '🗡 全獵人攻擊 +' + lvl + '・可製作 Lv.' + lvl + ' 級武器' + stageSuffix;
+    case 'armorShop': return '🛡 全獵人防禦 +' + lvl + '・可製作 Lv.' + lvl + ' 級防具' + stageSuffix;
+    case 'potionShop': { const p = BuildingSystem_getPotionProduction(); return '💊 每' + p.ticks + '秒生產 ' + Math.floor(stageProductionRate('potionShop', p.amount)) + ' 瓶藥水' + stageSuffix; }
+    case 'altar': return lvl > 0 ? '🔯 戰鬥金幣/經驗 +' + (lvl * 4) + '%' + stageSuffix : '🔯 建造後提升戰鬥收益';
+    case 'restaurant': return lvl > 0 ? `🍖 休息餐費 ${8 + lvl * 2}🪙/次・心情恢復 +${lvl * 30}%` + stageSuffix : '🍖 建造後獵人休息會付餐費';
+    case 'drinkShop': return lvl > 0 ? `🥤 飲料 ${salePrice(10, 'potion')}🪙/杯・心情 +${15 + lvl * 3}` + stageSuffix : '🥤 建造後獵人會來買飲料';
+    case 'inn': return lvl > 0 ? `🛏️ 復活 ${Math.max(6, 18 - lvl * 2)} 秒・休整回血 +${lvl * 10}%` + stageSuffix : '🛏️ 建造後加速復活與休整';
+    case 'trainingGround': return lvl > 0 ? `🎯 閒置獵人 +${lvl * 2} XP/秒` + stageSuffix : '🎯 建造後閒置獵人自動練功';
+    case 'enhanceForge': return lvl > 0 ? `⚒️ 強化費用 -${lvl * 6}%` + stageSuffix : '⚒️ 建造後降低強化費用';
     default: return '';
   }
 }
@@ -99,7 +103,7 @@ export function renderResourcesPanel() {
     const val = ResourceSystem_get(id), fill = ResourceSystem_getFillPercent(id);
     let rate = '<span class="rate neg">—</span>';
     if (MATERIAL_TYPES.includes(id)) rate = `<span class="rate">+${mon}~${3 * mon}/s</span>`;
-    if (id === 'gold') rate = `<span class="rate">+${BuildingSystem_getGoldRate()}/s・點擊+${getClickGold()}</span>`;
+    if (id === 'gold') rate = `<span class="rate">+${Math.floor(stageProductionRate('goldMine', BuildingSystem_getGoldRate()))}/s・點擊+${getClickGold()}</span>`;
     return `<div class="res-card"><div class="res-top"><div class="res-info"><div class="res-ico">${conf.icon}</div><div><div class="res-name">${conf.name}</div><div class="res-val">${fmt(val)}<span class="res-max"> / ${fmt(conf.capacity)}</span></div></div></div>${rate}</div><div class="progress-bar"><div class="progress-fill ${fill > 85 ? 'crit' : fill > 65 ? 'warn' : ''}" style="width:${fill}%"></div></div>${id === 'magicStones' ? '<div class="bonus-line">用途：神秘法杖、騎士鎧甲、祭壇與裝備強化</div>' : ''}</div>`;
   }).join('');
 }
@@ -131,7 +135,7 @@ export function renderHeroesPanel() {
   $('hero-tab-bar').innerHTML = [['territory', '村莊獵人'], ['wander', `流浪(${wanderingHeroes.length})`], ['reports', `戰報(${battleReports.length})`], ['skills', '🗡 技能'], ['teams', '👥 隊伍']].map(([k, label]) => `<button class="report-sub-btn ${heroSubTab === k ? 'active' : ''}" onclick="heroSubTab='${k}';renderHeroesPanel()">${label}</button>`).join('');
   for (const k of ['territory', 'wander', 'reports', 'skills', 'teams']) $('hero-' + k).classList.toggle('active', heroSubTab === k);
   if (heroSubTab === 'territory') {
-    $('hero-territory').innerHTML = `<div class="section-label">村莊獵人 ${territoryHeroes.length}/${BuildingSystem_getTerritoryHeroSlots()}（點「技能」學習技能）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">還沒有獵人。到酒館招募流浪獵人吧！</div>');
+    $('hero-territory').innerHTML = `<div class="section-label">村莊獵人 ${territoryHeroes.length}/${stageCapacity('tavern', BuildingSystem_getTerritoryHeroSlots())}（點「技能」學習技能）</div>` + (territoryHeroes.length ? territoryHeroes.map(heroCardHtml).join('') : '<div class="empty-state">還沒有獵人。到酒館招募流浪獵人吧！</div>');
   } else if (heroSubTab === 'wander') {
     $('hero-wander').innerHTML = wanderingHeroes.length ? wanderingHeroes.map(h => { const st = getHeroStats(h); const rc = RARITIES[h.rarity || 'normal']; const stateBadge = h.aiState === 'dead' ? '<span class="hero-badge badge-resting">陣亡復活中</span>' : '<span class="hero-badge badge-wandering">流浪</span>'; return `<div class="hero-card rar-frame-${h.rarity || 'normal'}"><div class="hero-top"><div class="hero-portrait portrait-rar-${h.rarity || 'normal'}">${HERO_CLASSES[h.class].icon}</div><div class="hero-info"><div style="display:flex;align-items:center;gap:6px;"><div class="hero-name">${esc(h.name)}</div><span style="color:${rc.color}">${rc.name}</span>${stateBadge}</div><div class="hero-class">${CLASS_NAMES_ZH[h.class]} Lv.${h.level}・<span style="color:var(--gold);letter-spacing:1px;">${'★'.repeat(h.stars || 3)}${'☆'.repeat(5 - (h.stars || 3))}</span>・${getHeroTrait(h)?.name || '無特質'}・😪${h.fatigue || 0}%・😊${Math.round(h.mood ?? 70)}</div><div class="stat">⚔${st.atk} 🛡${st.def} HP${Math.round(h.hp)}/${st.maxHp}</div><div class="wallet-display">錢包 <span>${fmt(h.wallet)}🪙</span>・💠${h.diamonds || 0}</div><div class="hero-actions"><button class="btn btn-gold btn-sm" onclick="recruitWanderingHero('${h.id}')">招募 ${fmt(recruitCost(h).gold)}🪙</button></div></div></div></div>`; }).join('') : '<div class="empty-state">酒館外目前沒有流浪獵人</div>';
   } else if (heroSubTab === 'skills') {

@@ -7,6 +7,7 @@ import { sceneCtx, sceneCanvas, sceneW, sceneH, sceneStart, sceneNight, hoverHot
 import { $, esc, showToast, showModal, hideModal, rand, randf, clamp, choice, uid, fmt, timeAgo } from './util.js'
 import { sfx } from './audio.js'
 import { gainGold, ResourceSystem_add, BuildingSystem_getLevel, BuildingSystem_getGoldRate, BuildingSystem_getWanderingSpawnInterval } from './resources-buildings.js'
+import { stageProductionRate } from './building-effects.js'
 import { getHeroStats, usePotion, grantXp, normalizeHero } from './heroes-stats.js'
 import { getCombatGoldMultiplier } from './bonuses.js'
 import { defaultTeams } from './combat-party.js'
@@ -1126,7 +1127,7 @@ function collectGuildClick(e) {
   sfx('gold'); checkAchievements(); renderHUD();
 }
 function collectMarketClick(e) {
-  const amount = _getClickGold() + BuildingSystem_getGoldRate() * 5;
+  const amount = _getClickGold() + Math.floor(stageProductionRate('goldMine', BuildingSystem_getGoldRate()) * 5);
   if (amount <= 0) { showToast('市集尚未建造,先到建築面板興建。', 'error'); return; }
   gainGold(amount); stats.clicks = (stats.clicks || 0) + 1;
   spawnFloat(`⚖️+${fmt(amount)}`, e.clientX, e.clientY, '#f4d03f');

@@ -6,6 +6,7 @@
 import { ACHIEVEMENTS, DIFF_LABELS, HERO_CLASSES, ITEMS, MATERIAL_TYPES, ZONES, RESOURCES } from './data.js'
 import { achievementsUnlocked, daily, mapProgress, pendingDailyReward, pendingOfflineSummary, potionShopAutoProduce, potionShopTickCounter, gearTickCounter, shopStock, territoryHeroes, stats, setPotionShopAutoProduce, incPotionShopTickCounter, incGearTickCounter, setPendingDailyReward, setDaily, setPendingOfflineSummary } from './state.js'
 import { BuildingSystem_getLevel, BuildingSystem_getPotionProduction, BuildingSystem_getTotalLevels, BuildingSystem_getGoldRate, ResourceSystem_add, gainGold } from './resources-buildings.js'
+import { stageProductionRate } from './building-effects.js'
 import { $, esc, fmt, todayKey, yesterdayKey, showToast, hideModal, showModal } from './util.js'
 import { sfx } from './audio.js'
 // combat.js 與 inventory.js 為 forward ref(只 call 進函式內,無模組層級使用)
@@ -23,7 +24,7 @@ export function produceTick() {
     const wMult = (mat === 'herbLow' && weather.type === 'rain') ? 1.2 : 1;
     ResourceSystem_add(mat, Math.max(1, Math.round(rand(1, 4) * mon * mult * wMult)));
   }
-  const goldRate = BuildingSystem_getGoldRate();
+  const goldRate = stageProductionRate('goldMine', BuildingSystem_getGoldRate());
   if (goldRate > 0) gainGold(Math.max(1, Math.round(goldRate * (weather.type === 'snow' ? 0.9 : 1))));
   if (potionShopAutoProduce && BuildingSystem_getLevel('potionShop') > 0) {
     incPotionShopTickCounter();
@@ -31,8 +32,9 @@ export function produceTick() {
     if (potionShopTickCounter >= p.ticks) {
       incPotionShopTickCounter(-potionShopTickCounter);
       // 一半入村莊倉庫（玩家用）、一半上架賣給獵人（村莊金庫收入來源）
-      addItem('healthPotion', p.amount);
-      shopStock.healthPotion = Math.min(potionStockCap(), shopStock.healthPotion + p.amount);
+      const pAmount = Math.floor(stageProductionRate('potionShop', p.amount));
+      addItem('healthPotion', pAmount);
+      shopStock.healthPotion = Math.min(potionStockCap(), shopStock.healthPotion + pAmount);
     }
   }
   if (BuildingSystem_getLevel('weaponShop') > 0) {
@@ -49,11 +51,11 @@ import { addItem, potionStockCap, gearStockCap } from './inventory.js'
 // ═══════════════════════════════════════════════════════════════════
 export function computeOffline(seconds) {
   const eff = 0.5, mon = BuildingSystem_getLevel('monument'), mult = getMaterialMultiplier();
-  const gains = { gold: Math.round(BuildingSystem_getGoldRate() * seconds * eff), magicStones: 0 };
+  const gains = { gold: Math.round(stageProductionRate('goldMine', BuildingSystem_getGoldRate()) * seconds * eff), magicStones: 0 };
   for (const mat of MATERIAL_TYPES) gains[mat] = Math.round(2 * mon * seconds * eff * mult);
   if (BuildingSystem_getLevel('potionShop') > 0) {
     const p = BuildingSystem_getPotionProduction();
-    gains.healthPotion = Math.floor(seconds / p.ticks) * p.amount;
+    gains.healthPotion = Math.floor(seconds / p.ticks) * Math.floor(stageProductionRate('potionShop', p.amount));
   }
   return gains;
 }
