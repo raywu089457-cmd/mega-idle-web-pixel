@@ -13,6 +13,66 @@ export const SCENE_W = 240, SCENE_H = 360;   // 村莊視窗邏輯尺寸
 export const RING = 132;                     // 村莊四周可探索的環寬
 export const WORLD = { minX: -RING, minY: -RING, maxX: SCENE_W + RING, maxY: SCENE_H + RING }; // 504 × 624
 
+// ── 主動線路點(named waypoints;村莊內步行路網,BFS 將走這個)
+// 設計參考 docs/EVIL-HUNTER-VILLAGE-DESIGN-RESEARCH.md §四 / §七:固定路點 + BFS 快取,
+// 不用連續 flow field 就夠 5~15 NPC。座標對應 SCENE_HOTSPOTS 內各建築的趨近點。
+export const ROAD_GRAPH = Object.freeze([
+  { id: 'gate-north', name: '北門',       x: 120, y:  10, adjacent: ['plaza'] },
+  { id: 'plaza',      name: '中央廣場',   x: 120, y: 196, adjacent: ['gate-north', 'tavern-approach', 'east-approach', 'south-approach'] },
+  { id: 'tavern-approach', name: '酒館道', x:  34, y: 174, adjacent: ['plaza', 'tavern-corner'] },
+  { id: 'tavern-corner',   name: '酒館角', x:  16, y: 174, adjacent: ['tavern-approach'] },
+  { id: 'east-approach',   name: '市集道', x: 206, y: 178, adjacent: ['plaza', 'east-corner'] },
+  { id: 'east-corner',     name: '市集角', x: 224, y: 178, adjacent: ['east-approach'] },
+  { id: 'south-approach',  name: '南工坊道', x: 120, y: 268, adjacent: ['plaza', 'south-corner'] },
+  { id: 'south-corner',    name: '南工坊角', x: 178, y: 270, adjacent: ['south-approach'] },
+]);
+const _roadById = Object.freeze(Object.fromEntries(ROAD_GRAPH.map(w => [w.id, w])));
+export const getWaypoint = (id) => _roadById[id] || null;
+// 樸素 BFS(慢,但目前只有 8 節點,實際會走 cache);給 NPC 尋路預備。
+export function pathFind(fromId, toId) {
+  if (fromId === toId) return [];
+  const seen = new Set([fromId]);
+  const queue = [[fromId, [fromId]]];
+  while (queue.length) {
+    const [cur, trail] = queue.shift();
+    const cur_wp = _roadById[cur]; if (!cur_wp) continue;
+    for (const next of cur_wp.adjacent) {
+      if (next === toId) return [...trail, next];
+      if (seen.has(next)) continue;
+      seen.add(next);
+      queue.push([next, [...trail, next]]);
+    }
+  }
+  return null;
+}
+export function nearestWaypoint(x, y) {
+  let best = null, bd = Infinity;
+  for (const w of ROAD_GRAPH) {
+    const d = (w.x - x) ** 2 + (w.y - y) ** 2;
+    if (d < bd) { bd = d; best = w; }
+  }
+  return best;
+}
+
+// ── 服務分區(借 §三「按使用頻率三圈服務區」,給玩家 hover hint prefix)
+// zone 是顯示分類,不影響 hotspotAt 行為(那仍是矩形命中)。
+export const SERVICE_ZONES = Object.freeze({
+  urgent:     { id: 'urgent',     label: '緊急服務', short: '緊', color: '#ff6b4a', order: 0,
+    members: ['tavern', 'alchemy'] },
+  combat:     { id: 'combat',     label: '戰鬥補給', short: '戰', color: '#9b6bd6', order: 1,
+    members: ['forge'] },
+  commerce:   { id: 'commerce',   label: '消費服務', short: '消', color: '#5db3ff', order: 2,
+    members: ['restaurant', 'drinkShop'] },
+  management: { id: 'management', label: '管理',     short: '管', color: '#a8a18a', order: 3,
+    members: ['guild', 'market', 'research'] },
+  expedition: { id: 'expedition', label: '遠征',     short: '遠', color: '#c9a15a', order: 4,
+    members: ['gate'] },
+});
+const _zoneByMember = Object.freeze(Object.fromEntries(
+  Object.values(SERVICE_ZONES).flatMap(z => z.members.map(m => [m, z]))
+));
+export function serviceZoneOf(hotspotId) { return _zoneByMember[hotspotId] || null; }
+
 // ── 相機(可變物件,scene.js 直接讀 cam.x / cam.y 走 hot path) ──
 export const cam = { x: 0, y: 0 };
 export function clampCam() {
@@ -37,6 +97,8 @@ export const ZONE_GATES = [
 const GATE_HALF_W = 24, GATE_HALF_H = 28;    // 命中框半寬/半高(不含下方名牌)
 const GATE_COLORS = { 1: '#6fbf5f', 2: '#9b6bd6', 3: '#c9a15a', 4: '#ff6b4a', 5: '#e0556b', 6: '#7c5cff', 7: '#5db3ff' };
 
+// 注意:本檔內另有 serviceZoneOf(hotspotId) 對映 9 個場景熱區所在的服務圈,
+// 別與本函式 (對映 7 個外圈獵場門) 混淆。
 export function zoneOf(zoneId) { return ZONES.find(z => z.id === zoneId); }
 export function gateAt(x, y) {
   for (const g of ZONE_GATES) {

@@ -12,7 +12,7 @@ import { getCombatGoldMultiplier } from './bonuses.js'
 import { defaultTeams } from './combat-party.js'
 import { setActivePanel, activePanel, setHeroSubTab, heroSubTab, setShopFilter, shopFilter } from './state.js'
 import { openPanel, renderHUD, renderAll } from './ui.js'
-import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, drawWorldRing, drawGates } from './scene-map.js'
+import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, serviceZoneOf, drawWorldRing, drawGates } from './scene-map.js'
 
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -937,7 +937,7 @@ export function initScene() {
     setHoverHotspot(hs);
     canvas.style.cursor = (wh || hs || gate) ? 'pointer' : 'grab';
     if (wh) setSceneHint(`流浪${CLASS_NAMES_ZH[wh.class] || '獵人'}「${wh.name}」Lv.${wh.level}:點擊查看 / 招募`);
-    else if (hs) setSceneHint(`${hs.name}:${hs.hint}`);
+    else if (hs) { const _sz = serviceZoneOf(hs.id); setSceneHint(`${_sz ? '[' + _sz.short + ']' : ''}${hs.name}:${hs.hint}`); }
     else if (gate) { const z = zoneOf(gate.zoneId), s = gateStatus(gate.zoneId); setSceneHint(`${z.icon} ${z.name}:${s.unlocked ? (s.cleared ? '已征服・可再刷' : s.bossReady ? '頭目已現身!' : '點擊派遣出征') : '🔒 尚未解鎖'}`); }
     else setSceneHint('🖐 拖曳探索世界地圖・外圍有 7 座獵場之門;點建築互動、點流浪獵人招募。');
   });
