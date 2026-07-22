@@ -12,6 +12,7 @@ import { getCombatGoldMultiplier } from './bonuses.js'
 import { defaultTeams } from './combat-party.js'
 import { setActivePanel, activePanel, setHeroSubTab, heroSubTab, setShopFilter, shopFilter } from './state.js'
 import { openPanel, renderHUD, renderAll } from './ui.js'
+import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, drawWorldRing, drawGates } from './scene-map.js'
 
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -232,7 +233,8 @@ function ensureWildMonsters() {
 export function sceneToClient(x, y) {
   if (!sceneCanvas) return { x: 0, y: 0 };
   const rect = sceneCanvas.getBoundingClientRect();
-  return { x: rect.left + x / sceneW * rect.width, y: rect.top + y / sceneH * rect.height };
+  // 世界座標 → 螢幕座標(扣掉相機平移;home 相機 (0,0) 時等同原公式)
+  return { x: rect.left + (x - cam.x) / sceneW * rect.width, y: rect.top + (y - cam.y) / sceneH * rect.height };
 }
 function wanderingHeroAt(x, y) {
   for (let i = wanderingHeroes.length - 1; i >= 0; i--) {
@@ -701,6 +703,8 @@ import { getClickGold as _getClickGold } from './bonuses.js'
 // 動態層(actor / hotspot / particles)每幀從 offscreen 複製 + 疊加
 // ═══════════════════════════════════════════════════════════════════
 const _staticCache = { canvas: null, ctx: null, signature: '' };
+// 相機 transform 的縮放因子(fitCanvas 計算並存,drawScene 每幀套用)
+const _view = { sx: 1, sy: 1, panned: false };
 
 function ensureStaticCache() {
   if (!_staticCache.canvas) {
@@ -811,6 +815,17 @@ export function drawScene(t, dt) {
   const night = 1 - day;
   setSceneNight(night);
 
+  // 0. 相機:每幀套用「縮放 + 平移」transform,之後全部以世界座標繪製。
+  //    home 相機 (0,0) → 視窗恰好等於村莊 0..w×0..h,畫面與加相機前逐像素相同。
+  c.setTransform(_view.sx, 0, 0, _view.sy, -cam.x * _view.sx, -cam.y * _view.sy);
+  c.imageSmoothingEnabled = false;
+  c.clearRect(cam.x - 4, cam.y - 4, w + 8, h + 8);
+  // 外環荒野(拖曳離開村莊才進畫面;村莊 static cache 會蓋掉中央)
+  const panned = !isAtHome();
+  if (panned) drawWorldRing(c, night);
+  // 相機離開村莊時顯示「回村」鈕(只在狀態切換時動 DOM)
+  if (panned !== _view.panned) { _view.panned = panned; const rb = $('btn-recenter'); if (rb) rb.style.display = panned ? 'flex' : 'none'; }
+
   // 1. 靜態層:若 cache 過期就重畫,否則 blit
   const cache = ensureStaticCache();
   const sig = staticCacheKey(t);
@@ -852,6 +867,9 @@ export function drawScene(t, dt) {
     c.strokeStyle = active ? '#f4d03f' : 'rgba(255,248,220,0.10)'; c.lineWidth = active ? 2 : 1; c.strokeRect(hs.x + 0.5, hs.y + 0.5, hs.w - 1, hs.h - 1);
   }
 
+  // 4.5 外圍獵場之門(僅拖曳離開村莊時繪製)
+  if (panned) drawGates(c, t);
+
   // 5. Weather particles / 夜晚靈火
   if (night > 0.55 && !reduceMotion) { c.fillStyle = 'rgba(225,179,255,0.75)'; for (let i = 0; i < 10; i++) { const x = 90 + ((i * 17 + Math.sin(t + i) * 8 + 40) % 60), y = 300 + ((i * 23) % 46) + Math.cos(t * 1.7 + i) * 4; c.fillRect(Math.round(x), Math.round(y), 2, 2); } }
   if (!reduceMotion && weather.type === 'rain') {
@@ -879,34 +897,74 @@ export function initScene() {
     const dw = wrap.clientWidth, dh = wrap.clientHeight;
     canvas.width = Math.max(1, Math.round(dw * dpr));
     canvas.height = Math.max(1, Math.round(dh * dpr));
-    sceneCtx.setTransform((dw / sceneW) * dpr, 0, 0, (dh / sceneH) * dpr, 0, 0);
+    _view.sx = (dw / sceneW) * dpr; _view.sy = (dh / sceneH) * dpr;
+    sceneCtx.setTransform(_view.sx, 0, 0, _view.sy, -cam.x * _view.sx, -cam.y * _view.sy);
     sceneCtx.imageSmoothingEnabled = false;
   }
   fitCanvas();
   window.addEventListener('resize', fitCanvas);
+
+  // ── 拖曳平移(pan)+ 點擊(tap)狀態機 ──
+  // 手勢區分:pointerdown 記錄起點;移動超過門檻 → 判定為拖曳(平移相機,吞掉點擊);
+  //          否則 pointerup 視為點擊 → 依序命中 流浪獵人 / 建築熱區 / 外圍門。
+  const DRAG_PX = 6;                       // 判定拖曳的 client 位移門檻
+  let ptrDown = false, dragged = false, downCX = 0, downCY = 0, startCamX = 0, startCamY = 0;
+  const recenterBtn = $('btn-recenter');
+  if (recenterBtn) recenterBtn.addEventListener('click', () => { recenterCam(); sfx?.('click'); setSceneHint('回到村莊中心。拖曳畫面可再次探索外圍。'); });
+
+  canvas.addEventListener('pointerdown', (e) => {
+    ptrDown = true; dragged = false;
+    downCX = e.clientX; downCY = e.clientY;
+    startCamX = cam.x; startCamY = cam.y;
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  });
   canvas.addEventListener('pointermove', (e) => {
+    if (ptrDown) {
+      const rect = sceneCanvas.getBoundingClientRect();
+      const dx = e.clientX - downCX, dy = e.clientY - downCY;
+      if (!dragged && Math.hypot(dx, dy) > DRAG_PX) { dragged = true; canvas.style.cursor = 'grabbing'; setHoverHotspot(null); }
+      if (dragged) {
+        // client 位移 → 世界位移;相機反向移動讓內容跟著手指
+        setCam(startCamX - dx / rect.width * sceneW, startCamY - dy / rect.height * sceneH);
+      }
+      return;
+    }
+    // hover(滑鼠):流浪獵人 / 建築熱區 / 外圍門
     const p = scenePoint(e);
     const wh = wanderingHeroAt(p.x, p.y);
-    setHoverHotspot(wh ? null : hotspotAt(p.x, p.y));
-    canvas.style.cursor = (wh || hoverHotspot) ? 'pointer' : 'default';
+    const hs = wh ? null : hotspotAt(p.x, p.y);
+    const gate = (wh || hs) ? null : gateAt(p.x, p.y);
+    setHoverHotspot(hs);
+    canvas.style.cursor = (wh || hs || gate) ? 'pointer' : 'grab';
     if (wh) setSceneHint(`流浪${CLASS_NAMES_ZH[wh.class] || '獵人'}「${wh.name}」Lv.${wh.level}:點擊查看 / 招募`);
-    else setSceneHint(hoverHotspot ? `${hoverHotspot.name}:${hoverHotspot.hint}` : '點擊建築互動:公會收金、酒館招募、工坊製作、獵場門派遣;點流浪獵人可招募');
+    else if (hs) setSceneHint(`${hs.name}:${hs.hint}`);
+    else if (gate) { const z = zoneOf(gate.zoneId), s = gateStatus(gate.zoneId); setSceneHint(`${z.icon} ${z.name}:${s.unlocked ? (s.cleared ? '已征服・可再刷' : s.bossReady ? '頭目已現身!' : '點擊派遣出征') : '🔒 尚未解鎖'}`); }
+    else setSceneHint('🖐 拖曳探索世界地圖・外圍有 7 座獵場之門;點建築互動、點流浪獵人招募。');
   });
-  canvas.addEventListener('pointerleave', () => { setHoverHotspot(null); setSceneHint('點擊建築互動:公會收金、酒館招募、工坊製作、獵場門派遣'); });
-  canvas.addEventListener('pointerdown', (e) => {
-    sfx?.('click'); // sfx 可能尚未準備好(避免 TypeError)
+  canvas.addEventListener('pointerleave', () => { if (!ptrDown) { setHoverHotspot(null); canvas.style.cursor = 'grab'; setSceneHint('🖐 拖曳探索世界地圖・外圍有 7 座獵場之門。'); } });
+  const endPointer = (e) => {
+    if (!ptrDown) return;
+    ptrDown = false;
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (dragged) { dragged = false; canvas.style.cursor = 'grab'; return; } // 拖曳結束 — 不觸發點擊
+    // ── tap ──
     const p = scenePoint(e);
     const wh = wanderingHeroAt(p.x, p.y);
     if (wh) {
+      sfx?.('click');
       setHeroSubTab('wander'); openPanel('hero');
       showToast(`流浪獵人「${wh.name}」:可在酒館頁招募進村`, 'info');
       const cp = sceneToClient(wh.sx, wh.sy - 10); burst(cp.x, cp.y, '#f4d03f');
       return;
     }
     const hs = hotspotAt(p.x, p.y);
-    if (hs) handleHotspot(hs, e);
-    else { setSceneHint('請點擊發亮建築、獵場門或流浪獵人'); spawnFloat('選擇目標', e.clientX, e.clientY, '#d2b48c'); }
-  });
+    if (hs) { sfx?.('click'); handleHotspot(hs, e); return; }
+    const gate = gateAt(p.x, p.y);
+    if (gate) { handleGate(gate); return; }
+    setSceneHint('請點擊發亮建築、外圍獵場之門或流浪獵人;空白處拖曳可平移地圖。');
+  };
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', () => { ptrDown = false; dragged = false; canvas.style.cursor = 'grab'; });
   let lastNow = performance.now();
   // rAF loop 必須永遠跑 — drawScene 內部動畫(雲/煙/泡/portal glow)各自有 if(!reduceMotion) guard;
   // 若 loop 本身被 reduceMotion 中斷,整個場景會 freeze 住。
@@ -916,7 +974,8 @@ export function initScene() {
 function setSceneHint(text) { const el = $('scene-hint'); if (el && el.textContent !== text) el.textContent = text; }
 function scenePoint(e) {
   const rect = sceneCanvas.getBoundingClientRect();
-  return { x: (e.clientX - rect.left) / rect.width * sceneW, y: (e.clientY - rect.top) / rect.height * sceneH, cx: e.clientX, cy: e.clientY };
+  // 螢幕座標 → 世界座標(加回相機平移,與 sceneToClient 互為逆)
+  return { x: (e.clientX - rect.left) / rect.width * sceneW + cam.x, y: (e.clientY - rect.top) / rect.height * sceneH + cam.y, cx: e.clientX, cy: e.clientY };
 }
 function hotspotAt(x, y) {
   return SCENE_HOTSPOTS.find(h => { const d = plotDelta(h.id); return x >= h.x + d.dx && x <= h.x + d.dx + h.w && y >= h.y + d.dy && y <= h.y + d.dy + h.h; }) || null;
@@ -935,6 +994,26 @@ function handleHotspot(hs, e) {
   else if (hs.id === 'gate') { openPanel('map'); showToast('選擇獵場與難度,派遣獵人出征。', 'info'); }
 }
 import { checkAchievements } from './meta.js'
+// 外圍獵場之門點擊:未解鎖→提示;已解鎖→開該區難度詳情(隊伍/自由組隊/單人派遣都在該 modal)。
+// 走 window.openDifficultyModal(combat.js 已 bridge 到 window)以避免 scene→combat 直接 import 造成循環。
+function handleGate(gate) {
+  const z = zoneOf(gate.zoneId); if (!z) return;
+  const s = gateStatus(gate.zoneId);
+  const cp = sceneToClient(gate.x, gate.y - 12);
+  if (!s.unlocked) {
+    sfx?.('click'); burst(cp.x, cp.y, '#8a8a96');
+    showToast(`🔒 ${z.icon}${z.name} 尚未解鎖 — 先擊敗前一區頭目解鎖。`, 'error');
+    return;
+  }
+  sfx?.('dispatch'); burst(cp.x, cp.y, '#f4d03f');
+  const diff = smartDiff(gate.zoneId);
+  if (typeof window !== 'undefined' && typeof window.openDifficultyModal === 'function') {
+    window.openDifficultyModal(gate.zoneId, diff);
+  } else {
+    openPanel('map');
+  }
+  showToast(`${z.icon} ${z.name} — 選擇隊伍或獵人派遣出征。`, 'info');
+}
 function collectGuildClick(e) {
   const amount = _getClickGold() + BuildingSystem_getLevel('monument');
   gainGold(amount); stats.clicks = (stats.clicks || 0) + 1;

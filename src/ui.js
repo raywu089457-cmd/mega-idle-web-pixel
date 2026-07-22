@@ -234,6 +234,7 @@ export function renderMapPanel() {
   const soloHtml = activeExplorations.length ? `<div class="section-label">進行中狩獵</div>` + activeExplorations.map(e => {
     const z = getZone(e.zoneId) || (e.zoneId === 'abyss' ? { id: 'abyss', icon: '🕳️', name: '深淵' } : null);
     if (!z) return '';
+    const lc = liveCombats[e.heroId];
     if (lc) {
       const hero = territoryHeroes.find(h => h.id === e.heroId);
       const hst = hero ? getHeroStats(hero) : { maxHp: 1 };

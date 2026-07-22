@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v22';   // bump to v22 — 加 SKIP_WAITING message 支援 + 自動更新提示
+const CACHE_NAME = 'hunter-village-v23';   // bump to v23 — 世界地圖:拖曳平移相機 + 外圍 7 座獵場之門
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
