@@ -824,37 +824,68 @@ function drawStaticLayer(t) {
   const label = (txt, x, y, color = '#fff8dc') => { c.font = '8px "Press Start 2P", monospace'; c.strokeStyle = '#2c2c2c'; c.lineWidth = 3; c.strokeText(txt, x, y); c.fillStyle = color; c.fillText(txt, x, y); };
   const house = (x, y, ww, hh, roof, wall) => { c.fillStyle = wall; c.fillRect(x, y, ww, hh); c.fillStyle = roof; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + ww / 2, y - 18); c.lineTo(x + ww + 4, y); c.closePath(); c.fill(); c.fillStyle = '#2c2c2c'; c.fillRect(x + ww / 2 - 5, y + hh - 18, 10, 18); };
   const blv = (id) => BuildingSystem_getLevel(id);
-  const bwall = (id, wood, stone) => blv(id) >= 3 ? stone : wood;
+  // 4 階段牆色(Lv 1-2 / 3-6 / 7-9 / 10+):每棟 4 色,identity 保留但 visual 升級
+  const bwall4 = (id, foundation, developed, professional, landmark) => {
+    const lv = blv(id);
+    if (lv >= 10) return landmark;
+    if (lv >= 7) return professional;
+    if (lv >= 3) return developed;
+    return foundation;
+  };
+  // 改建階段裝飾(煙囪 + 貨架):依 sceneKey 加元素;lv<3 不繪
+  // 座標對應各棟 fillRect 位置(在 house / 自身 fillRect 之上加)
+  const BUILDING_DECOR = {
+    tavern:     { chimney: { x: 50, y: 150, w: 4, h: 14 }, shelves: [{ x: 30, y: 188, w: 4, h: 3 }, { x: 44, y: 188, w: 4, h: 3 }] },
+    monument:   { chimney: { x: 138, y: 116, w: 5, h: 18 }, shelves: [{ x: 102, y: 178, w: 6, h: 4 }, { x: 132, y: 178, w: 6, h: 4 }] },
+    goldMine:   { chimney: { x: 218, y: 150, w: 4, h: 14 }, shelves: [{ x: 188, y: 184, w: 5, h: 3 }, { x: 200, y: 184, w: 5, h: 3 }, { x: 212, y: 184, w: 5, h: 3 }] },
+    restaurant: { shelves: [{ x: 64, y: 194, w: 4, h: 2 }, { x: 74, y: 194, w: 4, h: 2 }] },
+    drinkShop:  { shelves: [{ x: 160, y: 200, w: 3, h: 2 }, { x: 167, y: 200, w: 3, h: 2 }] },
+    forge:      { chimney: { x: 58, y: 238, w: 5, h: 16 }, shelves: [{ x: 26, y: 274, w: 5, h: 3 }, { x: 38, y: 274, w: 5, h: 3 }, { x: 50, y: 274, w: 5, h: 3 }] },
+    alchemy:    { chimney: { x: 132, y: 244, w: 4, h: 14 }, shelves: [{ x: 104, y: 280, w: 5, h: 3 }, { x: 118, y: 280, w: 5, h: 3 }, { x: 130, y: 280, w: 5, h: 3 }] },
+    research:   { shelves: [{ x: 184, y: 274, w: 5, h: 3 }, { x: 198, y: 274, w: 5, h: 3 }, { x: 208, y: 274, w: 5, h: 3 }] },
+  };
+  const applyDevelopedDecor = (sceneKey) => {
+    if (blv(sceneKey) < 3) return;
+    const d = BUILDING_DECOR[sceneKey]; if (!d) return;
+    if (d.chimney) {
+      const { x, y, w, h } = d.chimney;
+      c.fillStyle = '#5a5a62'; c.fillRect(x, y, w, h);
+      c.fillStyle = '#3a3a40'; c.fillRect(x - 1, y - 2, w + 2, 2); // 煙囪頂帽
+    }
+    if (d.shelves) {
+      for (const s of d.shelves) { c.fillStyle = '#3a3a40'; c.fillRect(s.x, s.y, s.w, s.h); }
+    }
+  };
   const bpips = (id, x, y) => { const n = Math.min(10, blv(id)); c.fillStyle = '#f4d03f'; for (let i = 0; i < n; i++) c.fillRect(x + i * 4, y, 3, 2); };
   c.save(); { const d = plotDelta('tavern'); c.translate(d.dx, d.dy); }
-  house(16, 164, 42, 42, '#6d3f2a', bwall('tavern', '#a9764b', '#9d9da8')); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); bpips('tavern', 16, 210);
+  house(16, 164, 42, 42, '#6d3f2a', bwall4('tavern', '#a9764b', '#9d9da8', '#b8b8c0', '#d4c896')); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); applyDevelopedDecor('tavern'); bpips('tavern', 16, 210);
   c.restore();
   c.save(); { const d = plotDelta('guild'); c.translate(d.dx, d.dy); }
-  house(96, 132, 50, 62, '#46324a', bwall('monument', '#c9b082', '#b8b8c4')); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
+  house(96, 132, 50, 62, '#46324a', bwall4('monument', '#c9b082', '#b8b8c4', '#d0d0e0', '#e8d8a8')); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
   c.fillStyle = '#2c2c2c'; c.fillRect(112, 104, 4, 30); c.fillStyle = '#e74c3c'; c.fillRect(116, 104, 24, 12);
-  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); bpips('monument', 96, 198);
+  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); applyDevelopedDecor('monument'); bpips('monument', 96, 198);
   c.restore();
   c.save(); { const d = plotDelta('market'); c.translate(d.dx, d.dy); }
-  c.fillStyle = bwall('goldMine', '#8b5a2b', '#8a8a96'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); bpips('goldMine', 184, 204);
+  c.fillStyle = bwall4('goldMine', '#8b5a2b', '#8a8a96', '#a8a8b8', '#c8b890'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); applyDevelopedDecor('goldMine'); bpips('goldMine', 184, 204);
   c.restore();
   if (blv('restaurant') > 0) { c.save(); { const d = plotDelta('restaurant'); c.translate(d.dx, d.dy); }
-    c.fillStyle = bwall('restaurant', '#a94f3c', '#9a8a86'); c.fillRect(62, 188, 22, 14);
+    c.fillStyle = bwall4('restaurant', '#a94f3c', '#9a8a86', '#b0a8a8', '#d8c0a8'); c.fillRect(62, 188, 22, 14);
     c.fillStyle = '#f4d03f'; c.fillRect(64, 182, 18, 6); c.fillStyle = '#2c2c2c'; c.fillRect(64, 202, 3, 4); c.fillRect(79, 202, 3, 4);
-    bpips('restaurant', 62, 206); c.restore(); }
+    applyDevelopedDecor('restaurant'); bpips('restaurant', 62, 206); c.restore(); }
   if (blv('drinkShop') > 0) { c.save(); { const d = plotDelta('drinkShop'); c.translate(d.dx, d.dy); }
-    c.fillStyle = bwall('drinkShop', '#3c6ea9', '#8296a8'); c.fillRect(158, 194, 16, 12);
+    c.fillStyle = bwall4('drinkShop', '#3c6ea9', '#8296a8', '#a8b8c8', '#c8d8c8'); c.fillRect(158, 194, 16, 12);
     c.fillStyle = '#7dd6ff'; c.fillRect(160, 189, 12, 5); c.fillStyle = '#2c2c2c'; c.fillRect(160, 206, 2, 4); c.fillRect(170, 206, 2, 4);
-    bpips('drinkShop', 158, 210); c.restore(); }
+    applyDevelopedDecor('drinkShop'); bpips('drinkShop', 158, 210); c.restore(); }
   c.save(); { const d = plotDelta('forge'); c.translate(d.dx, d.dy); }
-  house(22, 252, 44, 40, '#3c3c46', bwall('weaponShop', '#8f8f9d', '#787882')); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
-  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); bpips('weaponShop', 22, 296);
+  house(22, 252, 44, 40, '#3c3c46', bwall4('weaponShop', '#8f8f9d', '#787882', '#9898a0', '#c0b896')); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
+  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); applyDevelopedDecor('weaponShop'); bpips('weaponShop', 22, 296);
   c.restore();
   c.save(); { const d = plotDelta('alchemy'); c.translate(d.dx, d.dy); }
-  house(100, 258, 40, 36, '#4b3a63', bwall('potionShop', '#9b7bb8', '#9890a8')); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
-  bpips('potionShop', 100, 298);
+  house(100, 258, 40, 36, '#4b3a63', bwall4('potionShop', '#9b7bb8', '#9890a8', '#b8b0c8', '#d8c8b0')); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
+  applyDevelopedDecor('potionShop'); bpips('potionShop', 100, 298);
   c.restore();
   c.save(); { const d = plotDelta('research'); c.translate(d.dx, d.dy); }
-  house(178, 252, 40, 42, '#2d3d63', bwall('altar', '#7890c9', '#8890b0')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); bpips('altar', 178, 298);
+  house(178, 252, 40, 42, '#2d3d63', bwall4('altar', '#7890c9', '#8890b0', '#a8b0c8', '#d0c8a8')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); applyDevelopedDecor('altar'); bpips('altar', 178, 298);
   c.restore();
   c.save(); { const d = plotDelta('gate'); c.translate(d.dx, d.dy); }
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26);
