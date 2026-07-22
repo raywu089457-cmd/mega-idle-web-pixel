@@ -832,21 +832,46 @@ function drawStaticLayer(t) {
     if (lv >= 3) return developed;
     return foundation;
   };
-  // 改建階段裝飾(煙囪 + 貨架):依 sceneKey 加元素;lv<3 不繪
+  // 階段裝飾(developed/professional/landmark):依 sceneKey 加元素;lv<3 不繪
   // 座標對應各棟 fillRect 位置(在 house / 自身 fillRect 之上加)
   const BUILDING_DECOR = {
-    tavern:     { chimney: { x: 50, y: 150, w: 4, h: 14 }, shelves: [{ x: 30, y: 188, w: 4, h: 3 }, { x: 44, y: 188, w: 4, h: 3 }] },
-    monument:   { chimney: { x: 138, y: 116, w: 5, h: 18 }, shelves: [{ x: 102, y: 178, w: 6, h: 4 }, { x: 132, y: 178, w: 6, h: 4 }] },
-    goldMine:   { chimney: { x: 218, y: 150, w: 4, h: 14 }, shelves: [{ x: 188, y: 184, w: 5, h: 3 }, { x: 200, y: 184, w: 5, h: 3 }, { x: 212, y: 184, w: 5, h: 3 }] },
-    restaurant: { shelves: [{ x: 64, y: 194, w: 4, h: 2 }, { x: 74, y: 194, w: 4, h: 2 }] },
-    drinkShop:  { shelves: [{ x: 160, y: 200, w: 3, h: 2 }, { x: 167, y: 200, w: 3, h: 2 }] },
-    forge:      { chimney: { x: 58, y: 238, w: 5, h: 16 }, shelves: [{ x: 26, y: 274, w: 5, h: 3 }, { x: 38, y: 274, w: 5, h: 3 }, { x: 50, y: 274, w: 5, h: 3 }] },
-    alchemy:    { chimney: { x: 132, y: 244, w: 4, h: 14 }, shelves: [{ x: 104, y: 280, w: 5, h: 3 }, { x: 118, y: 280, w: 5, h: 3 }, { x: 130, y: 280, w: 5, h: 3 }] },
-    research:   { shelves: [{ x: 184, y: 274, w: 5, h: 3 }, { x: 198, y: 274, w: 5, h: 3 }, { x: 208, y: 274, w: 5, h: 3 }] },
+    tavern:     { chimney: { x: 50, y: 150, w: 4, h: 14 }, shelves: [{ x: 30, y: 188, w: 4, h: 3 }, { x: 44, y: 188, w: 4, h: 3 }],
+                  window_glow: [{ x: 26, y: 170, w: 4, h: 4 }, { x: 48, y: 170, w: 4, h: 4 }],
+                  lantern: [{ x: 22, y: 196, w: 1, h: 2 }, { x: 53, y: 196, w: 1, h: 2 }],
+                  aura: { x: 14, y: 150, w: 46, h: 60 } },
+    monument:   { chimney: { x: 138, y: 116, w: 5, h: 18 }, shelves: [{ x: 102, y: 178, w: 6, h: 4 }, { x: 132, y: 178, w: 6, h: 4 }],
+                  banner: { x: 96, y: 108, w: 16, h: 6 },
+                  tower: { x: 126, y: 102, w: 8, h: 16 },
+                  lantern: [{ x: 98, y: 184, w: 1, h: 2 }, { x: 144, y: 184, w: 1, h: 2 }],
+                  aura: { x: 86, y: 100, w: 64, h: 74 } },
+    goldMine:   { chimney: { x: 218, y: 150, w: 4, h: 14 }, shelves: [{ x: 188, y: 184, w: 5, h: 3 }, { x: 200, y: 184, w: 5, h: 3 }, { x: 212, y: 184, w: 5, h: 3 }],
+                  banner: { x: 186, y: 148, w: 16, h: 8 },
+                  lantern: [{ x: 184, y: 198, w: 1, h: 2 }, { x: 218, y: 198, w: 1, h: 2 }],
+                  aura: { x: 180, y: 144, w: 48, h: 58 } },
+    restaurant: { shelves: [{ x: 64, y: 194, w: 4, h: 2 }, { x: 74, y: 194, w: 4, h: 2 }],
+                  window_glow: [{ x: 64, y: 184, w: 18, h: 3 }],
+                  lantern: [{ x: 62, y: 200, w: 1, h: 2 }, { x: 80, y: 200, w: 1, h: 2 }],
+                  aura: { x: 60, y: 180, w: 26, h: 24 } },
+    drinkShop:  { shelves: [{ x: 160, y: 200, w: 3, h: 2 }, { x: 167, y: 200, w: 3, h: 2 }],
+                  window_glow: [{ x: 160, y: 189, w: 12, h: 3 }],
+                  lantern: [{ x: 158, y: 204, w: 1, h: 2 }, { x: 172, y: 204, w: 1, h: 2 }],
+                  aura: { x: 156, y: 186, w: 20, h: 22 } },
+    forge:      { chimney: { x: 58, y: 238, w: 5, h: 16 }, shelves: [{ x: 26, y: 274, w: 5, h: 3 }, { x: 38, y: 274, w: 5, h: 3 }, { x: 50, y: 274, w: 5, h: 3 }],
+                  lantern: [{ x: 22, y: 288, w: 1, h: 2 }, { x: 62, y: 288, w: 1, h: 2 }],
+                  aura: { x: 20, y: 234, w: 50, h: 64 } },
+    alchemy:    { chimney: { x: 132, y: 244, w: 4, h: 14 }, shelves: [{ x: 104, y: 280, w: 5, h: 3 }, { x: 118, y: 280, w: 5, h: 3 }, { x: 130, y: 280, w: 5, h: 3 }],
+                  lantern: [{ x: 100, y: 294, w: 1, h: 2 }, { x: 136, y: 294, w: 1, h: 2 }],
+                  aura: { x: 98, y: 240, w: 46, h: 62 } },
+    research:   { shelves: [{ x: 184, y: 274, w: 5, h: 3 }, { x: 198, y: 274, w: 5, h: 3 }, { x: 208, y: 274, w: 5, h: 3 }],
+                  banner: { x: 178, y: 236, w: 16, h: 6 },
+                  lantern: [{ x: 178, y: 290, w: 1, h: 2 }, { x: 214, y: 290, w: 1, h: 2 }],
+                  aura: { x: 176, y: 232, w: 44, h: 64 } },
   };
-  const applyDevelopedDecor = (sceneKey) => {
-    if (blv(sceneKey) < 3) return;
+  const applyBuildingDecor = (sceneKey) => {
+    const lvl = blv(sceneKey);
+    if (lvl < 3) return;
     const d = BUILDING_DECOR[sceneKey]; if (!d) return;
+    // developed (Lv3+) — 煙囪 + 貨架
     if (d.chimney) {
       const { x, y, w, h } = d.chimney;
       c.fillStyle = '#5a5a62'; c.fillRect(x, y, w, h);
@@ -855,37 +880,68 @@ function drawStaticLayer(t) {
     if (d.shelves) {
       for (const s of d.shelves) { c.fillStyle = '#3a3a40'; c.fillRect(s.x, s.y, s.w, s.h); }
     }
+    // professional (Lv7+) — 旗幟 + 暖黃窗
+    if (lvl >= 7) {
+      if (d.banner) {
+        c.fillStyle = '#c0392b'; c.fillRect(d.banner.x, d.banner.y, d.banner.w, d.banner.h);
+        c.fillStyle = '#7a1f12'; c.fillRect(d.banner.x, d.banner.y, 1, d.banner.h); // 旗桿
+      }
+      if (d.window_glow) {
+        c.fillStyle = '#ffe066';
+        for (const w of d.window_glow) c.fillRect(w.x, w.y, w.w, w.h);
+      }
+    }
+    // landmark (Lv10+) — 高塔(僅公會) + 燈籠 + 外光暈
+    if (lvl >= 10) {
+      if (d.tower) {
+        c.fillStyle = '#d4c896'; c.fillRect(d.tower.x, d.tower.y, d.tower.w, d.tower.h);
+        c.fillStyle = '#ffe066'; c.fillRect(d.tower.x + 1, d.tower.y - 2, d.tower.w - 2, 2); // 金頂
+      }
+      if (d.lantern) {
+        for (const l of d.lantern) {
+          c.fillStyle = '#ff6b35'; c.fillRect(l.x, l.y, l.w, l.h);
+        }
+      }
+      if (d.aura) {
+        c.save();
+        c.globalAlpha = 0.35;
+        c.strokeStyle = '#ffe066';
+        c.lineWidth = 2;
+        c.strokeRect(d.aura.x, d.aura.y, d.aura.w, d.aura.h);
+        c.restore();
+      }
+    }
   };
   const bpips = (id, x, y) => { const n = Math.min(10, blv(id)); c.fillStyle = '#f4d03f'; for (let i = 0; i < n; i++) c.fillRect(x + i * 4, y, 3, 2); };
   c.save(); { const d = plotDelta('tavern'); c.translate(d.dx, d.dy); }
-  house(16, 164, 42, 42, '#6d3f2a', bwall4('tavern', '#a9764b', '#9d9da8', '#b8b8c0', '#d4c896')); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); applyDevelopedDecor('tavern'); bpips('tavern', 16, 210);
+  house(16, 164, 42, 42, '#6d3f2a', bwall4('tavern', '#a9764b', '#9d9da8', '#b8b8c0', '#d4c896')); c.fillStyle = '#f4d03f'; c.fillRect(24, 172, 10, 8); c.fillRect(48, 172, 6, 8); applyBuildingDecor('tavern'); bpips('tavern', 16, 210);
   c.restore();
   c.save(); { const d = plotDelta('guild'); c.translate(d.dx, d.dy); }
   house(96, 132, 50, 62, '#46324a', bwall4('monument', '#c9b082', '#b8b8c4', '#d0d0e0', '#e8d8a8')); c.fillStyle = '#46324a'; c.fillRect(88, 154, 8, 40); c.fillRect(146, 154, 8, 40);
   c.fillStyle = '#2c2c2c'; c.fillRect(112, 104, 4, 30); c.fillStyle = '#e74c3c'; c.fillRect(116, 104, 24, 12);
-  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); applyDevelopedDecor('monument'); bpips('monument', 96, 198);
+  c.strokeStyle = '#dfe7ff'; c.lineWidth = 2; c.beginPath(); c.moveTo(105, 150); c.lineTo(127, 172); c.moveTo(127, 150); c.lineTo(105, 172); c.stroke(); applyBuildingDecor('monument'); bpips('monument', 96, 198);
   c.restore();
   c.save(); { const d = plotDelta('market'); c.translate(d.dx, d.dy); }
-  c.fillStyle = bwall4('goldMine', '#8b5a2b', '#8a8a96', '#a8a8b8', '#c8b890'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); applyDevelopedDecor('goldMine'); bpips('goldMine', 184, 204);
+  c.fillStyle = bwall4('goldMine', '#8b5a2b', '#8a8a96', '#a8a8b8', '#c8b890'); c.fillRect(184, 166, 40, 34); c.fillStyle = '#e74c3c'; for (let i = 0; i < 4; i++) c.fillRect(182 + i * 11, 156, 8, 10); c.fillStyle = '#f4d03f'; c.fillRect(190, 176, 8, 6); c.fillRect(206, 176, 8, 6); applyBuildingDecor('goldMine'); bpips('goldMine', 184, 204);
   c.restore();
   if (blv('restaurant') > 0) { c.save(); { const d = plotDelta('restaurant'); c.translate(d.dx, d.dy); }
     c.fillStyle = bwall4('restaurant', '#a94f3c', '#9a8a86', '#b0a8a8', '#d8c0a8'); c.fillRect(62, 188, 22, 14);
     c.fillStyle = '#f4d03f'; c.fillRect(64, 182, 18, 6); c.fillStyle = '#2c2c2c'; c.fillRect(64, 202, 3, 4); c.fillRect(79, 202, 3, 4);
-    applyDevelopedDecor('restaurant'); bpips('restaurant', 62, 206); c.restore(); }
+    applyBuildingDecor('restaurant'); bpips('restaurant', 62, 206); c.restore(); }
   if (blv('drinkShop') > 0) { c.save(); { const d = plotDelta('drinkShop'); c.translate(d.dx, d.dy); }
     c.fillStyle = bwall4('drinkShop', '#3c6ea9', '#8296a8', '#a8b8c8', '#c8d8c8'); c.fillRect(158, 194, 16, 12);
     c.fillStyle = '#7dd6ff'; c.fillRect(160, 189, 12, 5); c.fillStyle = '#2c2c2c'; c.fillRect(160, 206, 2, 4); c.fillRect(170, 206, 2, 4);
-    applyDevelopedDecor('drinkShop'); bpips('drinkShop', 158, 210); c.restore(); }
+    applyBuildingDecor('drinkShop'); bpips('drinkShop', 158, 210); c.restore(); }
   c.save(); { const d = plotDelta('forge'); c.translate(d.dx, d.dy); }
   house(22, 252, 44, 40, '#3c3c46', bwall4('weaponShop', '#8f8f9d', '#787882', '#9898a0', '#c0b896')); c.fillStyle = '#2c2c2c'; c.fillRect(48, 238, 10, 18);
-  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); applyDevelopedDecor('weaponShop'); bpips('weaponShop', 22, 296);
+  c.fillStyle = '#ff9f43'; c.fillRect(34, 274, 12, 6); applyBuildingDecor('weaponShop'); bpips('weaponShop', 22, 296);
   c.restore();
   c.save(); { const d = plotDelta('alchemy'); c.translate(d.dx, d.dy); }
   house(100, 258, 40, 36, '#4b3a63', bwall4('potionShop', '#9b7bb8', '#9890a8', '#b8b0c8', '#d8c8b0')); c.fillStyle = '#2c2c2c'; c.fillRect(112, 278, 18, 10); c.fillStyle = '#27ae60'; c.fillRect(114, 276, 14, 4);
-  applyDevelopedDecor('potionShop'); bpips('potionShop', 100, 298);
+  applyBuildingDecor('potionShop'); bpips('potionShop', 100, 298);
   c.restore();
   c.save(); { const d = plotDelta('research'); c.translate(d.dx, d.dy); }
-  house(178, 252, 40, 42, '#2d3d63', bwall4('altar', '#7890c9', '#8890b0', '#a8b0c8', '#d0c8a8')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); applyDevelopedDecor('altar'); bpips('altar', 178, 298);
+  house(178, 252, 40, 42, '#2d3d63', bwall4('altar', '#7890c9', '#8890b0', '#a8b0c8', '#d0c8a8')); c.fillStyle = night > 0.4 ? '#9be7ff' : '#4aa3ff'; c.fillRect(192, 236, 10, 10); c.fillStyle = `rgba(155,231,255,${0.25 + night * 0.35})`; c.fillRect(188, 232, 18, 18); applyBuildingDecor('altar'); bpips('altar', 178, 298);
   c.restore();
   c.save(); { const d = plotDelta('gate'); c.translate(d.dx, d.dy); }
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26);
@@ -981,11 +1037,11 @@ export function drawScene(t, dt) {
   // 飄雲
   c.fillStyle = day > 0.35 ? 'rgba(255,255,255,0.82)' : 'rgba(188,202,255,0.28)';
   for (let i = 0; i < 4; i++) { const x = ((t * (5 + i * 2) + i * 70) % (w + 60)) - 30, y = 30 + i * 22; c.fillRect(Math.round(x), y, 22, 7); c.fillRect(Math.round(x) + 5, y - 5, 12, 6); c.fillRect(Math.round(x) + 16, y + 3, 16, 6); }
-  // 鐵匠煙囪煙(只在沒 reduceMotion 時畫)
-  if (!reduceMotion) { const d = plotDelta('forge'); c.save(); c.translate(d.dx, d.dy);
+  // 鐵匠煙囪煙(Lv7+ 才畫 — 專業階段 chimney_smoke decoration)
+  if (!reduceMotion && BuildingSystem_getLevel('weaponShop') >= 7) { const d = plotDelta('forge'); c.save(); c.translate(d.dx, d.dy);
     for (let i = 0; i < 4; i++) { const sy = 238 - ((t * 10 + i * 9) % 34); c.fillStyle = `rgba(220,220,220,${0.35 - i * 0.06})`; c.fillRect(50 + Math.sin(t + i) * 4, sy, 6 + i, 5); } c.restore(); }
-  // 煉金鍋爐泡
-  if (!reduceMotion) { const d = plotDelta('alchemy'); c.save(); c.translate(d.dx, d.dy);
+  // 煉金鍋爐泡(Lv7+ 才畫)
+  if (!reduceMotion && BuildingSystem_getLevel('potionShop') >= 7) { const d = plotDelta('alchemy'); c.save(); c.translate(d.dx, d.dy);
     for (let i = 0; i < 3; i++) { c.fillStyle = 'rgba(190,255,210,0.8)'; c.fillRect(116 + i * 5, 272 - ((t * 8 + i * 4) % 10), 2, 2); } c.restore(); }
   // 獵場門 portal glow(會動,放動態)
   if (!reduceMotion) { const d = plotDelta('gate'); c.save(); c.translate(d.dx, d.dy);
