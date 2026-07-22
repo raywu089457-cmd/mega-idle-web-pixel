@@ -469,6 +469,48 @@ export function updateWanderingScene(dt) {
     const st = getHeroStats(h);
     processEffects(h, dt);
     if (h.bubble) { h.bubble.t -= dt; if (h.bubble.t <= 0) h.bubble = null; }
+    // §七 NPC 卡住恢復(在 switch 前統一處理;不論 aiState)
+    // 三層:①側向偏移 ②重走路點 graph ③傳送至安全點(廣場 / 城門)。
+    if (h.targetX != null) {
+      if (h.stuckX == null) { h.stuckX = h.sx; h.stuckY = h.sy; }
+      const _moved = (h.sx - h.stuckX) * (h.sx - h.stuckX) + (h.sy - h.stuckY) * (h.sy - h.stuckY);
+      // < 0.36 px² / 1.5 s ≈ 視為原地踏步(displacement < 0.6 px/tick)
+      if (_moved < 0.36) h.stuckTicks = (h.stuckTicks || 0) + dt;
+      else { h.stuckTicks = 0; h.stuckX = h.sx; h.stuckY = h.sy; }
+      if (h.stuckTicks > 1.5) {
+        h.recoveryLevel = (h.recoveryLevel || 0) + 1;
+        if (h.recoveryLevel === 1) {
+          // L1 側向偏移:給 target 加垂直位移,鼓勵 NPC 繞過卡點
+          const dx = h.targetX - h.sx, dy = h.targetY - h.sy;
+          const mag = Math.hypot(dx, dy) || 1;
+          const px = -dy / mag, py = dx / mag;
+          h.targetX += px * 10; h.targetY += py * 10;
+          h.stuckTicks = 0; h.stuckX = h.sx; h.stuckY = h.sy;
+        } else if (h.recoveryLevel === 2) {
+          // L2 重走路點 graph:用當前 sx/sy 重新 BFS
+          const ftx = h.finalTargetX ?? h.targetX, fty = h.finalTargetY ?? h.targetY;
+          const fromWp = nearestWaypoint(h.sx, h.sy);
+          const toWp = nearestWaypoint(ftx, fty);
+          let trail = null;
+          if (fromWp && toWp) trail = (fromWp.id === toWp.id) ? [fromWp.id] : pathFind(fromWp.id, toWp.id);
+          if (trail && trail.length >= 2) {
+            h.wpTrail = trail; h.wpTrailIndex = 1;
+            const next = getWaypoint(trail[1]);
+            h.targetX = next.x + rand(-2, 2); h.targetY = next.y + rand(-2, 2);
+          } else { h.wpTrail = null; h.targetX = ftx; h.targetY = fty; }
+          h.stuckTicks = 0; h.stuckX = h.sx; h.stuckY = h.sy;
+        } else {
+          // L3 傳送至安全點(廣場或城門)
+          const safe = BUILDING_ANCHORS.guild || BUILDING_ANCHORS.gate;
+          h.sx = safe.x + rand(-3, 3); h.sy = safe.y + rand(-1, 1);
+          h.wpTrail = null;
+          const ftx = h.finalTargetX ?? h.targetX, fty = h.finalTargetY ?? h.targetY;
+          h.targetX = ftx; h.targetY = fty;
+          h.recoveryLevel = 0; h.stuckTicks = 0; h.stuckX = h.sx; h.stuckY = h.sy;
+          setBubble(h, '🌀…(繞了一大圈)', 1.6);
+        }
+      }
+    }
     switch (h.aiState) {
       case 'arrive':
       case 'idle':
