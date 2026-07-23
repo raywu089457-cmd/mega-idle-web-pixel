@@ -6,6 +6,20 @@
 import { choice } from './util.js';
 
 // ─── RESOURCES ───────────────────────────────────────────────────────
+// §六 1 服務圈分區(借 research doc §三 三圈服務區,給 scene hint + stats panel)
+export const SERVICE_ZONES = Object.freeze({
+  urgent:     { id: 'urgent',     label: '緊急服務', short: '緊', color: '#ff6b4a', order: 0,
+    members: ['tavern', 'alchemy'] },
+  combat:     { id: 'combat',     label: '戰鬥補給', short: '戰', color: '#9b6bd6', order: 1,
+    members: ['forge'] },
+  commerce:   { id: 'commerce',   label: '消費服務', short: '消', color: '#5db3ff', order: 2,
+    members: ['restaurant', 'drinkShop'] },
+  management: { id: 'management', label: '管理',     short: '管', color: '#a8a18a', order: 3,
+    members: ['guild', 'market', 'research'] },
+  expedition: { id: 'expedition', label: '遠征',     short: '遠', color: '#c9a15a', order: 4,
+    members: ['gate'] },
+});
+
 export const RESOURCES = {
   gold:        { name: '金幣', icon: '🪙', initial: 500, capacity: 99999 },
   magicStones: { name: '魔核', icon: '💠', initial: 0, capacity: 999 },

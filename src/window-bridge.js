@@ -73,6 +73,7 @@ window.fulfillOrder = fulfillOrder;
 window.setPriceTier = setPriceTier;
 window.closePanel = closePanel;
 window.togglePanel = togglePanel;
+window.territoryHeroes = territoryHeroes;  // 給 E2E test / console debug 用途(已被 defineProperty 暴露,顯式 window alias)
 window.upgradeBuilding = upgradeBuilding;
 window.renderHeroesPanel = renderHeroesPanel;
 window.renderMapPanel = renderMapPanel;

@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v42';   // bump to v42 — scene.js 重構 + 教學系統 5 個新機制 onboarding modal
+const CACHE_NAME = 'hunter-village-v43';   // bump to v43 — E2E bugfix: data.js 缺 SERVICE_ZONES export + window-bridge 加 territoryHeroes alias
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
