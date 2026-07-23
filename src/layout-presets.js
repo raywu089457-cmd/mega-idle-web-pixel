@@ -4,7 +4,7 @@
 // sceneKey:tavern/guild/market/restaurant/drinkShop/forge/alchemy/research/gate
 // plotIdx:0..8 (對應 PLOT_COORDS[0..8])
 
-import { PLOT_BUILDINGS } from './scene-map.js'
+import { PLOT_BUILDINGS } from './data.js'
 
 export const LAYOUT_PRESETS = Object.freeze({
   service: {
