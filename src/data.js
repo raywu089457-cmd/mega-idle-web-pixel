@@ -83,7 +83,7 @@ export function rollGearTierEvent() {
 }
 export function makeGearInstance(id, opts = {}) {
   const def = ITEMS[id] || {};
-  const tier = opts.tier || (opts.roll ? rollGearTier() : 'normal');
+  const tier = opts.tier || (opts.roll ? rollGearTierEvent() : 'normal');
   let affix = opts.affix || null;
   if (!affix && tier === 'legend') affix = choice(AFFIXES).id;
   else if (!affix && tier === 'fine' && opts.roll && Math.random() < 0.4) affix = choice(AFFIXES).id;

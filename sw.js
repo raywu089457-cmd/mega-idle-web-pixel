@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v40';   // bump to v40 — §十 第三 trophy 用途(每個 trophy -20% 該棟 gold cost,最多 -80%)
+const CACHE_NAME = 'hunter-village-v41';   // bump to v41 — §六 3 fix: caravan boost 真正生效(makeGearInstance 改用 rollGearTierEvent)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
