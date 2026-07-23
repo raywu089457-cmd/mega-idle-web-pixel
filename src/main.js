@@ -14,6 +14,7 @@ import './specializations.js';      // L1: 建築專精分支(§六 2)
 import './expedition-readiness.js'; // L1: 遠征準備度檢查(§六 4)
 import './layout-presets.js';        // L1: 服務區配置方案(§十 4)
 import './town-events.js';          // L1: 城鎮隨機事件系統(§六 3)
+import './tutorial.js';             // L1: 玩家引導教學(5 個新機制 onboarding)
 import './state.js';                // L1: SOT
 import './bonuses.js';              // L2: multiplier
 import './resources-buildings.js';  // L2

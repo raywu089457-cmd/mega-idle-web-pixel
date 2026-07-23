@@ -669,6 +669,22 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
   </div>
 </div>
 
+<!-- 教學 modal(§5 個新機制 onboarding) -->
+<div class="modal-overlay" id="modal-tutorial">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+    <div class="modal-title" id="tutorial-title">📖 教學</div>
+    <div id="tutorial-body" style="padding:8px 0;"></div>
+    <div class="tutorial-progress" id="tutorial-progress" style="font-size:11px;color:var(--text-faint);text-align:center;margin:8px 0;"></div>
+    <div class="modal-actions" style="display:flex;gap:6px;justify-content:space-between;">
+      <button class="btn btn-outline btn-sm" onclick="tutorialSkip()">跳過</button>
+      <div style="display:flex;gap:4px;">
+        <button class="btn btn-outline btn-sm" id="tutorial-prev" onclick="tutorialPrev()">← 上一步</button>
+        <button class="btn btn-gold btn-sm" id="tutorial-next" onclick="tutorialNext()">下一步 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- §六 2 — 建築專精選擇 modal -->
 <div class="modal-overlay" id="modal-specialization">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-spec-title">

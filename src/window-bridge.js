@@ -17,6 +17,7 @@ import {
 import {
   closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, renderShopGrid, fulfillOrder, openTraditionPicker, openSpecializationPicker,
 } from './ui.js';
+import { tutorialNext, tutorialPrev, tutorialSkip, tutorialRestart } from './tutorial.js';
 import {
   setCombatSpeed, openSettings, closeSettings, exportSaveCode, importSaveCode,
   doPrestige, doReset, closeOnboard, confirmTraditionPick, confirmSpecializationPick, applyLayoutPreset,
@@ -89,6 +90,10 @@ window.confirmTraditionPick = confirmTraditionPick;
 window.openSpecializationPicker = openSpecializationPicker;
 window.confirmSpecializationPick = confirmSpecializationPick;
 window.applyLayoutPreset = applyLayoutPreset;
+window.tutorialNext = tutorialNext;
+window.tutorialPrev = tutorialPrev;
+window.tutorialSkip = tutorialSkip;
+window.tutorialRestart = tutorialRestart;
 window.advanceClass = advanceClass;
 window.trainHero = trainHero;
 window.usePotion = usePotion;

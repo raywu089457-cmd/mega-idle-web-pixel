@@ -11,7 +11,8 @@ import { renderAll, renderHUD, renderBadges, renderPanel, openPanel, closePanel,
 import { BuildingSystem_setSpec } from './resources-buildings.js'
 import { BUILDINGS } from './data.js'
 import { computePresetSwaps, getPresetName } from './layout-presets.js'
-import { PLOT_BUILDINGS } from './scene-map.js'
+import { PLOT_BUILDINGS } from './data.js'
+import { showTutorialIntro } from './tutorial.js'
 import { SAVE_KEY, getDefaultGameState as _getDefaultGameState } from './state.js'
 import { checkAchievements, collectOffline, computeOffline, offlineModalHtml, claimDaily, produceTick, checkDaily as _checkDaily, finalBossDefeated as _finalBossDefeated, getPrestigeGain as _getPrestigeGain } from './meta.js'
 import { processHeroTick, openDispatch, openDifficultyModal, dispatchHero } from './combat.js';
@@ -262,6 +263,10 @@ export function init() {
   // ?skiponboard=1 — 分享連結 / 深連結跳過新手導覽(開發測試也方便)
   const skipOnboard = new URLSearchParams(location.search).get('skiponboard') === '1';
   if (!skipOnboard && !settings.onboarded) showModal('modal-onboard');
+  // 5 個新機制 onboarding(教學)— onboard 完成後 1.5s 觸發,讓玩家熟悉新系統
+  if (!skipOnboard && settings.onboarded && !settings.tutorialDone) {
+    setTimeout(() => { try { showTutorialIntro(); } catch (e) { /* skip on error */ } }, 1500);
+  }
   checkAchievements();
   renderAll();
   setInterval(gameTick, 1000);

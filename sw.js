@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v42';   // bump to v42 — scene.js 刪除 PLOT_BUILDINGS/PLOT_COORDS/PLOT_NAMES/BUILDING_TO_SCENE 重複定義,改從 data.js import
+const CACHE_NAME = 'hunter-village-v42';   // bump to v42 — scene.js 重構 + 教學系統 5 個新機制 onboarding modal
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ const ASSETS_TO_CACHE = [
 // 由 install 動態掃 src/ 補上;這裡放常見入口,讓 fetch handler 觸發 src/*.js runtime cache
 const SRC_GLOB = [
   './src/main.js', './src/data.js', './src/util.js', './src/state.js', './src/bonuses.js',
-  './src/building-stages.js', './src/building-effects.js', './src/reachability.js', './src/queue-points.js', './src/region-unlocks.js', './src/traditions.js', './src/specializations.js', './src/expedition-readiness.js', './src/layout-presets.js', './src/town-events.js',
+  './src/building-stages.js', './src/building-effects.js', './src/reachability.js', './src/queue-points.js', './src/region-unlocks.js', './src/traditions.js', './src/specializations.js', './src/expedition-readiness.js', './src/layout-presets.js', './src/town-events.js', './src/tutorial.js',
   './src/resources-buildings.js', './src/skills.js', './src/audio.js', './src/inventory.js',
   './src/heroes-stats.js', './src/meta.js', './src/combat.js', './src/combat-party.js',
   './src/expeditions.js', './src/scene.js', './src/ui.js', './src/selftest.js',
