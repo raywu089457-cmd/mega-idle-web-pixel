@@ -118,11 +118,12 @@ function pickWanderingType() {
   return WANDERING_HERO_TYPES[0];
 }
 export function spawnWanderingHero() {
-  if (wanderingHeroes.length >= stageCapacity('tavern', BuildingSystem_getMaxWanderingHeroes())) return;
+  console.warn('[spawn] called, len=' + wanderingHeroes.length);
+  if (wanderingHeroes.length >= stageCapacity('tavern', BuildingSystem_getMaxWanderingHeroes())) { console.warn('[spawn] cap hit, len=' + wanderingHeroes.length); return; }
   const tpl = pickWanderingType();
+  if (!tpl) { console.warn('[spawn] no template'); return; }
   const rarity = pickRarity();
   const rDef = RARITIES[rarity];
-  // Wallet scales with hero level so high-level visitors are pricey recruits
   const wallet = Math.round((40 + tpl.level * 60) * rDef.walletMult);
   const id = 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   const h = normalizeHero({
@@ -133,7 +134,6 @@ export function spawnWanderingHero() {
     equipment: { weapon: null, armor: null },
     inventory: {},
     wallet, diamonds: 0,
-    // Higher-level visitors start with better mood (selective)
     mood: rand(50, 80) + Math.min(15, tpl.level),
     dropMagicStoneChance: tpl.dropMagicStoneChance,
   });
@@ -142,6 +142,7 @@ export function spawnWanderingHero() {
   h.wandering = true;
   h.arrivedAt = Date.now();
   wanderingHeroes.push(h);
+  console.log('[spawn] pushed, len=' + wanderingHeroes.length);
 }
 function pickRarity() {
   const total = Object.values(RARITIES).reduce((s, r) => s + r.weight, 0);

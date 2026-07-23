@@ -18,6 +18,7 @@ import {
   closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, renderShopGrid, fulfillOrder, openTraditionPicker, openSpecializationPicker,
 } from './ui.js';
 import { tutorialNext, tutorialPrev, tutorialSkip, tutorialRestart } from './tutorial.js';
+import { spawnWanderingHero, processWanderingTick, weatherTick } from './expeditions.js';
 import {
   setCombatSpeed, openSettings, closeSettings, exportSaveCode, importSaveCode,
   doPrestige, doReset, closeOnboard, confirmTraditionPick, confirmSpecializationPick, applyLayoutPreset,
@@ -32,8 +33,9 @@ import { pickPlacement, resetBuildingPlots } from './scene.js';
 import {
   setHeroSubTab, setSkillTabHeroId, setHeroReportSubTab, setShopFilter,
   heroSubTab, skillTabHeroId, heroReportSubTab, shopFilter, saveGame,
-  territoryHeroes, setTerritoryHeroes,
+  territoryHeroes, setTerritoryHeroes, wanderingHeroes, resources, prestige, mapProgress, battleReports, impls,
 } from './state.js';
+import { gameTick } from './settings-and-init.js';
 import { closeModal } from './util.js';
 
 // 批次掛載到 window
@@ -73,7 +75,19 @@ window.fulfillOrder = fulfillOrder;
 window.setPriceTier = setPriceTier;
 window.closePanel = closePanel;
 window.togglePanel = togglePanel;
-window.territoryHeroes = territoryHeroes;  // 給 E2E test / console debug 用途(已被 defineProperty 暴露,顯式 window alias)
+// E2E / debug:顯式 expose 主要 SOT — 用 defineProperty getter 保證 live binding,
+// 避免 `window.X = X` 凍結 reference(原寫法造成 expeditions.js push 與 window 看到不同 array)
+Object.defineProperty(window, 'territoryHeroes', { get: () => territoryHeroes, configurable: true });
+Object.defineProperty(window, 'wanderingHeroes', { get: () => wanderingHeroes, configurable: true });
+Object.defineProperty(window, 'resources', { get: () => resources, configurable: true });
+Object.defineProperty(window, 'prestige', { get: () => prestige, configurable: true });
+Object.defineProperty(window, 'mapProgress', { get: () => mapProgress, configurable: true });
+Object.defineProperty(window, 'battleReports', { get: () => battleReports, configurable: true });
+window.gameTick = gameTick;
+Object.defineProperty(window, 'impls', { get: () => impls, configurable: true });
+window.spawnWanderingHero = spawnWanderingHero;
+window.processWanderingTick = processWanderingTick;
+window.weatherTick = weatherTick;
 window.upgradeBuilding = upgradeBuilding;
 window.renderHeroesPanel = renderHeroesPanel;
 window.renderMapPanel = renderMapPanel;
@@ -115,4 +129,5 @@ Object.defineProperty(window, 'heroSubTab', { get: () => heroSubTab, set: (v) =>
 Object.defineProperty(window, 'skillTabHeroId', { get: () => skillTabHeroId, set: (v) => setSkillTabHeroId(v), configurable: true });
 Object.defineProperty(window, 'heroReportSubTab', { get: () => heroReportSubTab, set: (v) => setHeroReportSubTab(v), configurable: true });
 Object.defineProperty(window, 'shopFilter', { get: () => shopFilter, set: (v) => setShopFilter(v), configurable: true });
-Object.defineProperty(window, 'territoryHeroes', { get: () => territoryHeroes, set: (v) => setTerritoryHeroes(v), configurable: true });
+// territoryHeroes 已用 defineProperty getter(避免 reference freeze)
+// 舊 setter 拿掉 — 統一由 Setters 函式修改
