@@ -5,6 +5,7 @@
 import { ACHIEVEMENTS, BUILDINGS } from './data.js'
 import { achievementsUnlocked, prestige } from './state.js'
 import { BuildingSystem_getLevel } from './resources-buildings.js'
+import { getTraditionBonus } from './traditions.js'
 
 export function getAchievementBonuses() {
   const agg = { mat: 0, gold: 0, xp: 0, click: 0, atk: 0, def: 0 };
@@ -20,9 +21,14 @@ export function getAchievementBonuses() {
   return agg;
 }
 
-export function getMaterialMultiplier() { return 1 + getAchievementBonuses().mat + prestige.shards * 0.10; }
-export function getCombatGoldMultiplier() { return 1 + getAchievementBonuses().gold + prestige.shards * 0.10 + BuildingSystem_getLevel('altar') * 0.04; }
-export function getXpMultiplier() { return 1 + getAchievementBonuses().xp + prestige.shards * 0.10 + BuildingSystem_getLevel('altar') * 0.04; }
+// §六 5:hunt tradition 取代舊 shards 全加成(+15%/次累積);shards 保留作 legacy 顯示但不再影響產出
+const huntTraditionMul = getTraditionBonus('matMul') + getTraditionBonus('goldMul') + getTraditionBonus('xpMul');
+const huntMatMul = getTraditionBonus('matMul');
+const huntGoldMul = getTraditionBonus('goldMul');
+const huntXpMul = getTraditionBonus('xpMul');
+export function getMaterialMultiplier() { return 1 + getAchievementBonuses().mat + huntMatMul; }
+export function getCombatGoldMultiplier() { return 1 + getAchievementBonuses().gold + huntGoldMul + BuildingSystem_getLevel('altar') * 0.04; }
+export function getXpMultiplier() { return 1 + getAchievementBonuses().xp + huntXpMul + BuildingSystem_getLevel('altar') * 0.04; }
 export function getClickGold() {
   const base = 2 + Math.floor(BuildingSystem_getLevel('goldMine') / 2);
   return base + getAchievementBonuses().click + prestige.shards;

@@ -244,6 +244,15 @@ body{
 .building-card.region-unlocked{border-color:rgba(155,89,182,0.6);background:rgba(155,89,182,0.05);}
 .building-region-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
 .building-region-badge{display:inline-block;padding:1px 5px;background:rgba(155,89,182,0.18);color:#c39bd3;font-family:'Press Start 2P',monospace;font-size:7px;border:1px solid rgba(155,89,182,0.4);border-radius:2px;letter-spacing:1px;}
+/* §六 5 — 重建傳統選擇 */
+.tradition-card{background:var(--card-bg);border:2px solid var(--card-border);padding:10px;cursor:pointer;transition:transform 0.1s,border-color 0.1s;}
+.tradition-card:hover{border-color:#f4d03f;transform:translateY(-1px);}
+.tradition-icon{font-size:32px;text-align:center;margin-bottom:4px;}
+.tradition-name{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);text-align:center;margin-bottom:4px;}
+.tradition-desc{font-family:'Lora',serif;font-size:11px;color:var(--text-faint);line-height:1.4;text-align:center;}
+.tradition-count{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--green);text-align:center;margin-top:4px;}
+.tradition-display{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.tradition-display-item{display:inline-block;padding:2px 6px;background:rgba(244,208,63,0.12);color:var(--gold);font-size:11px;border:1px solid rgba(244,208,63,0.3);border-radius:2px;}
 
 /* ── MAP / ZONES ── */
 .active-explore{margin-bottom:12px;}
@@ -653,6 +662,18 @@ details.gallery summary{font-size:13px;color:var(--text-dim);cursor:pointer;padd
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closePartyDispatch()">取消</button>
       <button class="btn btn-gold btn-sm" id="btn-launch-party" onclick="launchPartyDispatch()">⚔ 出征</button>
+    </div>
+  </div>
+</div>
+
+<!-- §六 5 — 重建傳統選擇 modal -->
+<div class="modal-overlay" id="modal-tradition">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-tradition-title">
+    <div class="modal-title" id="modal-tradition-title">🏰 選擇村莊傳統</div>
+    <div id="tradition-modal-body" style="font-size:13px;color:var(--text-faint);margin-bottom:12px;">重建後將重置資源/建築/獵人,但保留成就與本次選擇的村莊傳統。</div>
+    <div id="tradition-modal-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">取消</button>
     </div>
   </div>
 </div>

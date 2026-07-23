@@ -44,7 +44,7 @@ export let battleReports = [];
 // 玩家進度聚合
 export let stats = { kills: 0, bossKills: 0, goldEarned: 0, clicks: 0, crafted: 0, prestiges: 0, shopRevenue: 0 };
 export let achievementsUnlocked = {};
-export let prestige = { shards: 0, count: 0 };
+export let prestige = { shards: 0, count: 0, traditions: { commerce: 0, forge: 0, hunt: 0, scholar: 0, pioneer: 0 } };
 export let daily = { lastClaim: null, streak: 0, bestStreak: 0 };
 export let settings = { music: 40, sfx: 80, notif: true, combatSpeed: 1, autoRecall: true };
 
@@ -183,7 +183,7 @@ export function getDefaultGameState() {
     mapProgress: defaultMapProgress(),
     shopInventory: {}, gearInventory: [], battleReports: [], activeExplorations: [],
     stats: { kills: 0, bossKills: 0, goldEarned: 0, clicks: 0, crafted: 0, prestiges: 0, shopRevenue: 0 },
-    achievements: {}, prestige: { shards: 0, count: 0 },
+    achievements: {}, prestige: { shards: 0, count: 0, traditions: { commerce: 0, forge: 0, hunt: 0, scholar: 0, pioneer: 0 } },
     daily: { lastClaim: null, streak: 0, bestStreak: 0 },
     settings: { music: 40, sfx: 80, notif: true },
     nextWanderingSpawnIn: 0, potionShopAutoProduce: true,
@@ -200,6 +200,8 @@ export function migrateSave(parsed) {
   for (const k of Object.keys(d.stats)) if (parsed.stats[k] == null) parsed.stats[k] = d.stats[k];
   if (!parsed.achievements) parsed.achievements = {};
   if (!parsed.prestige) parsed.prestige = d.prestige;
+  // §六 5 migration:老存檔 traditions 缺失 → 預設全 0(shards 保留作 legacy 顯示)
+  if (!parsed.prestige.traditions) parsed.prestige.traditions = { commerce: 0, forge: 0, hunt: 0, scholar: 0, pioneer: 0 };
   if (!parsed.daily) parsed.daily = d.daily;
   if (!parsed.settings) parsed.settings = d.settings;
   for (const k of Object.keys(d.settings)) if (parsed.settings[k] == null) parsed.settings[k] = d.settings[k];

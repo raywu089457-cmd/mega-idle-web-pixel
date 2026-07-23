@@ -11,6 +11,7 @@ import { ResourceSystem_get, ResourceSystem_getFillPercent, ResourceSystem_canAf
 import { getBuildingStage, getNextStage, levelsToNextStage } from './building-stages.js'
 import { isSceneReachable } from './reachability.js'
 import { getRegionUpgradesForBuilding } from './region-unlocks.js'
+import { TRADITIONS, TRADITION_ORDER, getTraditionCount, getTraditionSummary } from './traditions.js'
 import { stageProductionRate, stageCapacity } from './building-effects.js'
 import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
 import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
@@ -363,8 +364,21 @@ export function renderShopGrid() {
 import { shopInventory } from './state.js'
 export function renderAchPanel() {
   const canPrestige = finalBossDefeated();
-  $('ach-special').innerHTML = `<div class="ach-card special"><div class="ach-head"><span class="ach-ico">🌀</span><div><div class="ach-name">傳承重建</div><div class="ach-desc">擊敗魔域大君後重置獵魔村，換取永久傳承碎片。目前碎片 ${prestige.shards}（全產出 +${prestige.shards * 10}%），已重建 ${prestige.count} 次。</div><div class="ach-bonus">本次可獲得：${canPrestige ? getPrestigeGain() : '—'} 碎片</div></div><span class="ach-state ${canPrestige ? 'done' : ''}">${canPrestige ? '可重建' : '未解鎖'}</span></div><div class="modal-actions"><button class="btn btn-purple btn-sm" ${canPrestige ? '' : 'disabled'} onclick="doPrestige()">🌀 重建</button><button class="btn btn-gold btn-sm" onclick="checkDaily()">📅 每日獎勵</button></div></div>`;
+  const traditionsHtml = TRADITION_ORDER.map(id => {
+    const t = TRADITIONS[id]; const c = getTraditionCount(id);
+    return `<div class="tradition-display-item" title="${t.desc}">${t.icon} ${t.name} × ${c}</div>`;
+  }).join('');
+  $('ach-special').innerHTML = `<div class="ach-card special"><div class="ach-head"><span class="ach-ico">🌀</span><div><div class="ach-name">傳承重建</div><div class="ach-desc">擊敗魔域大君後重置獵魔村，並選擇一項村莊傳統作為永久獎勵。已重建 ${prestige.count} 次。</div><div class="ach-bonus">本次可獲得：${canPrestige ? getPrestigeGain() : '—'} 傳承碎片 + 1 項村莊傳統</div></div><span class="ach-state ${canPrestige ? 'done' : ''}">${canPrestige ? '可重建' : '未解鎖'}</span></div><div style="margin-top:6px;font-size:11px;color:var(--text-faint);">目前選擇的村莊傳統:</div><div class="tradition-display">${traditionsHtml || '<span style="color:var(--text-faint);font-size:11px;">尚未選擇</span>'}</div><div class="modal-actions"><button class="btn btn-purple btn-sm" ${canPrestige ? '' : 'disabled'} onclick="openTraditionPicker()">🌀 重建</button><button class="btn btn-gold btn-sm" onclick="checkDaily()">📅 每日獎勵</button></div></div>`;
   $('ach-list').innerHTML = ACHIEVEMENTS.map(a => { const done = !!achievementsUnlocked[a.id]; return `<div class="ach-card"><div class="ach-head"><span class="ach-ico">${a.icon}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div><div class="ach-bonus">${a.bonusText}</div></div><span class="ach-state ${done ? 'done' : ''}">${done ? '已完成' : '未完成'}</span></div></div>`; }).join('');
+}
+// §六 5 — 重建傳統選擇 modal
+export function openTraditionPicker() {
+  const grid = $('tradition-modal-grid');
+  grid.innerHTML = TRADITION_ORDER.map(id => {
+    const t = TRADITIONS[id]; const c = getTraditionCount(id);
+    return `<div class="tradition-card" onclick="confirmTraditionPick('${id}')"><div class="tradition-icon">${t.icon}</div><div class="tradition-name">${t.name}</div><div class="tradition-desc">${t.desc}</div><div class="tradition-count">已選 ${c} 次</div></div>`;
+  }).join('');
+  showModal('modal-tradition');
 }
 import { checkDaily } from './meta.js'
 

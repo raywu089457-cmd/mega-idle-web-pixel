@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v27';   // bump to v27 — §十 第三 區域綁建築升級(boss → trophy → decoration)
+const CACHE_NAME = 'hunter-village-v28';   // bump to v28 — §六 5 重建傳統選擇(5 種 tradition 取代線性 shards)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ const ASSETS_TO_CACHE = [
 // 由 install 動態掃 src/ 補上;這裡放常見入口,讓 fetch handler 觸發 src/*.js runtime cache
 const SRC_GLOB = [
   './src/main.js', './src/data.js', './src/util.js', './src/state.js', './src/bonuses.js',
-  './src/building-stages.js', './src/building-effects.js', './src/reachability.js', './src/queue-points.js', './src/region-unlocks.js',
+  './src/building-stages.js', './src/building-effects.js', './src/reachability.js', './src/queue-points.js', './src/region-unlocks.js', './src/traditions.js',
   './src/resources-buildings.js', './src/skills.js', './src/audio.js', './src/inventory.js',
   './src/heroes-stats.js', './src/meta.js', './src/combat.js', './src/combat-party.js',
   './src/expeditions.js', './src/scene.js', './src/ui.js', './src/selftest.js',

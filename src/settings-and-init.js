@@ -51,16 +51,28 @@ export function doReset() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
   location.reload();
 }
-export function doPrestige() {
+export function doPrestige(traditionId) {
   if (!finalBossDefeated()) { showToast('需先擊敗魔域王座的魔域大君。', 'error'); return; }
+  const TRADITIONS_VALID = ['commerce', 'forge', 'hunt', 'scholar', 'pioneer'];
+  if (!traditionId || !TRADITIONS_VALID.includes(traditionId)) {
+    showToast('請先選擇一項村莊傳統。', 'error');
+    if (typeof openTraditionPicker === 'function') openTraditionPicker();
+    return;
+  }
   const gain = getPrestigeGain();
-  if (!confirm(`重建將重置資源、建築、獵人與地圖,但保留成就/統計/每日,並獲得 ${gain} 傳承碎片(每片全產出+10%)。確定?`)) return;
-  const keep = { stats, achievements: achievementsUnlocked, prestige: { shards: prestige.shards + gain, count: prestige.count + 1 }, daily, settings };
+  if (!confirm(`重建將重置資源、建築、獵人與地圖,但保留成就/統計/每日,並獲得 ${gain} 傳承碎片 + 「${traditionId}」傳統。確定?`)) return;
+  const nextTraditions = { ...(prestige.traditions || { commerce: 0, forge: 0, hunt: 0, scholar: 0, pioneer: 0 }) };
+  nextTraditions[traditionId] = (nextTraditions[traditionId] || 0) + 1;
+  const keep = { stats, achievements: achievementsUnlocked, prestige: { shards: prestige.shards + gain, count: prestige.count + 1, traditions: nextTraditions }, daily, settings };
   keep.stats.prestiges = (keep.stats.prestiges || 0) + 1;
   const newState = getDefaultGameState();
   newState.stats = keep.stats; newState.achievements = keep.achievements; newState.prestige = keep.prestige; newState.daily = keep.daily; newState.settings = keep.settings;
   localStorage.setItem(SAVE_KEY, JSON.stringify(newState));
   location.reload();
+}
+export function confirmTraditionPick(traditionId) {
+  closeModal();
+  doPrestige(traditionId);
 }
 import { finalBossDefeated, getPrestigeGain } from './meta.js';
 import { achievementsUnlocked, prestige } from './state.js';
