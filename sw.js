@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v35';   // bump to v35 — §六 3 事件 effect 套用(seasonalMul/potionBuyMul/gearTierBoost/recruitDiscount/material_wave)
+const CACHE_NAME = 'hunter-village-v36';   // bump to v36 — §六 2 擴展 10 棟建築可選專精(原 3 棟 + tavern/inn/restaurant/drinkShop/altar/enhanceForge 7 棟)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
