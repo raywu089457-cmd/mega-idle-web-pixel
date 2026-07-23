@@ -62,6 +62,17 @@ export function BuildingSystem_setSpec(id, spec) {
 }
 export function BuildingSystem_getLevel(id) { return buildingStates[id]?.level ?? 0; }
 export function BuildingSystem_getTotalLevels() { return Object.values(buildingStates).reduce((s, b) => s + b.level, 0); }
+// §六 3:building_halt 事件期間,指定棟 efficiency -30%
+import { townEvent } from './state.js'
+import { getEventMul } from './town-events.js'
+export function BuildingSystem_getEffectiveLevel(id) {
+  const base = BuildingSystem_getLevel(id);
+  if (townEvent?.id === 'building_halt' && townEvent.params?.buildingId === id) {
+    const penalty = getEventMul(townEvent, 'buildingPenalty'); // 0.3
+    if (penalty > 0) return Math.max(0, base * (1 - penalty));
+  }
+  return base;
+}
 // 建築等級上限跟隨主堡（獵魔公會）：其他建築上限 = min(自身上限, 公會等級 × 2)
 export function buildingMaxLevel(id) {
   const def = BUILDINGS[id]; if (!def) return 0;

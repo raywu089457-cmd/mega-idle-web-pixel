@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v38';   // bump to v38 — §十 第三 trophy material 入庫(5 boss → 自動 +1 material)
+const CACHE_NAME = 'hunter-village-v39';   // bump to v39 — §六 3 night_raid + building_halt event 套用(夜怪 +30% HP/ATK,指定棟 -30% efficiency)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

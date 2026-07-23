@@ -16,6 +16,8 @@ import { openPanel, renderHUD, renderAll } from './ui.js'
 import { cam, WORLD, SCENE_W, SCENE_H, setCam, recenterCam, isAtHome, gateAt, gateStatus, smartDiff, zoneOf, serviceZoneOf, drawWorldRing, drawGates, ROAD_GRAPH, getWaypoint, pathFind, nearestWaypoint } from './scene-map.js'
 import { getQueueSlotOffset } from './queue-points.js'
 import { getUnlockedDecorationsForBuilding } from './region-unlocks.js'
+import { getEventMul } from './town-events.js'
+import { townEvent } from './state.js'
 
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -197,7 +199,7 @@ function bestHuntZone(h) {
   return lv < HUNT_ZONES[0].minLv ? HUNT_ZONES[0] : HUNT_ZONES[HUNT_ZONES.length - 1];
 }
 // Compute level-scaled monster stats: base + (highest hero level in zone − zone minLv) × scalePerLevel
-function scaleMonsterStats(t, zone, idx) {
+function scaleMonsterStats(t, zone, idx, isNightPool = false) {
   // Find the highest-level wandering hero currently in this zone
   let maxLvInZone = 0;
   for (const h of wanderingHeroes) {
@@ -205,9 +207,17 @@ function scaleMonsterStats(t, zone, idx) {
   }
   const overshoot = Math.max(0, maxLvInZone - zone.minLv);
   const s = t.scalePerLevel || {};
-  const hp = (t.hp || 0) + (s.hp || 0) * overshoot;
-  const atk = (t.atk || 0) + (s.atk || 0) * overshoot;
+  let hp = (t.hp || 0) + (s.hp || 0) * overshoot;
+  let atk = (t.atk || 0) + (s.atk || 0) * overshoot;
   const def = (t.def || 0) + (s.def || 0) * overshoot;
+  // §六 3 night_raid 事件:夜怪 HP/ATK +30%(套用到 night monster pool)
+  if (sceneNight > 0.5 && isNightPool) {
+    const boost = getEventMul(townEvent, 'nightZoneBoost'); // 0.3
+    if (boost > 0) {
+      hp = Math.round(hp * (1 + boost));
+      atk = Math.round(atk * (1 + boost));
+    }
+  }
   // Slight variety per instance to avoid deterministic feel
   const jitter = (idx * 7) % 11;
   return {
@@ -221,9 +231,11 @@ function ensureWildMonsters() {
   for (const z of HUNT_ZONES) {
     const inZone = wildMonsters.filter(m => m.zone === z.id);
     for (let i = inZone.length; i < z.spawn; i++) {
-      const pool = (sceneNight > 0.5 && z.nightMonsters) ? z.monsters.concat(z.nightMonsters) : z.monsters;
+      const isNightPool = sceneNight > 0.5 && !!z.nightMonsters;
+      const pool = isNightPool ? z.monsters.concat(z.nightMonsters) : z.monsters;
       const t = choice(pool);
-      const scaled = scaleMonsterStats(t, z, i);
+      const isNight = isNightPool && z.nightMonsters.includes(t);
+      const scaled = scaleMonsterStats(t, z, i, isNight);
       wildMonsters.push({
         id: uid(), zone: z.id, kind: t.kind, name: t.name, color: t.color, debuff: t.debuff || null,
         x: z.x + 8 + rand(0, z.w - 18), y: z.y + 12 + rand(0, z.h - 24),
