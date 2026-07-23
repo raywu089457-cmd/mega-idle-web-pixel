@@ -79,6 +79,8 @@ export function buildingMaxLevel(id) {
   if (id === 'monument') return def.maxLevel;
   return Math.min(def.maxLevel, Math.max(1, BuildingSystem_getLevel('monument')) * 2);
 }
+// §十 第三:trophy material 可抵升級 cost(每個 trophy = 該棟 gold cost -20%)
+import { REGION_UNLOCKS } from './region-unlocks.js'
 export function getBuildingCost(buildingId, targetLevel) {
   const building = BUILDINGS[buildingId];
   if (!building) return null;
@@ -86,6 +88,17 @@ export function getBuildingCost(buildingId, targetLevel) {
   const cost = {};
   for (const [resourceId, baseAmount] of Object.entries(building.baseCost)) {
     cost[resourceId] = Math.floor(baseAmount * multiplier);
+  }
+  // §十 第三 trophy 折扣:該棟所屬 zone boss trophy 每個抵 20% gold cost(最多 -80%)
+  for (const u of Object.values(REGION_UNLOCKS)) {
+    if (u.building === buildingId) {
+      const trophyId = u.material;
+      const trophies = resources[trophyId]?.value || 0;
+      if (trophies > 0 && cost.gold) {
+        const discount = Math.min(0.8, trophies * 0.2);
+        cost.gold = Math.max(0, Math.floor(cost.gold * (1 - discount)));
+      }
+    }
   }
   return cost;
 }

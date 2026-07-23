@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v39';   // bump to v39 — §六 3 night_raid + building_halt event 套用(夜怪 +30% HP/ATK,指定棟 -30% efficiency)
+const CACHE_NAME = 'hunter-village-v40';   // bump to v40 — §十 第三 trophy 用途(每個 trophy -20% 該棟 gold cost,最多 -80%)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

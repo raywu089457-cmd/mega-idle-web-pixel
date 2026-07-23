@@ -16,6 +16,7 @@ import { BUILDING_SPECS, canSpecialize, getSpecOptions, getCurrentSpec } from '.
 import { BuildingSystem_getSpec, BuildingSystem_setSpec } from './resources-buildings.js'
 import { LAYOUT_PRESETS, PRESET_ORDER, getPresetName } from './layout-presets.js'
 import { SERVICE_ZONES } from './data.js'
+import { REGION_UNLOCKS } from './region-unlocks.js'
 import { TOWN_EVENTS, getRemainingTicks } from './town-events.js'
 import { townEvent } from './state.js'
 import { stageProductionRate, stageCapacity } from './building-effects.js'
@@ -244,7 +245,19 @@ export function renderBuildingsPanel() {
     const reachWarn = unreachable ? `<div class="building-reach-warn" title="建築與主幹道不連通,NPC 將無法造訪">⚠️ 路徑中斷</div>` : '';
     const regionUpgrades = getRegionUpgradesForBuilding(id);
     const regionBadges = regionUpgrades.map(u => `<span class="building-region-badge" title="${u.zoneName} boss 擊敗獎勵">${u.badge}</span>`).join('');
-    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''} ${unreachable ? 'unreachable' : ''} ${regionUpgrades.length ? 'region-unlocked' : ''}"><div class="building-header"><div class="building-name">${b.name}${stageBadge}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div>${regionBadges ? `<div class="building-region-row">${regionBadges}</div>` : ''}${stageHint}${reachWarn}<div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}${placeBtn}</div>`;
+    // §十 第三 trophy 折扣顯示:每個 trophy -20% gold(最多 -80%)
+    let trophyHint = '';
+    for (const u of Object.values(REGION_UNLOCKS)) {
+      if (u.building === id) {
+        const trophyCount = ResourceSystem_get(u.material);
+        if (trophyCount > 0 && cost && cost.gold) {
+          const discount = Math.min(0.8, trophyCount * 0.2);
+          const originalGold = cost.gold / (1 - discount);
+          trophyHint = `<div class="building-trophy-hint" title="${u.zoneName} trophy × ${trophyCount} → gold cost -${Math.round(discount * 100)}%">🏆 ${u.zoneName} × ${trophyCount} → 💰 -${Math.round(discount * 100)}%</div>`;
+        }
+      }
+    }
+    return `<div class="building-card ${lvl === 0 ? 'unbuilt' : ''} ${unreachable ? 'unreachable' : ''} ${regionUpgrades.length ? 'region-unlocked' : ''}"><div class="building-header"><div class="building-name">${b.name}${stageBadge}</div><div class="building-level">Lv.${lvl}/${effMax}${hardMax ? ' MAX' : ''}</div></div>${regionBadges ? `<div class="building-region-row">${regionBadges}</div>` : ''}${stageHint}${trophyHint}${reachWarn}<div class="building-ico">${b.icon}</div><div class="building-desc">${b.description}</div><div class="building-effect">${buildingEffectText(id)}</div>${hardMax ? '<div class="max-badge">已達最高等級</div>' : castleCapped ? `<div class="max-badge">🔒 需先升級獵魔公會</div>` : `<div class="building-cost">${Object.entries(cost).map(([rid, amt]) => `<span class="cost-item">${RESOURCES[rid].icon}${fmt(amt)}</span>`).join('')}</div><button class="btn ${afford ? 'btn-gold' : 'btn-outline'} btn-sm" ${afford ? '' : 'disabled'} onclick="upgradeBuilding('${id}')">${lvl === 0 ? '建造' : '升級'}</button>`}${placeBtn}</div>`;
   }).join('');
 }
 export function upgradeBuilding(id) {
