@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v28';   // bump to v28 — §六 5 重建傳統選擇(5 種 tradition 取代線性 shards)
+const CACHE_NAME = 'hunter-village-v29';   // bump to v29 — §十 5 橫向後期選擇總覽(trail frame,7 大類計數)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
