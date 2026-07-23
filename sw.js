@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v41';   // bump to v41 — §六 3 fix: caravan boost 真正生效(makeGearInstance 改用 rollGearTierEvent)
+const CACHE_NAME = 'hunter-village-v42';   // bump to v42 — scene.js 刪除 PLOT_BUILDINGS/PLOT_COORDS/PLOT_NAMES/BUILDING_TO_SCENE 重複定義,改從 data.js import
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

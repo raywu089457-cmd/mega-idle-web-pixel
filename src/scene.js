@@ -24,6 +24,7 @@ const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-mo
 // ═══════════════════════════════════════════════════════════════════
 // 場景 hotspot / 建築擺位配置
 // ═══════════════════════════════════════════════════════════════════
+import { PLOT_COORDS, PLOT_BUILDINGS, PLOT_NAMES, BUILDING_TO_SCENE } from './data.js'
 const SCENE_HOTSPOTS = [
   { id: 'tavern', name: '獵人酒館', hint: '招募流浪獵人 / 查看獵人', x: 8, y: 148, w: 58, h: 62 },
   { id: 'guild', name: '獵魔公會', hint: '點擊收金與素材', x: 88, y: 112, w: 66, h: 82 },
@@ -35,13 +36,6 @@ const SCENE_HOTSPOTS = [
   { id: 'restaurant', name: '餐廳', hint: '獵人用餐(村莊收入)', x: 58, y: 174, w: 30, h: 32 },
   { id: 'drinkShop', name: '飲料店', hint: '獵人買飲料(村莊收入)', x: 154, y: 182, w: 24, h: 30 },
 ];
-const PLOT_COORDS = [
-  { x: 16, y: 164 }, { x: 96, y: 132 }, { x: 184, y: 166 }, { x: 62, y: 188 }, { x: 158, y: 194 },
-  { x: 22, y: 252 }, { x: 100, y: 258 }, { x: 178, y: 252 }, { x: 96, y: 314 },
-];
-const PLOT_BUILDINGS = ['tavern', 'guild', 'market', 'restaurant', 'drinkShop', 'forge', 'alchemy', 'research', 'gate'];
-const PLOT_NAMES = { tavern: '獵人酒館', guild: '獵魔公會', market: '市集', restaurant: '餐廳', drinkShop: '飲料店', forge: '鐵匠鋪', alchemy: '煉金工房', research: '魔核研究所', gate: '獵場門' };
-const BUILDING_TO_SCENE = { tavern: 'tavern', monument: 'guild', goldMine: 'market', restaurant: 'restaurant', drinkShop: 'drinkShop', weaponShop: 'forge', potionShop: 'alchemy', altar: 'research' };
 const DEFAULT_PLOT_OF = Object.fromEntries(PLOT_BUILDINGS.map((b, i) => [b, i]));
 
 // ═══════════════════════════════════════════════════════════════════
