@@ -10,6 +10,7 @@ import './reachability.js';         // L1: 建築可達性檢查(§七 1)
 import './queue-points.js';         // L1: 服務建築排隊點(§七 2)
 import './region-unlocks.js';       // L1: 區域綁建築升級(§十 第三)
 import './traditions.js';          // L1: 重建傳統選擇(§六 5)
+import './specializations.js';      // L1: 建築專精分支(§六 2)
 import './state.js';                // L1: SOT
 import './bonuses.js';              // L2: multiplier
 import './resources-buildings.js';  // L2

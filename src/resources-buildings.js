@@ -53,6 +53,13 @@ export function BuildingSystem_init(savedState) {
   }
   setBuildingStates(next);
 }
+// §六 2:取得建築專精(預設 null)
+export function BuildingSystem_getSpec(id) { return buildingStates[id]?.spec || null; }
+export function BuildingSystem_setSpec(id, spec) {
+  if (!buildingStates[id]) return false;
+  buildingStates[id] = { ...buildingStates[id], spec };
+  return true;
+}
 export function BuildingSystem_getLevel(id) { return buildingStates[id]?.level ?? 0; }
 export function BuildingSystem_getTotalLevels() { return Object.values(buildingStates).reduce((s, b) => s + b.level, 0); }
 // 建築等級上限跟隨主堡（獵魔公會）：其他建築上限 = min(自身上限, 公會等級 × 2)

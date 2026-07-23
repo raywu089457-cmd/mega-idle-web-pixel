@@ -5,16 +5,18 @@
 
 import { getBuildingStageMultiplier } from './building-stages.js'
 import { BuildingSystem_getLevel } from './resources-buildings.js'
+import { getSpecMultiplier } from './specializations.js'
 
 /**
- * 把既有 baseRate 套上該建築的階段產量乘數(目前僅 developed=×1.2)
+ * 把既有 baseRate 套上該建築的階段產量乘數 + 專精乘數
  * @param {string} buildingId - 建築 id('goldMine' / 'potionShop' 等)
  * @param {number} baseRate - 既有 BuildingSystem_getXxxRate() 的回傳
- * @returns {number} baseRate × stage.productionMul
+ * @returns {number} baseRate × stage.productionMul × spec.yield
  */
 export function stageProductionRate(buildingId, baseRate) {
-  const mul = getBuildingStageMultiplier(BuildingSystem_getLevel(buildingId), 'productionMul')
-  return baseRate * mul
+  const stageMul = getBuildingStageMultiplier(BuildingSystem_getLevel(buildingId), 'productionMul')
+  const specMul = getSpecMultiplier(buildingId, 'yield')
+  return baseRate * stageMul * specMul
 }
 
 /**

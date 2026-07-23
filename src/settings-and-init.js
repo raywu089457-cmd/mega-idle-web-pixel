@@ -8,6 +8,8 @@ import { saveGame, loadGame, migrateSave, getDefaultGameState, defaultMapProgres
 import { syncActiveExplorations, normalizeHero, generateHero } from './heroes-stats.js'
 import { defaultTeams } from './combat-party.js'
 import { renderAll, renderHUD, renderBadges, renderPanel, openPanel, closePanel, renderBuildingsPanel, upgradeBuilding, renderResourcesPanel, renderHeroesPanel, renderMapPanel, renderShopPanel, renderAchPanel } from './ui.js'
+import { BuildingSystem_setSpec } from './resources-buildings.js'
+import { BUILDINGS } from './data.js'
 import { SAVE_KEY, getDefaultGameState as _getDefaultGameState } from './state.js'
 import { checkAchievements, collectOffline, computeOffline, offlineModalHtml, claimDaily, produceTick, checkDaily as _checkDaily, finalBossDefeated as _finalBossDefeated, getPrestigeGain as _getPrestigeGain } from './meta.js'
 import { processHeroTick, openDispatch, openDifficultyModal, dispatchHero } from './combat.js';
@@ -73,6 +75,14 @@ export function doPrestige(traditionId) {
 export function confirmTraditionPick(traditionId) {
   closeModal();
   doPrestige(traditionId);
+}
+// §六 2 — 確認選擇建築專精
+export function confirmSpecializationPick(buildingId, specId) {
+  closeModal();
+  BuildingSystem_setSpec(buildingId, specId);
+  saveGame();
+  renderBuildingsPanel();
+  showToast(`⚒️ ${BUILDINGS[buildingId]?.name || buildingId} 已選「${specId}」專精`, 'success', 3000);
 }
 import { finalBossDefeated, getPrestigeGain } from './meta.js';
 import { achievementsUnlocked, prestige } from './state.js';

@@ -12,6 +12,8 @@ import { getBuildingStage, getNextStage, levelsToNextStage } from './building-st
 import { isSceneReachable } from './reachability.js'
 import { getRegionUpgradesForBuilding } from './region-unlocks.js'
 import { TRADITIONS, TRADITION_ORDER, getTraditionCount, getTraditionSummary, getTotalTraditions } from './traditions.js'
+import { BUILDING_SPECS, canSpecialize, getSpecOptions, getCurrentSpec } from './specializations.js'
+import { BuildingSystem_getSpec, BuildingSystem_setSpec } from './resources-buildings.js'
 import { stageProductionRate, stageCapacity } from './building-effects.js'
 import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
 import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
@@ -228,7 +230,14 @@ export function renderBuildingsPanel() {
   }).join('');
 }
 export function upgradeBuilding(id) {
-  if (BuildingSystem_upgrade(id)) { sfx('craft'); showToast(`${BUILDINGS[id].name} 升到 Lv.${BuildingSystem_getLevel(id)}`, 'success'); checkAchievements(); }
+  if (BuildingSystem_upgrade(id)) {
+    const newLvl = BuildingSystem_getLevel(id);
+    sfx('craft'); showToast(`${BUILDINGS[id].name} 升到 Lv.${newLvl}`, 'success'); checkAchievements();
+    // §六 2:首次到達 Lv3 + 該棟可選專精 + 尚未選過 → 開專精選擇 modal
+    if (newLvl === 3 && canSpecialize(id) && !BuildingSystem_getSpec(id)) {
+      setTimeout(() => openSpecializationPicker(id), 500);
+    }
+  }
   else if (BuildingSystem_getLevel(id) >= buildingMaxLevel(id) && BuildingSystem_getLevel(id) < BUILDINGS[id].maxLevel) showToast('🔒 已達公會上限，請先升級獵魔公會。', 'error');
   else showToast('資源不足或已達上限。', 'error');
 }
@@ -382,6 +391,18 @@ export function openTraditionPicker() {
     return `<div class="tradition-card" onclick="confirmTraditionPick('${id}')"><div class="tradition-icon">${t.icon}</div><div class="tradition-name">${t.name}</div><div class="tradition-desc">${t.desc}</div><div class="tradition-count">已選 ${c} 次</div></div>`;
   }).join('');
   showModal('modal-tradition');
+}
+// §六 2 — 建築專精選擇 modal(Lv3 觸發 / 手動從建築面板可重選前清空)
+export function openSpecializationPicker(buildingId) {
+  const opts = getSpecOptions(buildingId);
+  if (!opts.length) return;
+  const current = getCurrentSpec(buildingId);
+  $('spec-modal-body').textContent = `「${BUILDINGS[buildingId]?.name || buildingId}」達到 Lv3,選擇永久專精${current ? `(目前:${current.icon} ${current.name})` : ''}:`;
+  $('spec-modal-grid').innerHTML = opts.map(o => {
+    const isCurrent = current && current.id === o.id;
+    return `<div class="tradition-card" onclick="confirmSpecializationPick('${buildingId}','${o.id}')"><div class="tradition-icon">${o.icon}</div><div class="tradition-name">${o.name}${isCurrent ? ' ✓' : ''}</div><div class="tradition-desc">${o.desc}</div></div>`;
+  }).join('');
+  showModal('modal-specialization');
 }
 import { checkDaily } from './meta.js'
 

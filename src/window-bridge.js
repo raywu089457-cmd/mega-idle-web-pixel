@@ -15,11 +15,11 @@ import {
   craftItem, sellItem, sellGear, salvageGear, sellAllCommons, transmuteGear, setPriceTier,
 } from './inventory.js';
 import {
-  closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, renderShopGrid, fulfillOrder, openTraditionPicker,
+  closePanel, togglePanel, upgradeBuilding, renderHeroesPanel, renderMapPanel, renderShopGrid, fulfillOrder, openTraditionPicker, openSpecializationPicker,
 } from './ui.js';
 import {
   setCombatSpeed, openSettings, closeSettings, exportSaveCode, importSaveCode,
-  doPrestige, doReset, closeOnboard, confirmTraditionPick,
+  doPrestige, doReset, closeOnboard, confirmTraditionPick, confirmSpecializationPick,
 } from './settings-and-init.js';
 import {
   advanceClass, trainHero, usePotion, recallHero, recallAllHeroes, recruitWanderingHero,
@@ -86,6 +86,8 @@ window.doReset = doReset;
 window.closeOnboard = closeOnboard;
 window.openTraditionPicker = openTraditionPicker;
 window.confirmTraditionPick = confirmTraditionPick;
+window.openSpecializationPicker = openSpecializationPicker;
+window.confirmSpecializationPick = confirmSpecializationPick;
 window.advanceClass = advanceClass;
 window.trainHero = trainHero;
 window.usePotion = usePotion;
