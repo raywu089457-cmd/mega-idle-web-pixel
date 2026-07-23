@@ -14,6 +14,7 @@ import { getRegionUpgradesForBuilding } from './region-unlocks.js'
 import { TRADITIONS, TRADITION_ORDER, getTraditionCount, getTraditionSummary, getTotalTraditions } from './traditions.js'
 import { BUILDING_SPECS, canSpecialize, getSpecOptions, getCurrentSpec } from './specializations.js'
 import { BuildingSystem_getSpec, BuildingSystem_setSpec } from './resources-buildings.js'
+import { LAYOUT_PRESETS, PRESET_ORDER, getPresetName } from './layout-presets.js'
 import { stageProductionRate, stageCapacity } from './building-effects.js'
 import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
 import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
@@ -210,7 +211,8 @@ import { resetBuildingPlots, pickPlacement, plotNameOf } from './scene.js'
 export function renderBuildingsPanel() {
   const castleLv = BuildingSystem_getLevel('monument');
   const placeHint = placementPick ? `⇄ 擺設模式：選擇要與「${plotNameOf(placementPick)}」交換的建築` : '⇄ 點「換位」可兩兩交換建築位置（場景即時生效）';
-  $('building-grid').innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;">🏰 建築等級上限＝獵魔公會等級 ×2（公會目前 Lv.${castleLv}，上限 Lv.${castleLv * 2}）</div><div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="flex:1;">${placeHint}</span><button class="btn btn-outline btn-sm" onclick="resetBuildingPlots()">恢復預設</button></div>` + BUILDING_ORDER.map(id => {
+  const presetBtns = PRESET_ORDER.map(id => `<button class="btn btn-outline btn-sm" onclick="applyLayoutPreset('${id}')" title="${LAYOUT_PRESETS[id].desc}">${LAYOUT_PRESETS[id].name}</button>`).join('');
+  $('building-grid').innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;">🏰 建築等級上限＝獵魔公會等級 ×2（公會目前 Lv.${castleLv}，上限 Lv.${castleLv * 2}）</div><div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);padding:2px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="flex:1;">${placeHint}</span><button class="btn btn-outline btn-sm" onclick="resetBuildingPlots()">恢復預設</button></div><div style="grid-column:1/-1;font-size:11px;color:var(--text-faint);padding:2px 0;">§十 4 一鍵套用布局(整村換位):</div><div style="grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">${presetBtns}</div>` + BUILDING_ORDER.map(id => {
     const b = BUILDINGS[id], lvl = BuildingSystem_getLevel(id);
     const effMax = buildingMaxLevel(id), hardMax = lvl >= b.maxLevel, castleCapped = !hardMax && lvl >= effMax;
     const maxed = hardMax || castleCapped;

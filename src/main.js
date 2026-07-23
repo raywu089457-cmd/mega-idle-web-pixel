@@ -12,6 +12,7 @@ import './region-unlocks.js';       // L1: 區域綁建築升級(§十 第三)
 import './traditions.js';          // L1: 重建傳統選擇(§六 5)
 import './specializations.js';      // L1: 建築專精分支(§六 2)
 import './expedition-readiness.js'; // L1: 遠征準備度檢查(§六 4)
+import './layout-presets.js';        // L1: 服務區配置方案(§十 4)
 import './state.js';                // L1: SOT
 import './bonuses.js';              // L2: multiplier
 import './resources-buildings.js';  // L2

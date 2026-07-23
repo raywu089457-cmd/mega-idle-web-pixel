@@ -10,6 +10,8 @@ import { defaultTeams } from './combat-party.js'
 import { renderAll, renderHUD, renderBadges, renderPanel, openPanel, closePanel, renderBuildingsPanel, upgradeBuilding, renderResourcesPanel, renderHeroesPanel, renderMapPanel, renderShopPanel, renderAchPanel } from './ui.js'
 import { BuildingSystem_setSpec } from './resources-buildings.js'
 import { BUILDINGS } from './data.js'
+import { computePresetSwaps, getPresetName } from './layout-presets.js'
+import { PLOT_BUILDINGS } from './scene-map.js'
 import { SAVE_KEY, getDefaultGameState as _getDefaultGameState } from './state.js'
 import { checkAchievements, collectOffline, computeOffline, offlineModalHtml, claimDaily, produceTick, checkDaily as _checkDaily, finalBossDefeated as _finalBossDefeated, getPrestigeGain as _getPrestigeGain } from './meta.js'
 import { processHeroTick, openDispatch, openDifficultyModal, dispatchHero } from './combat.js';
@@ -83,6 +85,22 @@ export function confirmSpecializationPick(buildingId, specId) {
   saveGame();
   renderBuildingsPanel();
   showToast(`⚒️ ${BUILDINGS[buildingId]?.name || buildingId} 已選「${specId}」專精`, 'success', 3000);
+}
+// §十 4 — 套用布局 preset
+export function applyLayoutPreset(presetId) {
+  const swaps = computePresetSwaps(buildingPlots, presetId);
+  if (swaps.length === 0) { showToast('已是目標布局。', 'info'); return; }
+  // 套用所有 swap — 透過 plotDelta 機制:pickPlacement 兩兩互換
+  const next = { ...buildingPlots };
+  for (const [a, b] of swaps) {
+    const aPlot = next[a] ?? PLOT_BUILDINGS.indexOf(a);
+    const bPlot = next[b] ?? PLOT_BUILDINGS.indexOf(b);
+    next[a] = bPlot; next[b] = aPlot;
+  }
+  setBuildingPlots(next);
+  saveGame();
+  renderBuildingsPanel();
+  showToast(`🏘 已套用「${getPresetName(presetId)}」(${swaps.length} 次互換)`, 'success', 3000);
 }
 import { finalBossDefeated, getPrestigeGain } from './meta.js';
 import { achievementsUnlocked, prestige } from './state.js';

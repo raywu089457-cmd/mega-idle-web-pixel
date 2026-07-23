@@ -19,7 +19,7 @@ import {
 } from './ui.js';
 import {
   setCombatSpeed, openSettings, closeSettings, exportSaveCode, importSaveCode,
-  doPrestige, doReset, closeOnboard, confirmTraditionPick, confirmSpecializationPick,
+  doPrestige, doReset, closeOnboard, confirmTraditionPick, confirmSpecializationPick, applyLayoutPreset,
 } from './settings-and-init.js';
 import {
   advanceClass, trainHero, usePotion, recallHero, recallAllHeroes, recruitWanderingHero,
@@ -88,6 +88,7 @@ window.openTraditionPicker = openTraditionPicker;
 window.confirmTraditionPick = confirmTraditionPick;
 window.openSpecializationPicker = openSpecializationPicker;
 window.confirmSpecializationPick = confirmSpecializationPick;
+window.applyLayoutPreset = applyLayoutPreset;
 window.advanceClass = advanceClass;
 window.trainHero = trainHero;
 window.usePotion = usePotion;
