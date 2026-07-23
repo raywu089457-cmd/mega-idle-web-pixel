@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v32';   // bump to v32 — §十 4 服務區配置(3 preset 一鍵套用)
+const CACHE_NAME = 'hunter-village-v33';   // bump to v33 — §六 1 空間擴張(4 服務圈分區 hint + zone stats)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

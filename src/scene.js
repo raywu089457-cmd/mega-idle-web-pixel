@@ -980,6 +980,24 @@ function drawStaticLayer(t) {
   c.fillStyle = '#4a4a55'; c.fillRect(96, 314, 48, 34); c.fillStyle = '#1b1026'; c.fillRect(104, 322, 32, 26);
   c.fillStyle = '#ff5252'; c.fillRect(112, 332, 4, 3); c.fillRect(124, 332, 4, 3); // 眼睛不閃(畫在 static 層)
   c.restore();
+  // §六 1 4 服務圈 zone band(在每棟建築底部畫一道該 zone 的彩色 hint,讓玩家一眼看出分類)
+  const ZONE_BANDS = [
+    { sceneKey: 'tavern',     y: 206, w: 42, color: '#ff6b4a' },  // urgent
+    { sceneKey: 'alchemy',    y: 300, w: 40, color: '#ff6b4a' },  // urgent
+    { sceneKey: 'forge',      y: 292, w: 44, color: '#9b6bd6' },  // combat
+    { sceneKey: 'restaurant', y: 206, w: 22, color: '#5db3ff' },  // commerce
+    { sceneKey: 'drinkShop',  y: 212, w: 16, color: '#5db3ff' },  // commerce
+    { sceneKey: 'guild',      y: 194, w: 50, color: '#a8a18a' },  // management
+    { sceneKey: 'market',     y: 200, w: 40, color: '#a8a18a' },  // management
+    { sceneKey: 'research',   y: 296, w: 40, color: '#a8a18a' },  // management
+  ];
+  for (const b of ZONE_BANDS) {
+    const d = plotDelta(b.sceneKey);
+    c.fillStyle = b.color;
+    c.globalAlpha = 0.18;
+    c.fillRect(d.dx + 2, d.dy + b.y - 1, b.w, 2);
+    c.globalAlpha = 1;
+  }
   // ── 主動線路點視覺(8 路點 + 連線虛線;對應 ROAD_GRAPH) ──
   // 低調渲染:暖金 #f4d03f 半透明虛線 + 暗芯;不干擾建築輪廓,但讓「路」可視。
   c.lineWidth = 1;
