@@ -238,7 +238,17 @@ export function recallAllHeroes() {
   for (const h of out) restHero(h.id);
   sfx('click'); showToast(`🏠 已召回 ${out.length} 位獵人。`, 'success');
 }
-export function recruitCost(w) { return { gold: 60 + (w.level || 1) * 45 }; }
+export function recruitCost(w) {
+  const base = { gold: 60 + (w.level || 1) * 45 };
+  // §六 3:rare_visitor 事件期間招募成本 -50%
+  if (townEvent?.id === 'rare_visitor') {
+    const discount = getEventMul(townEvent, 'recruitDiscount'); // 0.5
+    return { gold: Math.max(1, Math.round(base.gold * (1 - discount))) };
+  }
+  return base;
+}
+import { townEvent } from './state.js'
+import { getEventMul } from './town-events.js'
 export function recruitWanderingHero(heroId) {
   const idx = wanderingHeroes.findIndex(h => h.id === heroId); if (idx < 0) return;
   if (territoryHeroes.length >= stageCapacity('tavern', BuildingSystem_getTerritoryHeroSlots())) { showToast('獵人空位不足，請升級酒館。', 'error'); return; }

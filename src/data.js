@@ -62,6 +62,19 @@ export function advClassFor(cls) { return Object.keys(ADV_CLASSES).find(k => ADV
 
 export function isGear(id) { const t = ITEMS[id]?.type; return t === 'weapon' || t === 'armor' || t === 'accessory'; }
 export function rollGearTier() { const r = Math.random(); return r < 0.6 ? 'normal' : r < 0.9 ? 'fine' : 'legend'; }
+// §六 3:caravan 期間精良/傳說 +15%(與 town-events 聯動)
+import { townEvent } from './state.js'
+import { getEventMul } from './town-events.js'
+export function rollGearTierEvent() {
+  const boost = getEventMul(townEvent, 'gearTierBoost');
+  if (boost > 0) {
+    const r = Math.random();
+    if (r < 0.6 - boost * 0.5) return 'normal';
+    if (r < 0.9 - boost * 0.3) return 'fine';
+    return 'legend';
+  }
+  return rollGearTier();
+}
 export function makeGearInstance(id, opts = {}) {
   const def = ITEMS[id] || {};
   const tier = opts.tier || (opts.roll ? rollGearTier() : 'normal');

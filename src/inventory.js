@@ -71,6 +71,18 @@ export function itemStatsText(def) {
 export function potionStockCap() { return 8 + BuildingSystem_getLevel('potionShop') * 2; }
 export function gearStockCap() { return 3 + BuildingSystem_getLevel('weaponShop') + BuildingSystem_getLevel('armorShop'); }
 export function salePrice(base, kind) { return Math.max(1, Math.round(base * priceMult[kind] * 1.2)); }
+// §六 3:medical_surge 期間藥水營收 ×potionBuyMul(2.0);material_wave 對指定資源 ±priceWave
+import { townEvent } from './state.js'
+import { getEventMul } from './town-events.js'
+export function eventAdjustedPrice(base, kind, resourceId) {
+  let price = salePrice(base, kind);
+  if (kind === 'potion' && townEvent?.id === 'medical_surge') price = Math.round(price * getEventMul(townEvent, 'potionBuyMul'));
+  if (townEvent?.id === 'material_wave' && townEvent.params?.resourceId === resourceId) {
+    const sign = (Math.sin(townEvent.startTick) > 0) ? 1 : -1; // 用 startTick 決定方向
+    price = Math.round(price * (1 + sign * getEventMul(townEvent, 'priceWave')));
+  }
+  return Math.max(1, price);
+}
 import { priceMult } from './state.js'
 export function setPriceTier(kind, mult) { priceMult[kind] = mult; }
 export function getShopStock() { return shopStock; }

@@ -3,9 +3,10 @@
 // 業務模組(combat / heroes-stats / scene)只 import 此處的純函式;不需要 meta.js 的其他邏輯
 
 import { ACHIEVEMENTS, BUILDINGS } from './data.js'
-import { achievementsUnlocked, prestige } from './state.js'
+import { achievementsUnlocked, prestige, townEvent } from './state.js'
 import { BuildingSystem_getLevel } from './resources-buildings.js'
 import { getTraditionBonus } from './traditions.js'
+import { getEventMul } from './town-events.js'
 
 export function getAchievementBonuses() {
   const agg = { mat: 0, gold: 0, xp: 0, click: 0, atk: 0, def: 0 };
@@ -26,9 +27,11 @@ const huntTraditionMul = getTraditionBonus('matMul') + getTraditionBonus('goldMu
 const huntMatMul = getTraditionBonus('matMul');
 const huntGoldMul = getTraditionBonus('goldMul');
 const huntXpMul = getTraditionBonus('xpMul');
-export function getMaterialMultiplier() { return 1 + getAchievementBonuses().mat + huntMatMul; }
-export function getCombatGoldMultiplier() { return 1 + getAchievementBonuses().gold + huntGoldMul + BuildingSystem_getLevel('altar') * 0.04; }
-export function getXpMultiplier() { return 1 + getAchievementBonuses().xp + huntXpMul + BuildingSystem_getLevel('altar') * 0.04; }
+// §六 3:season_shift 事件 ±20%(已 baked-in sign,getEventMul 直接給 1±0.2)
+const seasonalMul = () => getEventMul(townEvent, 'seasonalMul');
+export function getMaterialMultiplier() { return (1 + getAchievementBonuses().mat + huntMatMul) * seasonalMul(); }
+export function getCombatGoldMultiplier() { return (1 + getAchievementBonuses().gold + huntGoldMul + BuildingSystem_getLevel('altar') * 0.04) * seasonalMul(); }
+export function getXpMultiplier() { return (1 + getAchievementBonuses().xp + huntXpMul + BuildingSystem_getLevel('altar') * 0.04) * seasonalMul(); }
 export function getClickGold() {
   const base = 2 + Math.floor(BuildingSystem_getLevel('goldMine') / 2);
   return base + getAchievementBonuses().click + prestige.shards;
