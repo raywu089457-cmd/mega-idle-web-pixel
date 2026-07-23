@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v36';   // bump to v36 — §六 2 擴展 10 棟建築可選專精(原 3 棟 + tavern/inn/restaurant/drinkShop/altar/enhanceForge 7 棟)
+const CACHE_NAME = 'hunter-village-v37';   // bump to v37 — §六 4 UI readiness badge 在 difficulty modal 顯示
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

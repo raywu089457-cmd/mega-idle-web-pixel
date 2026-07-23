@@ -8,6 +8,7 @@ import { liveCombats, partyCombats, mapProgress, sceneNight, expandedReports, ba
 import { getHeroStats, usePotion, grantXp, restHero, syncActiveExplorations } from './heroes-stats.js'
 import { getHeroSkillLevel, tickSkillCds, applySkillBuffs, tryTriggerActiveSkill } from './skills.js'
 import { rand, randf, choice, clamp, uid, $, timeAgo, showModal, hideModal, showToast, esc, closeModal } from './util.js'
+import { checkExpeditionReadiness, getReadinessLabel } from './expedition-readiness.js'
 import { sfx } from './audio.js'
 import { gainGold, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js'
 import { addDropItem } from './inventory.js'
@@ -332,6 +333,8 @@ export function openDifficultyModal(zoneId, diff) {
     <div class="offline-item"><span class="offline-label">🪙 金幣</span><span class="offline-val">${cfg.goldRange[0]}~${cfg.goldRange[1]}</span></div>
     <div class="offline-item"><span class="offline-label">💠 魔核機率</span><span class="offline-val">${Math.round(cfg.magicStoneChance * 100)}%</span></div>
     <div class="offline-item"><span class="offline-label">✨ 經驗</span><span class="offline-val">${cfg.xp}</span></div>
+    <div class="section-label">遠征準備度(§六 4)</div>
+    ${(() => { const r = checkExpeditionReadiness(zoneId, idleHeroes.slice(0, 4)); const itemsHtml = r.items.map(it => `<div class="offline-item"><span class="offline-label" style="${it.passed ? '' : 'color:#c0392b'}">${it.passed ? '✓' : '✗'} ${it.label}</span><span class="offline-val" style="font-size:11px;">${it.passed ? 'OK' : it.tip}</span></div>`).join(''); return `<div class="offline-item" style="background:${r.score >= 70 ? 'rgba(39,174,96,0.1)' : r.score >= 50 ? 'rgba(243,156,18,0.1)' : 'rgba(192,57,43,0.1)'};padding:8px;border-radius:4px;margin-bottom:6px;"><span class="offline-label" style="font-weight:bold;">⚔ 準備度 ${r.score}%</span><span class="offline-val" style="font-weight:bold;">${getReadinessLabel(r.score)}</span></div>${itemsHtml}`; })()}
     <div class="section-label">派遣獵人</div>
     ${teams.filter(t => teamAvailableMembers(t).length > 0).map(t => `<div style="margin-bottom:6px;"><button class="btn btn-blue btn-sm" onclick="dispatchTeam(${t.id},${zone.id},'${diff}')">⚔ 隊伍 ${t.id + 1} 出擊（${teamAvailableMembers(t).length} 人共同戰鬥）</button></div>`).join('')}
     ${idleHeroes.length ? `<div style="margin-bottom:6px;"><button class="btn btn-purple btn-sm" onclick="partyDispatch(${zone.id},'${diff}')">👥 自由組隊（最多 4 人）</button></div>` : ''}
