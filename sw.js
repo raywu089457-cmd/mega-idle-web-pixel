@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v37';   // bump to v37 — §六 4 UI readiness badge 在 difficulty modal 顯示
+const CACHE_NAME = 'hunter-village-v38';   // bump to v38 — §十 第三 trophy material 入庫(5 boss → 自動 +1 material)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

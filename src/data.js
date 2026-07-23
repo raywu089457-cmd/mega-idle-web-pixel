@@ -14,6 +14,12 @@ export const RESOURCES = {
   woodRotten:  { name: '木材', icon: '🪵', initial: 0, capacity: 500 },
   ironRusty:   { name: '鐵礦', icon: '⛏️', initial: 0, capacity: 500 },
   herbLow:     { name: '藥草', icon: '🌿', initial: 0, capacity: 500 },
+  // §十 第三 區域 trophy:擊敗 boss 後自動入庫
+  mistHeart:   { name: '霧靈核心', icon: '🌫️', initial: 0, capacity: 5 },
+  hiveCore:    { name: '母巢甲殼', icon: '🛡', initial: 0, capacity: 5 },
+  golemCore:   { name: '礦心金核', icon: '⛏', initial: 0, capacity: 5 },
+  lavaHeart:   { name: '熔核之心', icon: '🔥', initial: 0, capacity: 5 },
+  voidShard:   { name: '虛空碎片', icon: '🌌', initial: 0, capacity: 5 },
 };
 export const MATERIAL_TYPES = ['fruitPoor', 'waterDirty', 'woodRotten', 'ironRusty', 'herbLow'];
 

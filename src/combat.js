@@ -9,6 +9,7 @@ import { getHeroStats, usePotion, grantXp, restHero, syncActiveExplorations } fr
 import { getHeroSkillLevel, tickSkillCds, applySkillBuffs, tryTriggerActiveSkill } from './skills.js'
 import { rand, randf, choice, clamp, uid, $, timeAgo, showModal, hideModal, showToast, esc, closeModal } from './util.js'
 import { checkExpeditionReadiness, getReadinessLabel } from './expedition-readiness.js'
+import { getTrophyMaterialId } from './region-unlocks.js'
 import { sfx } from './audio.js'
 import { gainGold, ResourceSystem_add, BuildingSystem_getLevel } from './resources-buildings.js'
 import { addDropItem } from './inventory.js'
@@ -268,6 +269,13 @@ export function finishLiveCombat(hero, lc, won) {
       hero.status = 'idle'; hero.explorationProgress = 0; hero.exploreZoneId = null; hero.exploreDifficulty = null;
       sfx('boss'); showToast(`👑 擊敗 ${zone.boss.name}！${next ? '解鎖 ' + next.name : '五域全通，可進行重建！'}`, 'success');
       if (!next) showToast('🌀 前往「成就」面板進行重建，獲得永久傳承碎片。', 'info');
+      // §十 第三 擊敗 boss → trophy material 入庫
+      const trophyId = getTrophyMaterialId(zone.id);
+      if (trophyId) {
+        ResourceSystem_add(trophyId, 1);
+        const trophyDef = RESOURCES[trophyId];
+        showToast(`🏆 獲得 ${trophyDef.icon}${trophyDef.name} × 1`, 'success', 3000);
+      }
     } else {
       const first = !mapProgress.zoneProgress[zone.id][lc.diff];
       mapProgress.zoneProgress[zone.id][lc.diff] = true;
