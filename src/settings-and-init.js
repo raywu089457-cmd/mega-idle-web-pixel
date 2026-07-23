@@ -4,7 +4,7 @@
 
 import { $, esc, showModal, hideModal, showToast, fmt, todayKey } from './util.js'
 import { sfx } from './audio.js'
-import { saveGame, loadGame, migrateSave, getDefaultGameState, defaultMapProgress, gameState, setResources, setBuildingStates, setMapProgress, setShopStock, setPriceMult, setActiveExplorations, setBattleReports, setStats, setAchievementsUnlocked, setPrestige, setDaily, setSettings, setWeather, setCraftOrders, setTeams, setBuildingPlots, setShopInventory, setGearInventory, setNextWanderingSpawnIn, setPotionShopAutoProduce, setTerritoryHeroes, setWanderingHeroes, setResetting, setPendingOfflineSummary, territoryCombatTickCounter, incTerritoryCombatTickCounter, buildingPlots as _buildingPlots, defaultBuildings } from './state.js'
+import { saveGame, loadGame, migrateSave, getDefaultGameState, defaultMapProgress, gameState, setResources, setBuildingStates, setMapProgress, setShopStock, setPriceMult, setActiveExplorations, setBattleReports, setStats, setAchievementsUnlocked, setPrestige, setDaily, setSettings, setWeather, setCraftOrders, setTeams, setBuildingPlots, setShopInventory, setGearInventory, setNextWanderingSpawnIn, setPotionShopAutoProduce, setTerritoryHeroes, setWanderingHeroes, setResetting, setPendingOfflineSummary, territoryCombatTickCounter, incTerritoryCombatTickCounter, buildingPlots as _buildingPlots, defaultBuildings, townEvent, setTownEvent } from './state.js'
 import { syncActiveExplorations, normalizeHero, generateHero } from './heroes-stats.js'
 import { defaultTeams } from './combat-party.js'
 import { renderAll, renderHUD, renderBadges, renderPanel, openPanel, closePanel, renderBuildingsPanel, upgradeBuilding, renderResourcesPanel, renderHeroesPanel, renderMapPanel, renderShopPanel, renderAchPanel } from './ui.js'
@@ -18,6 +18,7 @@ import { processHeroTick, openDispatch, openDifficultyModal, dispatchHero } from
 import { processPartyCombats } from './combat-party.js';
 import { processOrdersTick } from './ui.js';
 import { startAbyssCombat, finishAbyssCombat, spawnWanderingHero, processWanderingTick, weatherTick } from './expeditions.js'
+import { maybeTriggerNewEvent, tickEventDuration, TOWN_EVENTS } from './town-events.js'
 import { initScene, drawScene, initFloatCanvas } from './scene.js'
 import { gameState as _gs } from './state.js'
 import { ensureAudio } from './audio.js'
@@ -101,6 +102,19 @@ export function applyLayoutPreset(presetId) {
   saveGame();
   renderBuildingsPanel();
   showToast(`🏘 已套用「${getPresetName(presetId)}」(${swaps.length} 次互換)`, 'success', 3000);
+}
+// §六 3 — 城鎮事件 tick 推進 + 隨機觸發
+export function tickTownEvent() {
+  const ticked = tickEventDuration(townEvent, territoryCombatTickCounter);
+  if (ticked !== townEvent) setTownEvent(ticked);
+  if (!ticked) {
+    const newEvt = maybeTriggerNewEvent(townEvent, territoryCombatTickCounter);
+    if (newEvt) {
+      setTownEvent(newEvt);
+      const def = TOWN_EVENTS[newEvt.id];
+      showToast(`${def.icon} 城鎮事件:${def.name}`, 'info', 4000);
+    }
+  }
 }
 import { finalBossDefeated, getPrestigeGain } from './meta.js';
 import { achievementsUnlocked, prestige } from './state.js';
@@ -216,6 +230,8 @@ export function gameTick() {
   processWanderingTick();
   incTerritoryCombatTickCounter();
   checkAchievements();
+  // §六 3 城鎮事件:tick 推進 + 隨機觸發
+  tickTownEvent();
   renderHUD(); renderBadges();
   if (activePanel && (territoryCombatTickCounter % 5 === 0 || (activePanel === 'map' && territoryCombatTickCounter % 2 === 0))) {
     renderPanel(activePanel);

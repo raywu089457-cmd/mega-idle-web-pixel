@@ -16,6 +16,8 @@ import { BUILDING_SPECS, canSpecialize, getSpecOptions, getCurrentSpec } from '.
 import { BuildingSystem_getSpec, BuildingSystem_setSpec } from './resources-buildings.js'
 import { LAYOUT_PRESETS, PRESET_ORDER, getPresetName } from './layout-presets.js'
 import { SERVICE_ZONES } from './data.js'
+import { TOWN_EVENTS, getRemainingTicks } from './town-events.js'
+import { townEvent } from './state.js'
 import { stageProductionRate, stageCapacity } from './building-effects.js'
 import { getHeroStats, getHeroTrait, getHeroTraits, usePotion, canAdvance, advanceClass, syncActiveExplorations, rerollTrait, trainCost, trainHero, recallHero, recruitWanderingHero, recruitCost } from './heroes-stats.js'
 import { getHeroSkillLevel, canLearnSkill, learnSkill, resetSkills } from './skills.js'
@@ -97,6 +99,19 @@ export function renderHUD() {
   if (streakEl) streakEl.textContent = streak > 0 ? streak + '天' : '';
   const wEl = $('hud-weather');
   if (wEl) { wEl.textContent = WEATHERS[weather.type].icon; wEl.title = `天氣：${WEATHERS[weather.type].name}（${WEATHERS[weather.type].desc}）`; }
+  // §六 3 城鎮事件 banner(若有 active 事件顯示名稱 + 剩餘 ticks)
+  const evBanner = $('hud-event');
+  if (evBanner) {
+    if (townEvent && TOWN_EVENTS[townEvent.id]) {
+      const def = TOWN_EVENTS[townEvent.id];
+      const remain = getRemainingTicks(townEvent, territoryCombatTickCounter);
+      evBanner.style.display = 'inline-block';
+      evBanner.textContent = `${def.icon}${def.name} ${remain}s`;
+      evBanner.title = def.desc;
+    } else {
+      evBanner.style.display = 'none';
+    }
+  }
 }
 export function renderBadges() {
   const idle = territoryHeroes.filter(h => h.status === 'idle').length;

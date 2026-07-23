@@ -4,7 +4,7 @@
  * serving a stale cached index.html.
  */
 
-const CACHE_NAME = 'hunter-village-v33';   // bump to v33 — §六 1 空間擴張(4 服務圈分區 hint + zone stats)
+const CACHE_NAME = 'hunter-village-v34';   // bump to v34 — §六 3 城鎮隨機事件(7 種 + HUD banner)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ const ASSETS_TO_CACHE = [
 // 由 install 動態掃 src/ 補上;這裡放常見入口,讓 fetch handler 觸發 src/*.js runtime cache
 const SRC_GLOB = [
   './src/main.js', './src/data.js', './src/util.js', './src/state.js', './src/bonuses.js',
-  './src/building-stages.js', './src/building-effects.js', './src/reachability.js', './src/queue-points.js', './src/region-unlocks.js', './src/traditions.js', './src/specializations.js', './src/expedition-readiness.js', './src/layout-presets.js',
+  './src/building-stages.js', './src/building-effects.js', './src/reachability.js', './src/queue-points.js', './src/region-unlocks.js', './src/traditions.js', './src/specializations.js', './src/expedition-readiness.js', './src/layout-presets.js', './src/town-events.js',
   './src/resources-buildings.js', './src/skills.js', './src/audio.js', './src/inventory.js',
   './src/heroes-stats.js', './src/meta.js', './src/combat.js', './src/combat-party.js',
   './src/expeditions.js', './src/scene.js', './src/ui.js', './src/selftest.js',
