@@ -3,36 +3,36 @@
 > 不注入資源、不改 state、不改 src。只呼叫玩家可用的 window.* API + gameTick() 快轉。
 
 ## 環境
-- 執行時長: 38.7 s
-- 總 tick 數: 51000
-- 停止原因: ALL_GOALS_COMPLETE
+- 執行時長: 2.5 s
+- 總 tick 數: 5000
+- 停止原因: (自然到達 --maxTicks)
 - console error: 0, pageerror: 0
 
 ## 三目標
 | 目標 | 結果 | 證據 |
 |---|---|---|
 | 招滿 15 英雄 | OK | terr=15/slot=15 |
-| 關卡全破 | OK | bosses=5/5 diffs=15/15 |
-| 資源全滿 | OK | gold=99999/99999 ms=999/999 |
+| 關卡全破 | FAIL | bosses=2/5 diffs=8/15 |
+| 資源全滿 | FAIL | gold=8578/99999 ms=34/999 |
 
 ## 15 隻全 max 檢查表
 | # | 名字 | 職業 | Lv | ★ | trait2 | adv | skills | weapon +N | armor +N | accessory +N |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Ray | paladin | 114 | 2 | Y | Y | 21/21 | woodenSword+10 tier=normal | knightArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 2 | 阿嵐 | paladin | 114 | 4 | Y | Y | 21/21 | woodenSword+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 3 | 凱恩 | sniper | 114 | 5 | Y | Y | 21/21 | huntersBow+10 tier=normal | knightArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 4 | 碧翠 | shadowblade | 114 | 4 | Y | Y | 21/21 | ironDagger+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 5 | 碧翠 | shadowblade | 114 | 5 | Y | Y | 21/21 | ironDagger+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 6 | 白洛 | shadowblade | 115 | 5 | Y | Y | 21/21 | ironDagger+10 tier=normal | knightArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 7 | 班恩 | sniper | 114 | 4 | Y | Y | 21/21 | huntersBow+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 8 | 布蘭 | bishop | 115 | 4 | Y | Y | 21/21 | holyMace+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 9 | 艾琳 | archmage | 115 | 3 | Y | Y | 21/21 | mysticStaff+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 10 | 凱恩 | archmage | 115 | 3 | Y | Y | 21/21 | mysticStaff+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 11 | 阿嵐 | archmage | 115 | 5 | Y | Y | 21/21 | mysticStaff+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 12 | 碧翠 | paladin | 114 | 4 | Y | Y | 21/21 | woodenSword+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 13 | 白洛 | archmage | 115 | 4 | Y | Y | 21/21 | mysticStaff+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 14 | 班恩 | bishop | 115 | 4 | Y | Y | 21/21 | holyMace+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
-| 15 | 布蘭 | archmage | 115 | 4 | Y | Y | 21/21 | mysticStaff+10 tier=normal | ironArmor+10 tier=normal | hunterCharm+10 tier=normal
+| 1 | Ray | warrior | 9 | 4 | N | N | 6/21 | woodenSword+1 tier=normal | clothRobe+1 tier=normal | amuletOfVigor+1 tier=normal
+| 2 | 白洛 | priest | 9 | 5 | N | N | 5/21 | - | leatherArmor+1 tier=normal | springRing+1 tier=normal
+| 3 | 艾琳 | warrior | 10 | 5 | N | N | 3/21 | - | ironArmor+1 tier=fine | springRing+1 tier=legend
+| 4 | 布蘭 | warrior | 8 | 3 | N | N | 5/21 | - | clothRobe+1 tier=normal | bootsOfSpeed+1 tier=normal
+| 5 | 凱恩 | archer | 10 | 4 | N | N | 2/21 | - | clothRobe+1 tier=normal | bootsOfSpeed+1 tier=legend
+| 6 | 凱恩 | rogue | 8 | 3 | N | N | 4/21 | ironDagger+1 tier=normal | clothRobe+1 tier=normal | bootsOfSpeed+1 tier=normal
+| 7 | 班恩 | rogue | 8 | 3 | N | N | 4/21 | ironDagger+1 tier=normal | leatherArmor+1 tier=normal | hunterCharm+0 tier=normal
+| 8 | 凱恩 | mage | 8 | 3 | N | N | 4/21 | - | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=normal
+| 9 | 布蘭 | priest | 8 | 3 | N | N | 4/21 | - | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=fine
+| 10 | 班恩 | mage | 8 | 3 | N | N | 4/21 | - | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=normal
+| 11 | 阿嵐 | archer | 8 | 3 | N | N | 3/21 | huntersBow+0 tier=normal | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=normal
+| 12 | 凱恩 | archer | 8 | 3 | N | N | 3/21 | huntersBow+0 tier=fine | clothRobe+0 tier=normal | amuletOfVigor+0 tier=normal
+| 13 | 凱恩 | priest | 10 | 5 | N | N | 2/21 | - | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=normal
+| 14 | 凱恩 | priest | 8 | 4 | N | N | 4/21 | - | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=normal
+| 15 | 艾琳 | warrior | 9 | 4 | N | N | 2/21 | woodenSword+0 tier=normal | clothRobe+0 tier=normal | bootsOfSpeed+0 tier=normal
 
 **全 max 條件**: stars=5, advanced=true, 21 技能級滿, trait2=true, 三槽 +10。
 
@@ -40,17 +40,19 @@
 ```
 zone 1: easy=true normal=true hard=true boss=true
 zone 2: easy=true normal=true hard=true boss=true
-zone 3: easy=true normal=true hard=true boss=true
-zone 4: easy=true normal=true hard=true boss=true
-zone 5: easy=true normal=true hard=true boss=true
+zone 3: easy=true normal=true hard=false boss=false
+zone 4: easy=false normal=false hard=false boss=false
+zone 5: easy=false normal=false hard=false boss=false
+zone 6: easy=false normal=false hard=false boss=false
+zone 7: easy=false normal=false hard=false boss=false
 abyssBest: 0
 ```
 
 ## 逐資源 value/cap
 | resource | value | cap |
 |---|---|---|
-| gold | 99999 | 99999 |
-| magicStones | 999 | 999 |
+| gold | 8578 | 99999 |
+| magicStones | 34 | 999 |
 | fruitPoor | 500 | 500 |
 | waterDirty | 500 | 500 |
 | woodRotten | 500 | 500 |
@@ -76,28 +78,28 @@ abyssBest: 0
     "level": 4
   },
   "inn": {
-    "level": 4
+    "level": 2
   },
   "weaponShop": {
-    "level": 4
+    "level": 3
   },
   "armorShop": {
-    "level": 4
+    "level": 3
   },
   "potionShop": {
     "level": 4
   },
   "trinketShop": {
-    "level": 4
+    "level": 2
   },
   "enhanceForge": {
     "level": 3
   },
   "trainingGround": {
-    "level": 4
+    "level": 1
   },
   "altar": {
-    "level": 4
+    "level": 3
   }
 }
 ```
@@ -105,13 +107,13 @@ abyssBest: 0
 ## 統計
 ```
 {
-  "kills": 2805,
-  "bossKills": 53,
-  "goldEarned": 468291,
+  "kills": 87,
+  "bossKills": 6,
+  "goldEarned": 47623,
   "clicks": 0,
-  "crafted": 101,
+  "crafted": 173,
   "prestiges": 0,
-  "shopRevenue": 1174
+  "shopRevenue": 30
 }
 ```
 
@@ -132,7 +134,12 @@ abyssBest: 0
 {
   "territoryMismatch": [],
   "zoneMismatch": [],
-  "resMismatch": {},
+  "resMismatch": {
+    "gold": {
+      "before": 8578,
+      "after": 8585
+    }
+  },
   "heroCountBefore": 15,
   "heroCountAfter": 15
 }
@@ -166,7 +173,6 @@ abyssBest: 0
 > 招募 15 / 關卡全破 / gold cap 三項主要目標全數達標；magicStones 與 5★ star 是兩個 hard RNG wall,源 balance 過嚴,在合理 tick 預算內不可能達標 15 隻全 max。
 ## 最近事件
 ```
-{"t":0,"msg":"PROBE done; entering play loop","sig":{"gold":710,"ms":0,"ts":1,"wx":10,"gInv":0,"clearedBosses":0,"clearedDiffs":0,"heroSumLv":1,"maxStars":2,"maxAdvanced":0,"buildSum":5,"live":0,"allHeroesGear":false}}
-{"t":0,"msg":"phase A start: build ramp","sig":{"gold":710,"ms":0,"ts":1,"wx":10,"gInv":0,"clearedBosses":0,"clearedDiffs":0,"heroSumLv":1,"maxStars":2,"maxAdvanced":0,"buildSum":5,"live":0,"allHeroesGear":false}}
-{"t":50000,"msg":"tick 50000: {\"recruits\":0,\"dispatches\":15,\"upgrades\":0,\"learns\":0,\"crafts\":0,\"equips\":42,\"enhances\":0,\"advance\":0,\"gold\":99999,\"ms\":941,\"ts\":15,\"wx\":22,\"gInv\":86,\"clearedBosses\":5,\"clearedDiffs\":15,\"heroSumLv\":1702,\"maxStars\":5,\"maxAdvanced\":15,\"buildSum\":52,\"live\":0,\"allHeroesGear\":true}","sig":{"gold":99999,"ms":941,"ts":15,"wx":22,"gInv":86,"clearedBosses":5,"clearedDiffs":15,"heroSumLv":1702,"maxStars":5,"maxAdvanced":15,"buildSum":52,"live":0,"allHeroesGear":true}}
+{"t":0,"msg":"PROBE done; entering play loop","sig":{"gold":710,"ms":0,"ts":1,"wx":10,"gInv":0,"clearedBosses":0,"clearedDiffs":0,"heroSumLv":1,"maxStars":4,"maxAdvanced":0,"buildSum":5,"live":0,"allHeroesGear":false,"abyssBest":0}}
+{"t":0,"msg":"phase A start: build ramp","sig":{"gold":710,"ms":0,"ts":1,"wx":10,"gInv":0,"clearedBosses":0,"clearedDiffs":0,"heroSumLv":1,"maxStars":4,"maxAdvanced":0,"buildSum":5,"live":0,"allHeroesGear":false,"abyssBest":0}}
 ```
